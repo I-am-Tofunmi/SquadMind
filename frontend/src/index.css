@@ -1,0 +1,21 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #06b6d4;
+  --font-outfit: "Outfit", sans-serif;
+}
+
+:root {
+  font-family: "Outfit", system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #f8fafc;
+  color: #0f172a;
+}
+
+* {
+  transition: all 0.2s ease-in-out;
+}
