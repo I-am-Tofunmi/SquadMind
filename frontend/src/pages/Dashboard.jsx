@@ -88,10 +88,17 @@ function Dashboard({ onLogout, onNavigate }) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Upgrade Button */}
-          <button className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-[#001f3f] font-bold py-3.5 rounded-xl text-base transition-all shadow-lg shadow-[#00d2ff]/20">
-            Upgrade Plan
-          </button>
+          {/* Upgrade Card */}
+          <div className="bg-[#112f4d] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+             <div className="relative z-10">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">CURRENT TIER</p>
+                <p className="text-base font-bold text-white mb-4">Pro Business</p>
+                <button className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-[#001f3f] font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#00d2ff]/20">
+                  Upgrade Plan
+                </button>
+             </div>
+             <div className="absolute top-0 right-0 w-24 h-24 bg-[#00d2ff]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+          </div>
 
           {/* Bottom Links */}
           <div className="space-y-1">

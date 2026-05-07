@@ -85,12 +85,12 @@ function FraudDetection({ onLogout, onNavigate }) {
         </div>
 
         <div className="p-6 space-y-6">
-          {/* Upgrade Card (Mini version from image) */}
-          <div className="bg-[#112f4d] rounded-2xl p-4 border border-white/5 relative overflow-hidden">
+          {/* Upgrade Card */}
+          <div className="bg-[#112f4d] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
              <div className="relative z-10">
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Current Tier</p>
-                <p className="text-sm font-bold text-white mb-3">Pro Business</p>
-                <button className="w-full bg-[#00d2ff] hover:bg-[#00c2ee] text-[#001f3f] font-bold py-2 rounded-lg text-[11px] transition-colors">
+                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">CURRENT TIER</p>
+                <p className="text-base font-bold text-white mb-4">Pro Business</p>
+                <button className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-[#001f3f] font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#00d2ff]/20">
                   Upgrade Plan
                 </button>
              </div>
