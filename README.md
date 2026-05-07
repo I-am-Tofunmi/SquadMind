@@ -1,5 +1,3 @@
-cat > README.md << 'ENDOFFILE'
-
 # SquadMind
 
 > AI-powered financial intelligence and credit identity
