@@ -65,17 +65,26 @@ function CashFlow({ onLogout, onNavigate }) {
               <span className="font-medium text-[15px]">Fraud Detection</span>
             </button>
             
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group">
+            <button 
+              onClick={() => onNavigate('alerts')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group"
+            >
               <Bell className="w-5 h-5" />
               <span className="font-medium text-[15px]">Alerts</span>
             </button>
             
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group">
+            <button 
+              onClick={() => onNavigate('trustscore')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group"
+            >
               <Award className="w-5 h-5" />
               <span className="font-medium text-[15px]">TrustScore</span>
             </button>
             
-            <button className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group">
+            <button 
+              onClick={() => onNavigate('settings')}
+              className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer group"
+            >
               <Settings className="w-5 h-5" />
               <span className="font-medium text-[15px]">Settings</span>
             </button>
@@ -108,6 +117,17 @@ function CashFlow({ onLogout, onNavigate }) {
               <LogOut className="w-4 h-4" />
               <span className="text-sm font-medium">Logout</span>
             </button>
+          </div>
+
+          {/* User Profile */}
+          <div className="pt-6 border-t border-white/5 flex items-center gap-3">
+             <div className="w-10 h-10 rounded-lg bg-[#00d2ff] flex items-center justify-center text-[#001f3f] font-bold overflow-hidden">
+                <img src="https://ui-avatars.com/api/?name=Lekan+Adeyemi&background=00d2ff&color=001f3f" alt="Lekan Adeyemi" />
+             </div>
+             <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
+                <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
+             </div>
           </div>
         </div>
       </aside>

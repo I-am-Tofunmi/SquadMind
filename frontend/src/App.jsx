@@ -4,6 +4,9 @@ import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import CashFlow from './pages/CashFlow';
 import FraudDetection from './pages/FraudDetection';
+import Alerts from './pages/Alerts';
+import TrustScore from './pages/TrustScore';
+import Settings from './pages/Settings';
 
 function App() {
   const [view, setView] = useState('landing');
@@ -19,6 +22,18 @@ function App() {
 
   if (view === 'frauddetection') {
     return <FraudDetection onLogout={() => setView('landing')} onNavigate={setView} />;
+  }
+
+  if (view === 'alerts') {
+    return <Alerts onLogout={() => setView('landing')} onNavigate={setView} />;
+  }
+
+  if (view === 'trustscore') {
+    return <TrustScore onLogout={() => setView('landing')} onNavigate={setView} />;
+  }
+
+  if (view === 'settings') {
+    return <Settings onLogout={() => setView('landing')} onNavigate={setView} />;
   }
 
   if (view === 'landing') {
