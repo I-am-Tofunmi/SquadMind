@@ -138,22 +138,22 @@ function Dashboard({ onLogout, onNavigate }) {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col h-full overflow-y-auto">
+      <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         
         {/* Top Header Bar */}
-        <header className="h-20 bg-white border-b border-slate-100 flex items-center justify-between px-8 shrink-0">
-          <div className="flex items-center gap-4 w-1/2">
+        <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
+          <div className="flex items-center gap-4 w-full md:w-1/2">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search analytics..." 
-                className="w-full pl-10 pr-4 py-2.5 bg-[#f1f5f9] border-none rounded-lg text-sm focus:ring-2 focus:ring-[#00d2ff]/30 outline-none"
+                placeholder="Search..." 
+                className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-[#f1f5f9] border-none rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-[#00d2ff]/30 outline-none"
               />
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
+          <div className="hidden md:flex items-center gap-6">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-[#e0f7fa] text-[#00838f] rounded-full">
               <div className="w-2 h-2 bg-[#00acc1] rounded-full animate-pulse"></div>
               <span className="text-[10px] font-bold tracking-wider uppercase">AI LIVE MONITORING</span>
@@ -168,14 +168,14 @@ function Dashboard({ onLogout, onNavigate }) {
                 <p className="text-sm font-bold text-slate-900 leading-none">Chinedu Stores</p>
                 <p className="text-[10px] text-slate-500 mt-1 uppercase font-medium">Merchant Admin</p>
               </div>
-              <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-                <User className="w-5 h-5 text-slate-400" />
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
+                <User className="w-4 h-4 text-slate-400" />
               </div>
             </div>
           </div>
         </header>
 
-        <div className="p-8 max-w-[1400px] w-full mx-auto">
+        <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
           
           {/* Welcome Section */}
           <div className="mb-10">
@@ -455,12 +455,34 @@ function Dashboard({ onLogout, onNavigate }) {
         </div>
       </main>
 
-      {/* Floating Chatbot Button (from image) */}
-      <button className="fixed bottom-8 right-8 w-14 h-14 bg-[#001f3f] text-white rounded-2xl shadow-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all">
-        <div className="relative">
-          <Settings className="w-7 h-7" />
-          <div className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full border-2 border-[#001f3f]"></div>
-        </div>
+      {/* Mobile Bottom Navigation */}
+      <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
+        <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-[#001f3f]">
+          <LayoutDashboard className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Home</span>
+        </button>
+        <button onClick={() => onNavigate('cashflow')} className="flex flex-col items-center gap-1 text-slate-400">
+          <Banknote className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Cash</span>
+        </button>
+        <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-slate-400">
+          <ShieldAlert className="w-5 h-5" />
+          <span className="text-[10px] font-bold">Fraud</span>
+        </button>
+        <button onClick={() => onNavigate('alerts')} className="flex flex-col items-center gap-1 text-slate-400 relative">
+          <Bell className="w-5 h-5" />
+          <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+          <span className="text-[10px] font-bold">Alerts</span>
+        </button>
+        <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400">
+          <Settings className="w-5 h-5" />
+          <span className="text-[10px] font-bold">More</span>
+        </button>
+      </nav>
+
+      {/* Floating Chatbot Button */}
+      <button className="fixed bottom-24 right-6 w-12 h-12 bg-[#001f3f] text-white rounded-xl shadow-2xl flex items-center justify-center md:bottom-8 md:right-8 md:w-14 md:h-14 transition-all z-40">
+        <Sparkles className="w-6 h-6" />
       </button>
 
     </div>

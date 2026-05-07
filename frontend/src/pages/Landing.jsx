@@ -11,266 +11,237 @@ import {
   LayoutDashboard,
   ShieldCheck,
   Zap,
-  ChevronRight
+  ChevronRight,
+  MessageSquare,
+  BarChart,
+  Activity,
+  ShieldAlert
 } from 'lucide-react';
 
 function Landing({ onGetStarted }) {
+  const [isMenuOpen, setIsMenuOpen] = React.useState(false);
+
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-outfit text-slate-900 overflow-x-hidden">
       
-      {/* Background Gradients */}
-      <div className="absolute top-0 left-0 w-full h-[1000px] pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[80%] bg-blue-100/50 rounded-full blur-[120px]"></div>
-        <div className="absolute top-[10%] right-[-10%] w-[40%] h-[70%] bg-cyan-100/40 rounded-full blur-[120px]"></div>
-        <div className="absolute top-[40%] left-[20%] w-[60%] h-[50%] bg-[#001f3f]/5 rounded-full blur-[120px]"></div>
-      </div>
-
-      {/* Navigation */}
-      <nav className="w-full h-24 flex items-center justify-between px-8 md:px-20 relative z-50">
-        <div className="flex items-center gap-2">
-          <div className="w-10 h-10 bg-[#001f3f] rounded-xl flex items-center justify-center shadow-lg shadow-[#001f3f]/20">
-            <Sparkles className="w-6 h-6 text-[#00d2ff]" />
-          </div>
-          <span className="text-2xl font-bold tracking-tighter text-[#001f3f]">SquadMind</span>
+      {/* Navbar */}
+      <nav className="w-full h-20 bg-[#001f3f] flex items-center justify-between px-6 md:px-20 relative z-50">
+        <div className="text-xl font-bold text-white tracking-tight">
+          SquadMind
         </div>
         
-        <div className="hidden lg:flex items-center gap-10">
-          {['Features', 'Security', 'Pricing', 'About'].map((item) => (
-            <a key={item} href={`#${item.toLowerCase()}`} className="text-sm font-bold text-slate-500 hover:text-[#001f3f] transition-all">
-              {item}
-            </a>
-          ))}
+        <div className="hidden md:flex items-center gap-10 text-[13px] font-bold text-white/80">
+          <a href="#" className="hover:text-white transition-all">Features</a>
+          <a href="#" className="hover:text-white transition-all">Intelligence</a>
+          <a href="#" className="hover:text-white transition-all">Pricing</a>
         </div>
 
         <div className="flex items-center gap-4">
           <button 
             onClick={onGetStarted}
-            className="text-sm font-bold text-[#001f3f] hover:opacity-70 transition-all cursor-pointer"
+            className="text-[13px] font-bold text-white/80 hover:text-white transition-all cursor-pointer hidden sm:block"
           >
             Login
           </button>
           <button 
             onClick={onGetStarted}
-            className="bg-[#001f3f] text-white px-6 py-3 rounded-xl text-sm font-bold shadow-xl shadow-[#001f3f]/20 hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+            className="bg-white text-[#001f3f] px-5 md:px-6 py-2.5 rounded-lg text-[13px] font-bold hover:bg-slate-100 transition-all cursor-pointer shadow-lg"
           >
-            Connect Squad
-            <ArrowRight className="w-4 h-4 text-[#00d2ff]" />
+            Get Started
+          </button>
+          <button 
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            className="md:hidden text-white p-2 focus:outline-none"
+          >
+            {isMenuOpen ? <Zap className="w-6 h-6" /> : <BarChart className="w-6 h-6 rotate-90" />}
           </button>
         </div>
+
+        {/* Mobile Menu Overlay */}
+        {isMenuOpen && (
+          <div className="absolute top-20 left-0 w-full bg-[#001f3f] border-t border-white/5 p-6 flex flex-col gap-6 md:hidden shadow-2xl z-50">
+             <a href="#" className="text-lg font-bold text-white">Features</a>
+             <a href="#" className="text-lg font-bold text-white">Intelligence</a>
+             <a href="#" className="text-lg font-bold text-white">Pricing</a>
+             <button onClick={onGetStarted} className="text-left text-lg font-bold text-white/60">Login</button>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
-      <section className="pt-20 pb-32 px-8 md:px-20 flex flex-col items-center text-center relative">
-        <div className="inline-flex items-center gap-2 px-4 py-2 bg-white rounded-full shadow-sm border border-slate-100 mb-8 animate-fade-in-down">
-          <div className="w-2 h-2 bg-[#00d2ff] rounded-full animate-pulse"></div>
-          <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Financial intelligence for the informal economy</span>
+      <section className="pt-16 md:pt-24 pb-20 md:pb-32 px-6 flex flex-col items-center text-center">
+        <div className="inline-flex items-center px-4 py-1.5 bg-[#e0faff] rounded-full mb-8">
+           <span className="text-[10px] font-extrabold text-[#00d2ff] uppercase tracking-wider">AI DRIVEN BUSINESS INTELLIGENCE</span>
         </div>
 
-        <h1 className="text-5xl md:text-7xl font-extrabold text-[#001f3f] tracking-tight mb-8 max-w-4xl leading-[1.1]">
-          Make your business <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#001f3f] to-[#00d2ff]">visible</span> to the financial world.
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-[#001f3f] tracking-tight mb-8 leading-[1.1] max-w-4xl">
+          Your AI CFO.<br />Built for Your Business.
         </h1>
 
-        <p className="text-lg md:text-xl text-slate-500 max-w-2xl mb-12 leading-relaxed">
-          Transform your Squad transaction data into real-time business insights, fraud detection, and a lender-ready credit identity.
+        <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mb-12 font-medium leading-relaxed">
+          Connect your Squad account. Understand your money in seconds. Gain deep insights into your revenue, forecast cash flow, and secure your transactions with AI.
         </p>
 
-        <div className="flex flex-col sm:flex-row items-center gap-6 mb-24">
+        <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 md:mb-24 w-full sm:w-auto">
           <button 
             onClick={onGetStarted}
-            className="w-full sm:w-auto bg-[#00d2ff] text-[#001f3f] px-10 py-5 rounded-2xl font-bold text-lg shadow-2xl shadow-[#00d2ff]/30 hover:scale-105 active:scale-95 transition-all"
+            className="w-full sm:w-auto bg-[#001f3f] text-white px-8 py-4 rounded-xl font-bold text-sm hover:translate-y-[-2px] transition-all cursor-pointer shadow-xl shadow-[#001f3f]/20"
           >
-            Get Started Free
+            Connect My Squad Account
           </button>
-          <button className="w-full sm:w-auto flex items-center justify-center gap-3 px-10 py-5 rounded-2xl font-bold text-lg text-[#001f3f] border-2 border-slate-100 bg-white hover:bg-slate-50 transition-all shadow-sm">
-            <div className="w-8 h-8 bg-slate-100 rounded-full flex items-center justify-center">
-              <Play className="w-4 h-4 fill-[#001f3f]" />
-            </div>
-            Watch Demo
+          <button className="w-full sm:w-auto bg-white border border-slate-200 text-[#001f3f] px-10 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm cursor-pointer">
+            View Demo
           </button>
         </div>
 
-        {/* Dashboard Mockup */}
-        <div className="relative w-full max-w-5xl mx-auto">
-          <div className="bg-white rounded-[40px] shadow-2xl shadow-[#001f3f]/10 border border-slate-100 p-4 relative z-10 overflow-hidden group">
-            <div className="absolute inset-0 bg-gradient-to-b from-transparent to-slate-50/50 pointer-events-none"></div>
-            <img 
-              src="https://images.unsplash.com/photo-1551288049-bbbda536ad0a?auto=format&fit=crop&q=80&w=2000" 
-              alt="SquadMind Dashboard Mockup" 
-              className="w-full h-auto rounded-[32px] border border-slate-100 shadow-sm transition-transform duration-1000 group-hover:scale-[1.02]"
-            />
-          </div>
-          
-          {/* Decorative Floating Elements */}
-          <div className="absolute -top-10 -right-10 w-40 h-40 bg-[#00d2ff]/20 rounded-full blur-3xl -z-10"></div>
-          <div className="absolute -bottom-10 -left-10 w-60 h-60 bg-blue-200/20 rounded-full blur-3xl -z-10"></div>
+        {/* Browser Mockup */}
+        <div className="w-full max-w-5xl mx-auto bg-white rounded-[24px] md:rounded-[32px] shadow-[0_32px_64px_-16px_rgba(0,31,63,0.1)] border border-slate-100 p-2 md:p-3 relative">
+           <div className="bg-[#f8fafc] rounded-[18px] md:rounded-[24px] border border-slate-100 overflow-hidden flex flex-col">
+              {/* Browser bar */}
+              <div className="h-10 md:h-12 border-b border-slate-200/60 bg-white flex items-center justify-between px-4 md:px-6">
+                 <div className="flex gap-1.5 md:gap-2">
+                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-red-400"></div>
+                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-yellow-400"></div>
+                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-emerald-400"></div>
+                 </div>
+                 <div className="w-1/2 md:w-1/3 h-5 md:h-6 bg-slate-100 rounded-lg flex items-center px-4">
+                    <span className="text-[7px] md:text-[8px] text-slate-300 font-bold uppercase tracking-widest truncate">squadmind.ai/dashboard</span>
+                 </div>
+                 <div className="w-8 md:w-12 h-2"></div>
+              </div>
+              {/* Dashboard Content */}
+              <div className="flex h-[300px] md:h-[450px]">
+                 <div className="w-16 md:w-48 bg-[#001f3f] h-full p-4 md:p-6 space-y-4 shrink-0 overflow-hidden">
+                    <div className="w-full h-6 md:h-8 bg-white/10 rounded-lg mb-6 md:mb-8"></div>
+                    <div className="w-full h-2 md:h-3 bg-white/10 rounded-full"></div>
+                    <div className="w-3/4 h-2 md:h-3 bg-[#00d2ff] rounded-full"></div>
+                    <div className="w-full h-2 md:h-3 bg-white/10 rounded-full"></div>
+                 </div>
+                 <div className="flex-1 bg-white p-6 md:p-10 flex flex-col gap-6 md:gap-10 overflow-hidden">
+                    <div className="flex justify-between items-start">
+                       <div>
+                          <p className="text-[8px] md:text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1 md:mb-2">TOTAL REVENUE</p>
+                          <h3 className="text-xl md:text-3xl font-black text-[#001f3f]">₦342,500.00</h3>
+                       </div>
+                       <div className="w-16 md:w-24 h-8 md:h-12 relative">
+                          <svg className="w-full h-full text-[#00d2ff]" viewBox="0 0 100 40" fill="none" stroke="currentColor" strokeWidth="3">
+                             <path d="M0 30 Q 25 10 50 25 T 100 10" strokeLinecap="round" />
+                          </svg>
+                       </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-10">
+                       <div className="hidden md:flex h-48 bg-[#f8fafc] rounded-3xl border border-slate-100 p-8 flex-col justify-end gap-2">
+                          <div className="flex items-end gap-3 h-32">
+                             <div className="flex-1 h-1/2 bg-[#00d2ff]/20 rounded-t-lg"></div>
+                             <div className="flex-1 h-3/4 bg-[#00d2ff]/40 rounded-t-lg"></div>
+                             <div className="flex-1 h-2/3 bg-[#00d2ff]/60 rounded-t-lg"></div>
+                             <div className="flex-1 h-full bg-[#00d2ff] rounded-t-lg"></div>
+                          </div>
+                       </div>
+                       <div className="flex flex-col gap-4">
+                          <div className="bg-red-50 border border-red-100 rounded-2xl p-4 md:p-6 flex gap-3 md:gap-4">
+                             <div className="w-6 h-6 md:w-8 h-8 bg-red-100 rounded-lg flex items-center justify-center shrink-0">
+                                <ShieldAlert className="w-3 h-3 md:w-4 md:h-4 text-red-600" />
+                             </div>
+                             <div>
+                                <p className="text-[7px] md:text-[8px] font-bold text-red-600 uppercase tracking-widest mb-1">FRAUD ALERT</p>
+                                <p className="text-[9px] md:text-[10px] font-medium text-red-500 leading-tight">Suspicious activity detected in TXN-9021</p>
+                             </div>
+                          </div>
+                          <div className="space-y-3 pt-2">
+                             <div className="w-full h-2 md:h-3 bg-slate-100 rounded-full"></div>
+                             <div className="w-2/3 h-2 md:h-3 bg-slate-100 rounded-full"></div>
+                          </div>
+                       </div>
+                    </div>
+                 </div>
+              </div>
+           </div>
         </div>
       </section>
 
-      {/* Trusted By */}
-      <section className="py-20 border-y border-slate-100 bg-white/50 backdrop-blur-sm">
-        <div className="max-w-7xl mx-auto px-8 text-center">
-          <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-12">Empowering merchants across Nigeria</p>
-          <div className="flex flex-wrap justify-center items-center gap-16 md:gap-24 opacity-40 grayscale hover:grayscale-0 transition-all duration-700">
-             <div className="text-2xl font-black text-slate-900 tracking-tighter">GTCO</div>
-             <div className="text-2xl font-black text-slate-900 tracking-tighter">HABARIPAY</div>
-             <div className="text-2xl font-black text-slate-900 tracking-tighter uppercase">Squad</div>
-             <div className="text-2xl font-black text-slate-900 tracking-tighter">UNILAG</div>
-          </div>
-        </div>
-      </section>
-
-      {/* Core Solutions Section */}
-      <section id="features" className="py-32 px-8 md:px-20 bg-white">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <div className="space-y-12">
-              <div>
-                <h2 className="text-4xl md:text-5xl font-extrabold text-[#001f3f] tracking-tight mb-6">One data pipeline.<br/>Two powerful outputs.</h2>
-                <p className="text-lg text-slate-500 max-w-lg">We transform raw Squad transaction data into automated financial intelligence and a formal credit identity.</p>
-              </div>
-
-              <div className="space-y-8">
-                <div className="flex gap-6">
-                  <div className="w-14 h-14 bg-cyan-50 rounded-2xl flex items-center justify-center shrink-0">
-                    <BarChart3 className="w-7 h-7 text-[#00d2ff]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-[#001f3f] mb-2">Layer 1: Financial Intelligence</h4>
-                    <p className="text-slate-500 text-sm leading-relaxed">Your AI CFO gives you real-time revenue insights, fraud detection, and cash flow forecasts in plain English or Pidgin.</p>
-                  </div>
-                </div>
-
-                <div className="flex gap-6">
-                  <div className="w-14 h-14 bg-blue-50 rounded-2xl flex items-center justify-center shrink-0">
-                    <Award className="w-7 h-7 text-[#001f3f]" />
-                  </div>
-                  <div>
-                    <h4 className="text-xl font-bold text-[#001f3f] mb-2">Layer 2: TrustScore (Credit Identity)</h4>
-                    <p className="text-slate-500 text-sm leading-relaxed">An AI credit score built entirely from Squad history. Turn your data into a lender-ready report in one click.</p>
-                  </div>
-                </div>
-              </div>
-
-              <button className="flex items-center gap-2 text-[#001f3f] font-bold text-lg group">
-                See all features
-                <ChevronRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-              </button>
+      {/* Features Cards */}
+      <section className="py-16 md:py-20 px-6 max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {[
+          { icon: <BarChart className="w-5 h-5 text-[#00d2ff]" />, title: "Revenue Intelligence", text: "Identify growth patterns and revenue leakage automatically. SquadMind analyzes every transaction to find hidden opportunities for sustainable scale." },
+          { icon: <Shield className="w-5 h-5 text-[#00d2ff]" />, title: "Fraud Detection", text: "Stop suspicious activities before they impact your bottom line. Our AI monitors patterns in real-time to safeguard your business revenue." },
+          { icon: <Activity className="w-5 h-5 text-[#00d2ff]" />, title: "Cash Flow Forecast", text: "Predict your financial health 90 days out. Smart forecasting helps you make confident decisions about hiring, inventory, and scaling." },
+          { icon: <ShieldCheck className="w-5 h-5 text-[#00d2ff]" />, title: "TrustScore", text: "Turn your Squad transaction history into a verified credit score. Access loans and financial services for the first time." }
+        ].map((f, i) => (
+          <div key={i} className="bg-white p-6 md:p-8 rounded-[24px] md:rounded-[32px] shadow-sm border border-slate-100 hover:shadow-xl transition-all duration-500 hover:translate-y-[-4px]">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-cyan-50 rounded-2xl flex items-center justify-center mb-6 md:mb-8">
+              {f.icon}
             </div>
-
-            <div className="grid grid-cols-2 gap-6 relative">
-              <div className="space-y-6 pt-12">
-                <div className="bg-[#001f3f] text-white p-8 rounded-[32px] shadow-xl">
-                  <ShieldCheck className="w-10 h-10 text-[#00d2ff] mb-6" />
-                  <h5 className="font-bold mb-2">Fraud Protection</h5>
-                  <p className="text-slate-400 text-xs leading-relaxed">Real-time anomaly detection for POS reversals.</p>
-                </div>
-                <div className="bg-[#f8fafc] p-8 rounded-[32px] border border-slate-100">
-                  <TrendingUp className="w-10 h-10 text-[#001f3f] mb-6" />
-                  <h5 className="font-bold mb-2 text-[#001f3f]">90-Day Forecast</h5>
-                  <p className="text-slate-500 text-xs leading-relaxed">Predict future liquidity with 98% accuracy.</p>
-                </div>
-              </div>
-              <div className="space-y-6">
-                <div className="bg-[#00d2ff] text-[#001f3f] p-8 rounded-[32px] shadow-xl shadow-[#00d2ff]/20">
-                  <Zap className="w-10 h-10 text-[#001f3f] mb-6" />
-                  <h5 className="font-bold mb-2">Instant Setup</h5>
-                  <p className="text-[#001f3f]/70 text-xs leading-relaxed">Connect Squad and get results in 60 seconds.</p>
-                </div>
-                <div className="bg-[#f8fafc] p-8 rounded-[32px] border border-slate-100">
-                  <MessageSquare className="w-10 h-10 text-[#001f3f] mb-6" />
-                  <h5 className="font-bold mb-2 text-[#001f3f]">AI Chatbot</h5>
-                  <p className="text-slate-500 text-xs leading-relaxed">Financial advice in English and Pidgin.</p>
-                </div>
-              </div>
-            </div>
+            <h4 className="text-base md:text-lg font-bold text-[#001f3f] mb-3 md:mb-4">{f.title}</h4>
+            <p className="text-[11px] md:text-xs text-slate-400 font-medium leading-relaxed">{f.text}</p>
           </div>
-        </div>
+        ))}
       </section>
 
-      {/* TrustScore Promo Section */}
-      <section className="py-24 px-8 md:px-20">
-        <div className="max-w-7xl mx-auto bg-[#001f3f] rounded-[50px] p-12 md:p-24 text-center relative overflow-hidden group">
-          <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-[#001f3f] to-[#00d2ff]/20 z-0"></div>
-          
-          <div className="relative z-10">
-            <h2 className="text-4xl md:text-6xl font-extrabold text-white mb-8 tracking-tight">Ready to unlock your credit identity?</h2>
-            <p className="text-xl text-slate-400 max-w-2xl mx-auto mb-12">
-              Stop being invisible. Turn your transaction history into a powerful report that lenders can trust.
+      {/* Experience Section */}
+      <section className="py-20 md:py-32 px-6 max-w-7xl mx-auto">
+        <div className="bg-white rounded-[32px] md:rounded-[40px] p-8 md:p-20 shadow-sm border border-slate-100 flex flex-col lg:flex-row items-center gap-12 md:gap-20">
+          <div className="flex-1 space-y-8 md:space-y-10">
+            <h2 className="text-3xl md:text-5xl font-black text-[#001f3f] tracking-tight">Experience AI-Driven Clarity</h2>
+            <p className="text-slate-400 text-sm font-medium leading-relaxed max-w-xl">
+              SquadMind isn't just a dashboard—it's your dedicated financial intelligence partner. We run thousands of AI simulations on every transaction for summary strategy.
             </p>
-            <button 
-              onClick={onGetStarted}
-              className="bg-white text-[#001f3f] px-12 py-5 rounded-2xl font-bold text-xl shadow-2xl hover:scale-105 active:scale-95 transition-all"
-            >
-              Start Building My TrustScore
-            </button>
+            <div className="space-y-4">
+              {[
+                "Real-time Squad Integration",
+                "Customizable alert thresholds",
+                "Automated weekly CFO summaries"
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-4">
+                  <div className="w-5 h-5 rounded-full bg-cyan-50 flex items-center justify-center">
+                    <CheckCircle2 className="w-3 h-3 text-[#00d2ff]" />
+                  </div>
+                  <span className="text-xs md:text-[13px] font-bold text-slate-600">{item}</span>
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Decorative shapes */}
-          <div className="absolute -bottom-20 -right-20 w-80 h-80 bg-[#00d2ff]/10 rounded-full blur-[100px] pointer-events-none transition-transform duration-700 group-hover:scale-150"></div>
-          <div className="absolute -top-20 -left-20 w-80 h-80 bg-blue-500/10 rounded-full blur-[100px] pointer-events-none transition-transform duration-700 group-hover:scale-150"></div>
+          <div className="flex-1 w-full max-w-md bg-white rounded-[24px] md:rounded-[32px] shadow-2xl shadow-[#001f3f]/10 border border-slate-100 p-6 md:p-8 relative overflow-hidden">
+             <div className="flex justify-between items-start mb-6 md:mb-8 relative z-10">
+                <div>
+                   <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-1">TOTAL REVENUE</p>
+                   <h4 className="text-xl md:text-2xl font-black text-[#001f3f]">₦342,500.00</h4>
+                </div>
+                <div className="w-8 h-8 md:w-10 md:h-10 bg-cyan-50 rounded-2xl flex items-center justify-center">
+                   <Activity className="w-4 h-4 md:w-5 md:h-5 text-[#00d2ff]" />
+                </div>
+             </div>
+             <div className="h-32 md:h-40 w-full relative z-10">
+                <svg className="w-full h-full" viewBox="0 0 400 150">
+                  <defs>
+                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#00d2ff" stopOpacity="0.2" />
+                      <stop offset="100%" stopColor="#00d2ff" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+                  <path d="M0 120 Q 50 130 100 100 T 200 110 T 300 80 T 400 100 V 150 H 0 Z" fill="url(#gradient)" />
+                  <path d="M0 120 Q 50 130 100 100 T 200 110 T 300 80 T 400 100" fill="none" stroke="#00d2ff" strokeWidth="4" strokeLinecap="round" />
+                </svg>
+             </div>
+          </div>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="pt-32 pb-20 px-8 md:px-20 bg-white border-t border-slate-100">
-        <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-20">
-            <div className="col-span-1 md:col-span-1">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-8 h-8 bg-[#001f3f] rounded-lg flex items-center justify-center">
-                  <Sparkles className="w-5 h-5 text-[#00d2ff]" />
-                </div>
-                <span className="text-xl font-bold tracking-tighter text-[#001f3f]">SquadMind</span>
-              </div>
-              <p className="text-slate-400 text-sm leading-relaxed mb-6">
-                AI-powered financial intelligence and credit identity for Nigerian SMEs. Built on Squad APIs.
-              </p>
-            </div>
-            
-            <div>
-               <h5 className="font-bold text-[#001f3f] mb-6 uppercase tracking-widest text-[10px]">Product</h5>
-               <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">AI CFO Dashboard</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Fraud Detection</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">TrustScore Report</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">API Access</a></li>
-               </ul>
-            </div>
-
-            <div>
-               <h5 className="font-bold text-[#001f3f] mb-6 uppercase tracking-widest text-[10px]">Company</h5>
-               <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">About Us</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Success Stories</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Contact</a></li>
-               </ul>
-            </div>
-
-            <div>
-               <h5 className="font-bold text-[#001f3f] mb-6 uppercase tracking-widest text-[10px]">Compliance</h5>
-               <ul className="space-y-4 text-sm text-slate-500 font-medium">
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Privacy Policy</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Terms of Service</a></li>
-                  <li><a href="#" className="hover:text-[#001f3f] transition-all">Data Security</a></li>
-               </ul>
-            </div>
-          </div>
-
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8 pt-12 border-t border-slate-50">
-            <div className="flex items-center gap-8">
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">Powered by Squad</span>
-              <span className="text-[10px] font-bold text-slate-300 uppercase tracking-widest">© 2024 SquadMind Inc.</span>
-            </div>
-            
-            <div className="flex gap-6">
-              {['𝕏', 'In', 'Fb'].map((social) => (
-                <a key={social} href="#" className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center text-[#001f3f] font-bold hover:bg-[#001f3f] hover:text-white transition-all duration-300">
-                  {social}
-                </a>
-              ))}
-            </div>
-          </div>
+      <footer className="mt-auto py-12 px-6 border-t border-slate-100 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
+        <div className="space-y-2">
+           <h4 className="text-lg font-black text-[#001f3f]">SquadMind</h4>
+           <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">© 2024 SquadMind. Powered by Squad.</p>
         </div>
+        <div className="flex flex-wrap justify-center gap-6 md:gap-10 text-[11px] font-bold text-slate-500">
+           <a href="#" className="hover:text-[#001f3f] transition-all">Features</a>
+           <a href="#" className="hover:text-[#001f3f] transition-all">Benefits</a>
+           <a href="#" className="hover:text-[#001f3f] transition-all">Intelligence</a>
+        </div>
+        <button className="px-8 py-3 border border-slate-200 rounded-full text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-slate-50 transition-all cursor-pointer">
+           Connect Now
+        </button>
       </footer>
 
     </div>
