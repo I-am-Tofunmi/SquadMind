@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -25,8 +26,12 @@ import {
   Users
 } from 'lucide-react';
 
-function Dashboard({ onLogout, onNavigate }) {
+function Dashboard() {
   const [isEnglish, setIsEnglish] = useState(true);
+  const navigate = useNavigate();
+
+  const onLogout = () => navigate('/');
+  const onNavigate = (path) => navigate(`/${path}`);
 
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden">
@@ -165,7 +170,7 @@ function Dashboard({ onLogout, onNavigate }) {
             
             <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
               <div className="text-right">
-                <p className="text-sm font-bold text-slate-900 leading-none">Chinedu Stores</p>
+                <p className="text-sm font-bold text-slate-900 leading-none">Lekan Adeyemi</p>
                 <p className="text-[10px] text-slate-500 mt-1 uppercase font-medium">Merchant Admin</p>
               </div>
               <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
@@ -382,7 +387,12 @@ function Dashboard({ onLogout, onNavigate }) {
                     </button>
                     <span className={`text-[10px] font-bold ${!isEnglish ? 'text-slate-900' : 'text-slate-400'}`}>PIDGIN</span>
                   </div>
-                  <button className="text-xs font-bold text-[#00d2ff] hover:underline">Settings</button>
+                  <button 
+                    onClick={() => onNavigate('settings')}
+                    className="text-xs font-bold text-[#00d2ff] hover:underline cursor-pointer"
+                  >
+                    Settings
+                  </button>
                 </div>
               </div>
 
@@ -443,7 +453,7 @@ function Dashboard({ onLogout, onNavigate }) {
             <p className="text-sm text-slate-400 flex items-center gap-2">
               <span className="font-bold text-slate-900">SquadMind</span>
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-              © 2024 SquadMind. Powered by Squad.
+              © 2026 SquadMind. Powered by Squad.
             </p>
             <div className="flex gap-8">
               <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Privacy Policy</a>

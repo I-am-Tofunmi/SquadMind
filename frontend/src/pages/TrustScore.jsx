@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -19,13 +20,16 @@ import {
   Share2,
   CheckCircle2,
   Mail,
-  MoreVertical,
-  Info,
   ArrowRight,
-  ShieldCheck
+  ShieldCheck,
+  Landmark,
+  Info
 } from 'lucide-react';
 
-function TrustScore({ onLogout, onNavigate }) {
+function TrustScore() {
+  const navigate = useNavigate();
+  const onLogout = () => navigate('/');
+  const onNavigate = (path) => navigate(`/${path}`);
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
       
@@ -125,6 +129,14 @@ function TrustScore({ onLogout, onNavigate }) {
           <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">TrustScore</h2>
           
           <div className="flex items-center gap-2 md:gap-4">
+            <div className="hidden lg:relative lg:w-64">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+              <input 
+                type="text" 
+                placeholder="Search data assets..." 
+                className="w-full pl-10 pr-4 py-2.5 bg-[#f1f5f9] border-none rounded-lg text-sm focus:ring-2 focus:ring-[#00d2ff]/30 outline-none"
+              />
+            </div>
             <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
               <Mail className="w-5 h-5" />
             </button>
@@ -164,11 +176,11 @@ function TrustScore({ onLogout, onNavigate }) {
                <p className="text-slate-500 text-sm font-medium mb-10 text-center">Based on last 90 days of transactions</p>
                
                <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
-                  <button className="flex items-center justify-center gap-2 bg-[#001f3f] text-white font-bold py-3.5 px-8 rounded-xl text-xs transition-all shadow-lg">
+                  <button style={{ cursor: "pointer" }}   className="flex items-center justify-center gap-2 bg-[#001f3f] text-white font-bold py-3.5 px-8 rounded-xl text-xs transition-all shadow-lg">
                     <Download className="w-4 h-4" />
                     Download Report
                   </button>
-                  <button className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3.5 px-8 rounded-xl text-xs transition-all">
+                  <button style={{ cursor: "pointer" }}   className="flex items-center justify-center gap-2 bg-white border border-slate-200 text-slate-600 font-bold py-3.5 px-8 rounded-xl text-xs transition-all">
                     <Share2 className="w-4 h-4" />
                     Share with Lender
                   </button>
@@ -211,21 +223,29 @@ function TrustScore({ onLogout, onNavigate }) {
             </div>
           </div>
 
-          {/* Score Breakdown */}
           <div className="mb-12">
-            <h3 className="text-xl font-bold text-slate-900 mb-6">Score Breakdown</h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4">
+            <div className="flex justify-between items-end mb-6">
+              <div>
+                <h3 className="text-xl font-bold text-slate-900 mb-1">Score Breakdown</h3>
+                <p className="text-sm text-slate-400 font-medium">Individual metrics contributing to your overall score</p>
+              </div>
+              <button className="text-xs font-bold text-[#001f3f] hover:underline transition-all">View Historical Data</button>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                {[
-                 { label: 'REVENUE', score: '22/25', progress: '88%', color: 'cyan' },
-                 { label: 'CUSTOMERS', score: '18/20', progress: '90%', color: 'cyan' },
-                 { label: 'FRAUD RATE', score: '18/20', progress: '90%', color: 'emerald' },
-                 { label: 'CASHFLOW', score: '16/20', progress: '80%', color: 'cyan' },
-                 { label: 'GROWTH', score: '0/15', progress: '5%', color: 'red' }
+                 { label: 'REVENUE CONSISTENCY', score: '22/25', sub: '+2.4%', progress: '88%', color: 'cyan' },
+                 { label: 'REPEAT CUSTOMERS', score: '18/20', sub: 'STABLE', progress: '90%', color: 'cyan' },
+                 { label: 'LOW FRAUD RATE', score: '18/20', sub: 'EXCELLENT', progress: '90%', color: 'emerald' },
+                 { label: 'CASHFLOW STABILITY', score: '16/20', sub: 'STABLE', progress: '80%', color: 'cyan' },
+                 { label: 'GROWTH TREND', score: '0/15', sub: 'NEEDS IMPROVEMENT', progress: '5%', color: 'red' }
                ].map((metric, i) => (
                  <div key={i} className={`bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col ${metric.color === 'red' ? 'border-l-4 border-l-red-500' : ''}`}>
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">{metric.label}</p>
-                    <span className="text-2xl font-bold text-slate-900 mb-4">{metric.score}</span>
-                    <div className="mt-auto h-1 bg-slate-50 rounded-full overflow-hidden">
+                    <p className="text-[9px] font-bold text-slate-400 uppercase tracking-widest mb-4 leading-tight">{metric.label}</p>
+                    <div className="flex items-baseline justify-between mb-4">
+                      <span className="text-2xl font-bold text-slate-900">{metric.score.split('/')[0]}<span className="text-sm text-slate-300">/{metric.score.split('/')[1]}</span></span>
+                      <span className={`text-[9px] font-black tracking-tighter ${metric.color === 'red' ? 'text-red-500' : metric.color === 'emerald' ? 'text-emerald-500' : 'text-[#00d2ff]'}`}>{metric.sub}</span>
+                    </div>
+                    <div className="mt-auto h-1.5 bg-slate-50 rounded-full overflow-hidden">
                        <div className={`h-full ${metric.color === 'red' ? 'bg-red-500' : metric.color === 'emerald' ? 'bg-emerald-500' : 'bg-cyan-400'}`} style={{width: metric.progress}}></div>
                     </div>
                  </div>
@@ -233,8 +253,64 @@ function TrustScore({ onLogout, onNavigate }) {
             </div>
           </div>
 
-          <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2024 SQUADMIND AI</p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
+             {/* What This Means Card */}
+             <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3 mb-8">
+                   <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                      <Info className="w-5 h-5 text-[#00d2ff]" />
+                   </div>
+                   <h4 className="text-lg font-bold text-slate-900">What This Means</h4>
+                </div>
+                <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-10 font-medium opacity-90">
+                   Your TrustScore of 74 indicates a high level of operational reliability. This score is generated by analyzing transaction patterns, liquidity ratios, and fraud prevention success over the past 90 days within the SquadMind ecosystem.
+                </p>
+                <div className="p-6 bg-[#f8fafc] rounded-2xl border-l-4 border-slate-900">
+                   <h5 className="text-sm font-bold text-slate-900 mb-2">Growth Opportunity</h5>
+                   <p className="text-xs text-slate-500 leading-relaxed font-medium">
+                      Your Growth Trend metric is currently low because of seasonal adjustments. Reaching a score of 80+ could unlock lower interest rates from our lending partners.
+                   </p>
+                </div>
+             </div>
+
+             {/* Lender Ready Card */}
+             <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-sm border border-slate-100 flex flex-col">
+                <div className="flex items-center gap-3 mb-8">
+                   <div className="w-10 h-10 rounded-xl bg-cyan-50 flex items-center justify-center">
+                      <Landmark className="w-5 h-5 text-[#00d2ff]" />
+                   </div>
+                   <h4 className="text-lg font-bold text-slate-900">Lender Ready</h4>
+                </div>
+                <div className="space-y-5 mb-10 flex-1">
+                   {[
+                     "Identity Verified",
+                     "Squad Account Active (> 1yr)",
+                     "Transaction History Audited",
+                     "TrustScore Meeting Minimum Threshold"
+                   ].map((step, i) => (
+                     <div key={i} className="flex items-center gap-4">
+                        <CheckCircle2 className="w-5 h-5 text-emerald-500" />
+                        <span className="text-sm font-bold text-slate-700">{step}</span>
+                     </div>
+                   ))}
+                </div>
+                <div className="p-8 bg-cyan-50/30 rounded-3xl border border-cyan-100/50">
+                   <p className="text-xs font-bold text-slate-500 mb-6 text-center">You are ready to apply for business credit</p>
+                   <button style={{ cursor: "pointer" }}   className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-white font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#00d2ff]/20">
+                      Find Lenders
+                      <ArrowRight className="w-4 h-4" />
+                   </button>
+                </div>
+             </div>
+          </div>
+
+          <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+               <span className="text-slate-400">POWERED BY SQUAD</span>
+               <a href="#" className="hover:text-slate-500 transition-colors">Privacy Policy</a>
+               <a href="#" className="hover:text-slate-500 transition-colors">Terms of Service</a>
+            </div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND v2.4.1</p>
           </footer>
         </div>
       </main>
@@ -267,8 +343,6 @@ function TrustScore({ onLogout, onNavigate }) {
   );
 }
 
-const Landmark = ({ className }) => (
-  <svg className={className} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="22" x2="21" y2="22"></line><line x1="6" y1="18" x2="6" y2="11"></line><line x1="10" y1="18" x2="10" y2="11"></line><line x1="14" y1="18" x2="14" y2="11"></line><line x1="18" y1="18" x2="18" y2="11"></line><polygon points="12 2 20 7 4 7 12 2"></polygon></svg>
-);
+
 
 export default TrustScore;

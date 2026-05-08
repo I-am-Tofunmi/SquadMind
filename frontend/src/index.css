@@ -5,6 +5,10 @@
   --font-outfit: "Outfit", sans-serif;
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   font-family: "Outfit", system-ui, sans-serif;
 }

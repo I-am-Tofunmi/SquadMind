@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -21,10 +22,18 @@ import {
   Clock,
   Download,
   CheckSquare,
-  Sparkles
+  Sparkles,
+  Layout,
+  Grid,
+  PieChart,
+  Activity,
+  History
 } from 'lucide-react';
 
-function FraudDetection({ onLogout, onNavigate }) {
+function FraudDetection() {
+  const navigate = useNavigate();
+  const onLogout = () => navigate('/');
+  const onNavigate = (path) => navigate(`/${path}`);
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
       
@@ -131,14 +140,14 @@ function FraudDetection({ onLogout, onNavigate }) {
         
         {/* Top Header Bar */}
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Fraud Monitor</h2>
+          <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Fraud Detection</h2>
           
           <div className="flex items-center gap-2 md:gap-4">
-            <div className="hidden lg:relative lg:w-64">
+            <div className="hidden lg:relative lg:w-72">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input 
                 type="text" 
-                placeholder="Search..." 
+                placeholder="Search transactions..." 
                 className="w-full pl-10 pr-4 py-2.5 bg-[#f1f5f9] border-none rounded-lg text-sm focus:ring-2 focus:ring-[#00d2ff]/30 outline-none"
               />
             </div>
@@ -162,26 +171,27 @@ function FraudDetection({ onLogout, onNavigate }) {
             {/* Protection Status Card */}
             <div className="lg:col-span-2 bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row">
               <div className="p-6 md:p-10 flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-cyan-50 text-[#00d2ff] rounded-lg text-[9px] font-bold tracking-widest mb-6 border border-cyan-100 uppercase">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#e0faff] text-[#00d2ff] rounded-lg text-[9px] font-bold tracking-widest mb-10 border border-[#00d2ff]/20 uppercase">
                   <Sparkles className="w-3 h-3" />
-                  AI Monitor
+                  AI Insight
                 </div>
                 
-                <h3 className="text-2xl md:text-3xl font-bold text-slate-900 mb-4 leading-tight">
+                <h3 className="text-2xl md:text-4xl font-bold text-[#001f3f] mb-4 leading-tight">
                   Active Protection Enabled
                 </h3>
                 
-                <p className="text-slate-500 text-sm md:text-base mb-8 leading-relaxed">
-                  SquadMind is currently monitoring real-time streams. 3 threats neutralized in the last 24 hours.
+                <p className="text-slate-400 text-sm md:text-base mb-12 leading-relaxed max-w-md font-medium opacity-80">
+                  SquadMind is currently monitoring 1,240 real-time transaction streams. 3 threats were successfully neutralized in the last 24 hours.
                 </p>
                 
-                <button className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-3.5 px-8 rounded-xl text-sm transition-all shadow-lg">
-                  Full Report
+                <button style={{cursor:'pointer'}}   className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20">
+                  View Protection Report
                 </button>
               </div>
               
-              <div className="w-full md:w-1/3 bg-slate-100/50 border-l border-slate-50 flex items-center justify-center p-8">
-                 <ShieldCheck className="w-16 h-16 md:w-20 md:h-20 text-[#00d2ff] drop-shadow-[0_0_15px_rgba(0,210,255,0.3)]" />
+              <div className="w-full md:w-1/3 bg-[#f8fafc] border-l border-slate-50 flex items-center justify-center p-8 relative overflow-hidden">
+                 <div className="w-full h-full absolute inset-0 opacity-10 bg-[radial-gradient(#00d2ff_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                 <ShieldCheck className="w-20 h-20 md:w-24 md:h-24 text-[#00d2ff] relative z-10 drop-shadow-[0_0_20px_rgba(0,210,255,0.4)]" />
               </div>
             </div>
 
@@ -198,9 +208,9 @@ function FraudDetection({ onLogout, onNavigate }) {
                 <div className="h-full bg-red-500 w-[94%] rounded-full shadow-[0_0_10px_rgba(239,68,68,0.3)]"></div>
               </div>
               
-              <div className="flex items-start gap-3 p-4 bg-red-50 rounded-2xl border border-red-100">
+              <div className="flex items-start gap-3 p-4 bg-red-50/50 rounded-2xl border border-red-100/50">
                 <AlertTriangle className="w-5 h-5 text-red-500 shrink-0" />
-                <p className="text-xs font-bold text-red-700 leading-tight uppercase">Critical Attention</p>
+                <p className="text-[10px] font-bold text-red-600 leading-tight uppercase tracking-widest">Critical Attention Required</p>
               </div>
             </div>
           </div>
@@ -214,75 +224,139 @@ function FraudDetection({ onLogout, onNavigate }) {
               </div>
               
               <div className="flex items-center gap-3">
-                <button className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold text-slate-600 uppercase">Export</button>
-                <button className="px-4 py-2 bg-slate-50 border border-slate-100 rounded-xl text-[10px] font-bold text-slate-600 uppercase">Resolve All</button>
+                <button className="px-6 py-2.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-[10px] font-black text-slate-500 hover:text-[#001f3f] transition-all uppercase tracking-widest cursor-pointer">Export CSV</button>
+                <button className="px-6 py-2.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-[10px] font-black text-slate-500 hover:text-[#001f3f] transition-all uppercase tracking-widest cursor-pointer">Mark All Resolved</button>
               </div>
             </div>
             
             <div className="overflow-x-auto">
               <table className="w-full text-left min-w-[600px]">
                 <thead>
-                  <tr className="bg-slate-50/50 border-b border-slate-50">
-                    <th className="p-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DATE</th>
-                    <th className="p-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">DESCRIPTION</th>
-                    <th className="p-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">AMOUNT</th>
-                    <th className="p-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest">RISK</th>
+                  <tr className="bg-[#f8fafc]/50 border-b border-slate-50">
+                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">DATE</th>
+                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCRIPTION</th>
+                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">AMOUNT</th>
+                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">RISK LEVEL</th>
+                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">AI REASON</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  <tr className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-6 text-xs font-medium text-slate-500 uppercase">Oct 12</td>
+                  <tr className="hover:bg-[#f8fafc] transition-colors group">
+                    <td className="p-6 text-[11px] font-bold text-slate-400 uppercase">Oct 12</td>
                     <td className="p-6">
-                      <p className="text-sm font-bold text-slate-900 mb-1">POS Reversal Spam</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">TXN-9921-XF</p>
+                      <p className="text-sm font-black text-[#001f3f] mb-1">Reversal from POS-221</p>
+                      <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">TXN-9921-XF</p>
                     </td>
-                    <td className="p-6 text-sm font-bold text-slate-900">₦12,500</td>
+                    <td className="p-6 text-sm font-black text-[#001f3f]">₦12,500</td>
                     <td className="p-6">
-                      <span className="px-2.5 py-1 bg-red-50 text-red-600 text-[9px] font-bold uppercase tracking-wider rounded-md">High Risk</span>
+                      <span className="px-4 py-1 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-red-500/20">High Risk</span>
                     </td>
+                    <td className="p-6 text-[10px] text-slate-300 font-medium italic text-center">"Unusual..."</td>
                   </tr>
-                  <tr className="hover:bg-slate-50/50 transition-colors">
-                    <td className="p-6 text-xs font-medium text-slate-500 uppercase">Oct 11</td>
+                  <tr className="hover:bg-[#f8fafc] transition-colors group">
+                    <td className="p-6 text-[11px] font-bold text-slate-400 uppercase">Oct 11</td>
                     <td className="p-6">
-                      <p className="text-sm font-bold text-slate-900 mb-1">Duplicate Payment</p>
-                      <p className="text-[9px] text-slate-400 font-bold uppercase tracking-wider">TXN-4820-MQ</p>
+                      <p className="text-sm font-black text-[#001f3f] mb-1">Duplicate Payment</p>
+                      <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">TXN-4820-MQ</p>
                     </td>
-                    <td className="p-6 text-sm font-bold text-slate-900">₦5,000</td>
+                    <td className="p-6 text-sm font-black text-[#001f3f]">₦5,000</td>
                     <td className="p-6">
-                      <span className="px-2.5 py-1 bg-orange-50 text-orange-600 text-[9px] font-bold uppercase tracking-wider rounded-md">Medium</span>
+                      <span className="px-4 py-1 bg-[#fff7ed] text-[#f97316] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#f97316]/20">Medium Risk</span>
                     </td>
+                    <td className="p-6 text-[10px] text-slate-300 font-medium italic text-center">"Two..."</td>
+                  </tr>
+                  <tr className="hover:bg-[#f8fafc] transition-colors group">
+                    <td className="p-6 text-[11px] font-bold text-slate-400 uppercase">Oct 09</td>
+                    <td className="p-6">
+                      <p className="text-sm font-black text-[#001f3f] mb-1">Large Transfer</p>
+                      <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">TXN-1102-ZZ</p>
+                    </td>
+                    <td className="p-6 text-sm font-black text-[#001f3f]">₦85,000</td>
+                    <td className="p-6">
+                      <span className="px-4 py-1 bg-[#f0f9ff] text-[#0ea5e9] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#0ea5e9]/20">Low Risk</span>
+                    </td>
+                    <td className="p-6 text-[10px] text-slate-300 font-medium italic text-center">"Transacti..."</td>
                   </tr>
                 </tbody>
               </table>
             </div>
           </div>
 
-          {/* Activity Heatmap Area */}
-          <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 mb-10">
-              <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-8">Activity Heatmap</h3>
-              <div className="grid grid-cols-7 gap-2 md:gap-4">
-                 {[...Array(28)].map((_, i) => (
-                   <div key={i} className={`aspect-square rounded-md md:rounded-lg ${i % 7 === 0 ? 'bg-red-500' : i % 5 === 0 ? 'bg-orange-300' : 'bg-slate-50'}`}></div>
-                 ))}
-              </div>
-              <div className="mt-8 flex justify-center gap-6">
-                 <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded bg-slate-100"></div>
-                   <span className="text-[9px] font-bold text-slate-400 uppercase">Low</span>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-10">
+             {/* Activity Heatmap Area */}
+             <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col items-center">
+                 <div className="flex items-center gap-3 mb-10 self-start">
+                    <Grid className="w-5 h-5 text-[#001f3f]" />
+                    <h3 className="text-lg font-bold text-slate-900">Activity Heatmap</h3>
                  </div>
-                 <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded bg-orange-300"></div>
-                   <span className="text-[9px] font-bold text-slate-400 uppercase">Medium</span>
+                 
+                 <div className="flex gap-4 w-full max-w-[480px]">
+                    <div className="flex flex-col justify-between py-1 text-[9px] font-black text-slate-300 uppercase h-[180px]">
+                       <span>Morning</span>
+                       <span>Afternoon</span>
+                       <span>Evening</span>
+                       <span>Night</span>
+                    </div>
+                    <div className="flex-1 flex flex-col gap-3">
+                       <div className="flex justify-between px-2 text-[9px] font-black text-slate-300 uppercase mb-2">
+                          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+                       </div>
+                       <div className="grid grid-cols-7 gap-3">
+                          {[...Array(28)].map((_, i) => (
+                            <div key={i} className={`aspect-square rounded-lg transition-all ${[9, 15, 22, 23].includes(i) ? 'bg-red-500' : [8, 16, 17, 18, 19, 21].includes(i) ? 'bg-orange-100' : 'bg-[#f1f5f9]'}`}></div>
+                          ))}
+                       </div>
+                    </div>
                  </div>
-                 <div className="flex items-center gap-2">
-                   <div className="w-3 h-3 rounded bg-red-500"></div>
-                   <span className="text-[9px] font-bold text-slate-400 uppercase">Critical</span>
+
+                 <div className="mt-12 flex justify-center gap-8">
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-[#f1f5f9]"></div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">LOW</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-orange-100"></div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">MEDIUM</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-red-500"></div>
+                      <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SUSPICIOUS</span>
+                    </div>
                  </div>
-              </div>
+             </div>
+
+             {/* Security Recommendations */}
+             <div className="bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100">
+                <div className="flex items-center gap-3 mb-10">
+                   <div className="w-10 h-10 rounded-xl bg-red-50 flex items-center justify-center">
+                      <ShieldAlert className="w-5 h-5 text-red-500" />
+                   </div>
+                   <h3 className="text-lg font-bold text-slate-900">Security Recommendations</h3>
+                </div>
+                
+                <div className="space-y-6">
+                   {[
+                     { text: 'Update withdrawal limits for POS-221 to prevent further automated reversal spam.', icon: <CheckCircle2 className="text-[#00d2ff]" />, bg: 'bg-[#f0f9ff]' },
+                     { text: 'Enable 2FA for all transfers exceeding ₦50,000 to mitigate high-value transfer risks.', icon: <CheckCircle2 className="text-[#00d2ff]" />, bg: 'bg-[#f0f9ff]' },
+                     { text: 'Merchant account verification pending for 12 secondary terminals.', icon: <History className="text-slate-400" />, bg: 'bg-slate-50' }
+                   ].map((rec, i) => (
+                     <div key={i} className={`p-6 rounded-2xl border border-slate-50 flex items-center gap-5 ${rec.bg}`}>
+                        <div className="shrink-0">{React.cloneElement(rec.icon, { className: 'w-5 h-5' })}</div>
+                        <p className="text-xs md:text-sm font-medium text-slate-600 leading-relaxed">{rec.text}</p>
+                     </div>
+                   ))}
+                </div>
+             </div>
           </div>
 
-          <footer className="py-12 border-t border-slate-100 text-center md:text-left">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2024 SQUADMIND AI</p>
+          <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+               <span className="text-slate-400 font-black">SQUADMIND AI</span>
+               <a href="#" className="hover:text-slate-500 transition-colors">Privacy Policy</a>
+               <a href="#" className="hover:text-slate-500 transition-colors">Terms of Service</a>
+               <a href="#" className="hover:text-slate-500 transition-colors">Contact Support</a>
+            </div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND. POWERED BY SQUAD.</p>
           </footer>
         </div>
       </main>

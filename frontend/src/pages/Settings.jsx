@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, 
   Wallet, 
@@ -19,13 +20,16 @@ import {
   Copy,
   Globe,
   MessageSquare,
-  Activity,
-  CheckCircle2,
   ChevronDown,
-  ShieldCheck
+  ShieldCheck,
+  Languages,
+  Activity as LatencyIcon
 } from 'lucide-react';
 
-function Settings({ onLogout, onNavigate }) {
+function Settings() {
+  const navigate = useNavigate();
+  const onLogout = () => navigate('/');
+  const onNavigate = (path) => navigate(`/${path}`);
   const [language, setLanguage] = useState('english');
   const [alerts, setAlerts] = useState({
     whatsapp: true,
@@ -165,7 +169,9 @@ function Settings({ onLogout, onNavigate }) {
             </div>
             <div className="bg-white px-4 py-2 rounded-xl shadow-sm border border-slate-100 flex items-center gap-2">
                <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
-               <span className="text-[10px] md:text-[11px] font-bold text-slate-500 uppercase tracking-wider">99.9% Uptime</span>
+               <span className="text-[10px] md:text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+                 System Health: <span className="text-[#00d2ff]">99.9% Uptime</span>
+               </span>
             </div>
           </div>
 
@@ -195,14 +201,38 @@ function Settings({ onLogout, onNavigate }) {
 
                {/* API Key */}
                <div className="bg-[#001f3f] rounded-2xl md:rounded-3xl p-6 md:p-10 text-white relative overflow-hidden">
-                  <h3 className="text-lg md:text-xl font-bold mb-2">Squad API Key</h3>
-                  <p className="text-slate-400 text-sm mb-8">Production environment link</p>
-                  <div className="bg-[#112f4d] rounded-xl p-6 flex flex-col md:flex-row items-center justify-between gap-4">
-                     <p className="text-xs md:text-sm font-mono text-cyan-400 break-all">sk_prod_••••••••••••••••••••4j92</p>
-                     <button onClick={copyKey} className="w-full md:w-auto flex items-center justify-center gap-2 px-4 py-2 bg-white/5 border border-white/10 rounded-lg text-xs font-bold transition-all">
-                        {copied ? <CheckCircle2 className="w-4 h-4 text-emerald-400" /> : <Copy className="w-4 h-4" />}
-                        {copied ? 'Copied' : 'Copy'}
+                  <div className="flex justify-between items-center mb-2">
+                    <h3 className="text-lg md:text-xl font-bold">Squad API Integration</h3>
+                    <div className="px-3 py-1 bg-cyan-400/20 text-cyan-400 rounded-full text-[9px] font-bold tracking-widest border border-cyan-400/30 uppercase">Connected</div>
+                  </div>
+                  <p className="text-slate-400 text-sm mb-8">Secure production environment link.</p>
+                  <div className="bg-[#0c243d] rounded-xl p-5 md:p-6 flex flex-col md:flex-row items-center justify-between gap-4 border border-white/5">
+                     <div className="flex flex-col gap-1.5 overflow-hidden w-full md:w-auto">
+                        <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">PRODUCTION API KEY</p>
+                        <p className="text-xs md:text-sm font-mono text-cyan-400 break-all">sk_prod_••••••••••••••••••••4j92</p>
+                     </div>
+                     <button onClick={copyKey} className="w-full md:w-auto flex items-center justify-center gap-2 px-6 py-2.5 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-xs font-bold transition-all whitespace-nowrap">
+                        <Copy className="w-4 h-4" />
+                        {copied ? 'Copied' : 'Copy Key'}
                      </button>
+                  </div>
+               </div>
+
+               {/* AI Language & Tone */}
+               <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
+                  <div className="flex items-center gap-3 mb-8">
+                     <Languages className="w-5 h-5 text-[#001f3f]" />
+                     <h3 className="text-lg md:text-xl font-bold text-slate-900">AI Language & Tone</h3>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                     <div className="p-6 rounded-2xl bg-white border-2 border-[#00d2ff] shadow-md shadow-[#00d2ff]/5 relative overflow-hidden">
+                        <h4 className="text-sm font-bold text-slate-900 mb-2">English (Professional)</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">Standard corporate dialect. Precise, formal, and objective financial reporting.</p>
+                     </div>
+                     <div className="p-6 rounded-2xl bg-slate-50/50 border border-slate-100 hover:border-slate-200 transition-colors">
+                        <h4 className="text-sm font-bold text-slate-900 mb-2">Pidgin (Casual)</h4>
+                        <p className="text-xs text-slate-500 leading-relaxed font-medium">Local flavor for quick insights. Relatable, energetic, and efficient communication.</p>
+                     </div>
                   </div>
                </div>
             </div>
@@ -210,30 +240,75 @@ function Settings({ onLogout, onNavigate }) {
             {/* Right Column */}
             <div className="space-y-8">
                {/* Alerts */}
-               <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
-                  <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-8">AI Alerts</h3>
-                  <div className="space-y-6">
-                     {['WhatsApp', 'SMS', 'Email'].map(type => (
-                        <div key={type} className="flex items-center justify-between">
+               <div className="bg-white rounded-2xl md:rounded-3xl p-8 md:p-10 shadow-sm border border-slate-100">
+                  <div className="flex items-center gap-3 mb-10">
+                     <Bell className="w-5 h-5 text-slate-900" />
+                     <h3 className="text-lg font-bold text-slate-900">AI Alerts</h3>
+                  </div>
+                  <div className="space-y-8">
+                     {[
+                       { type: 'WhatsApp Alerts', sub: 'Instant anomalies detected' },
+                       { type: 'SMS Alerts', sub: 'Priority security events' },
+                       { type: 'Email Digests', sub: 'Daily financial health' }
+                     ].map((item, i) => (
+                        <div key={item.type} className="flex items-center justify-between">
                            <div>
-                              <p className="text-sm font-bold text-slate-900">{type}</p>
-                              <p className="text-[10px] text-slate-400">System updates</p>
+                              <p className="text-sm font-bold text-slate-900">{item.type}</p>
+                              <p className="text-[10px] text-slate-400 font-medium">{item.sub}</p>
                            </div>
                            <button 
-                             onClick={() => toggleAlert(type.toLowerCase())}
-                             className={`w-10 h-5 rounded-full relative transition-colors ${alerts[type.toLowerCase()] ? 'bg-[#00d2ff]' : 'bg-slate-200'}`}
+                             onClick={() => toggleAlert(item.type.split(' ')[0].toLowerCase())}
+                             className={`w-11 h-6 rounded-full relative transition-all duration-300 ${alerts[item.type.split(' ')[0].toLowerCase()] ? 'bg-[#00d2ff]' : 'bg-slate-200'}`}
                            >
-                             <div className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${alerts[type.toLowerCase()] ? 'right-1' : 'left-1'}`}></div>
+                             <div className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all duration-300 shadow-sm ${alerts[item.type.split(' ')[0].toLowerCase()] ? 'right-1' : 'left-1'}`}></div>
                            </button>
                         </div>
+                     ))}
+                  </div>
+
+                  <div className="mt-12 p-6 bg-cyan-50/50 rounded-2xl border border-cyan-100/50 flex items-center gap-4">
+                     <div className="w-10 h-10 rounded-full bg-[#00d2ff]/10 flex items-center justify-center">
+                        <Globe className="w-5 h-5 text-[#00d2ff]" />
+                     </div>
+                     <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest leading-tight">GLOBAL INSIGHTS ACTIVE</span>
+                  </div>
+               </div>
+
+               {/* Node Latency */}
+               <div className="bg-white rounded-2xl md:rounded-3xl p-8 shadow-sm border border-slate-100">
+                  <div className="flex justify-between items-center mb-8">
+                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">NODE LATENCY</p>
+                     <span className="text-[10px] font-bold text-emerald-500 uppercase">STABLE</span>
+                  </div>
+                  <div className="flex items-end gap-1.5 h-12">
+                     {[40, 60, 45, 85, 55, 65, 45, 55].map((h, i) => (
+                        <div key={i} className={`flex-1 rounded-t-sm transition-all ${i === 3 ? 'bg-[#00d2ff]' : 'bg-[#00d2ff]/20'}`} style={{ height: `${h}%` }}></div>
                      ))}
                   </div>
                </div>
             </div>
           </div>
 
-          <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left">
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2024 SQUADMIND AI</p>
+          {/* Deactivate Account */}
+          <div className="mt-12 bg-red-50/50 rounded-3xl p-8 md:p-12 border border-red-100 flex flex-col md:flex-row items-center justify-between gap-8">
+             <div className="space-y-2 text-center md:text-left">
+                <h3 className="text-lg font-bold text-red-600">Deactivate Account</h3>
+                <p className="text-sm text-red-500 font-medium opacity-80 leading-relaxed max-w-xl">
+                   Once deactivated, all access to SquadMind's predictive intelligence and history will be permanently revoked.
+                </p>
+             </div>
+             <button className="px-10 py-4 bg-white border-2 border-red-100 text-red-500 font-bold rounded-2xl hover:bg-red-500 hover:text-white hover:border-red-500 transition-all shadow-sm shadow-red-100">
+                Deactivate
+             </button>
+          </div>
+
+          <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
+            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
+               <span className="text-slate-400">POWERED BY SQUAD</span>
+               <a href="#" className="hover:text-slate-500 transition-colors">Privacy Policy</a>
+               <a href="#" className="hover:text-slate-500 transition-colors">Terms of Service</a>
+            </div>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND v2.4.1</p>
           </footer>
         </div>
       </main>
