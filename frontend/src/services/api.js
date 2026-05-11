@@ -29,7 +29,7 @@ export const authFetch = async (endpoint, options = {}) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.detail || 'API request failed');
+      throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'API request failed');
     }
 
     return data;
@@ -50,7 +50,7 @@ export const login = async (email, password) => {
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.detail || 'Login failed');
+      throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Login failed');
     }
 
     if (data.access_token) {
@@ -68,13 +68,18 @@ export const register = async (businessName, email, password) => {
     const response = await fetch(`${API_BASE}/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ business_name: businessName, email, password }),
+      body: JSON.stringify({ 
+        business_name: businessName, 
+        email, 
+        password,
+        username: email
+      }),
     });
 
     const data = await response.json();
 
     if (!response.ok) {
-      throw new Error(data.message || data.detail || 'Registration failed');
+      throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Registration failed');
     }
 
     return data;
