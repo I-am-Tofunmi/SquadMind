@@ -23,7 +23,8 @@ function Landing() {
   const [isMenuOpen, setIsMenuOpen] = React.useState(false);
   const navigate = useNavigate();
 
-  const handleGetStarted = () => navigate('/connect');
+  const handleGetStarted = () => navigate('/register');
+  const handleLogin = () => navigate('/login');
 
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-outfit text-slate-900 overflow-x-hidden">
@@ -42,7 +43,7 @@ function Landing() {
 
         <div className="flex items-center gap-4">
           <button 
-            onClick={handleGetStarted}
+            onClick={handleLogin}
             className="text-[13px] font-bold text-white/80 hover:text-white transition-all cursor-pointer hidden sm:block"
           >
             Login
@@ -67,7 +68,7 @@ function Landing() {
              <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Features</a>
              <a href="#intelligence" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Intelligence</a>
              <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Pricing</a>
-             <button onClick={handleGetStarted} className="text-left text-lg font-bold text-white/60">Login</button>
+             <button onClick={handleLogin} className="text-left text-lg font-bold text-white/60">Login</button>
           </div>
         )}
       </nav>

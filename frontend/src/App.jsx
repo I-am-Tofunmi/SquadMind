@@ -1,5 +1,5 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Dashboard from './pages/Dashboard';
 import Landing from './pages/Landing';
 import Connection from './pages/Connection';
@@ -8,18 +8,82 @@ import FraudDetection from './pages/FraudDetection';
 import Alerts from './pages/Alerts';
 import TrustScore from './pages/TrustScore';
 import Settings from './pages/Settings';
+import Login from './pages/Login';
+import Register from './pages/Register';
+import { removeToken } from './services/api';
 
 function App() {
+  const navigate = useNavigate();
+
+  const handleLogout = () => {
+    removeToken();
+    navigate('/login');
+  };
+
+  const handleNavigate = (path) => {
+    navigate(path);
+  };
+
   return (
     <Routes>
       <Route path="/" element={<Landing />} />
+      <Route path="/login" element={<Login />} />
+      <Route path="/register" element={<Register />} />
       <Route path="/connect" element={<Connection />} />
-      <Route path="/dashboard" element={<Dashboard onLogout={() => {}} onNavigate={() => {}} />} />
-      <Route path="/cashflow" element={<CashFlow onLogout={() => {}} onNavigate={() => {}} />} />
-      <Route path="/frauddetection" element={<FraudDetection onLogout={() => {}} onNavigate={() => {}} />} />
-      <Route path="/alerts" element={<Alerts onLogout={() => {}} onNavigate={() => {}} />} />
-      <Route path="/trustscore" element={<TrustScore onLogout={() => {}} onNavigate={() => {}} />} />
-      <Route path="/settings" element={<Settings onLogout={() => {}} onNavigate={() => {}} />} />
+      <Route 
+        path="/dashboard" 
+        element={
+          <Dashboard 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
+      <Route 
+        path="/cashflow" 
+        element={
+          <CashFlow 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
+      <Route 
+        path="/frauddetection" 
+        element={
+          <FraudDetection 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
+      <Route 
+        path="/alerts" 
+        element={
+          <Alerts 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
+      <Route 
+        path="/trustscore" 
+        element={
+          <TrustScore 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
+      <Route 
+        path="/settings" 
+        element={
+          <Settings 
+            onLogout={handleLogout} 
+            onNavigate={handleNavigate} 
+          />
+        } 
+      />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );
