@@ -21,7 +21,8 @@ import {
   X,
   TrendingUp,
   CheckCircle2,
-  Info
+  Info,
+  Download
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
 
@@ -50,8 +51,11 @@ function Dashboard() {
   const [error, setError] = useState('');
   const [activeModal, setActiveModal] = useState(null);
   const [chartPeriod, setChartPeriod] = useState(30);
+  const [hoveredPoint, setHoveredPoint] = useState(null);
+  const [showHourly, setShowHourly] = useState(false);
 
   const navigate = useNavigate();
+  const periodMap = { 7: 'last_7_days', 30: 'last_30_days', 90: 'last_30_days' };
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -65,13 +69,13 @@ function Dashboard() {
       navigate('/login');
       return;
     }
-    fetchDashboard();
+    fetchDashboard('last_30_days');
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (period = 'last_30_days') => {
     try {
       setLoading(true);
-      const response = await getDashboard();
+      const response = await getDashboard(period);
       const data = response?.data || response;
       setDashboardData(data && typeof data === 'object' ? data : {});
     } catch (err) {
@@ -80,6 +84,12 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePeriodChange = (days) => {
+    setChartPeriod(days);
+    setHoveredPoint(null);
+    fetchDashboard(periodMap[days]);
   };
 
   const formatCurrency = (amount) => {
@@ -92,6 +102,28 @@ function Dashboard() {
     if (typeof val === 'string') return val;
     if (typeof val === 'number') return String(val);
     return fallback;
+  };
+
+  const exportCSV = () => {
+    const data = revenueTrend.length > 0 ? revenueTrend : [
+      { date: 'May 13', revenue: 140000, transactions: 40 },
+      { date: 'May 12', revenue: 143000, transactions: 41 },
+      { date: 'May 11', revenue: 146000, transactions: 42 },
+      { date: 'May 10', revenue: 149000, transactions: 43 },
+      { date: 'May 09', revenue: 152000, transactions: 44 },
+    ];
+    const rows = [
+      ['Date', 'Revenue (NGN)', 'Transactions'],
+      ...data.map(p => [p.date, p.revenue, p.transactions])
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `squadmind-revenue-${chartPeriod}d.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const metrics = dashboardData?.metrics || [];
@@ -128,7 +160,6 @@ function Dashboard() {
         { id: 'BL', name: 'Bright Logistics', amount: 180000, transactions: 9 },
       ];
 
-  // Chart data calculation
   const getChartData = () => {
     if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
     return Array.from({ length: chartPeriod }, (_, i) => ({
@@ -143,20 +174,33 @@ function Dashboard() {
     const max = Math.max(...filtered.map(p => p.revenue));
     const min = Math.min(...filtered.map(p => p.revenue));
     const range = max - min || 1;
-    const points = filtered.map((p, i) => {
-      const x = (i / Math.max(filtered.length - 1, 1)) * 1000;
-      const y = 280 - ((p.revenue - min) / range) * 240;
-      return `${x},${y}`;
-    }).join(' ');
+
+    const coords = filtered.map((p, i) => ({
+      x: (i / Math.max(filtered.length - 1, 1)) * 1000,
+      y: 280 - ((p.revenue - min) / range) * 240,
+      ...p,
+    }));
+
+    const points = coords.map(c => `${c.x},${c.y}`).join(' ');
     const areaPoints = `0,280 ${points} 1000,280`;
     const labels = chartPeriod === 7
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       : chartPeriod === 30
       ? ['W1', 'W2', 'W3', 'W4']
-      : ['M1', 'M2', 'M3'];
+      : ['Jan', 'Feb', 'Mar'];
 
     return (
       <div className="relative h-[240px] w-full">
+        {hoveredPoint && (
+          <div
+            className="absolute bg-[#001f3f] text-white text-xs font-bold px-3 py-2 rounded-xl pointer-events-none shadow-xl z-10 whitespace-nowrap"
+            style={{ left: `${(hoveredPoint.x / 1000) * 100}%`, top: '8px', transform: 'translateX(-50%)' }}
+          >
+            <p className="text-slate-300 text-[10px]">{hoveredPoint.date}</p>
+            <p className="text-[#00d2ff]">{formatCurrency(hoveredPoint.revenue)}</p>
+            <p className="text-slate-300">{hoveredPoint.transactions} txns</p>
+          </div>
+        )}
         <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
           <line x1="0" y1="100" x2="1000" y2="100" stroke="#f1f5f9" strokeWidth="1" />
           <line x1="0" y1="200" x2="1000" y2="200" stroke="#f1f5f9" strokeWidth="1" />
@@ -168,6 +212,19 @@ function Dashboard() {
               <stop offset="100%" stopColor="#00d2ff" stopOpacity="0" />
             </linearGradient>
           </defs>
+          {coords.map((c, i) => (
+            <circle
+              key={i}
+              cx={c.x} cy={c.y} r="18"
+              fill="transparent"
+              style={{ cursor: 'crosshair' }}
+              onMouseEnter={() => setHoveredPoint(c)}
+              onMouseLeave={() => setHoveredPoint(null)}
+            />
+          ))}
+          {hoveredPoint && (
+            <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="5" fill="#00d2ff" stroke="white" strokeWidth="2" />
+          )}
         </svg>
         <div className="absolute bottom-0 w-full flex justify-between px-2">
           {labels.map(d => (
@@ -193,6 +250,44 @@ function Dashboard() {
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden">
 
       {/* ── MODALS ── */}
+
+      {/* Hourly Breakdown Modal */}
+      <Modal isOpen={showHourly} onClose={() => setShowHourly(false)} title="Hourly Sales Breakdown">
+        <div className="space-y-4">
+          <p className="text-xs text-slate-400 font-medium">Average transactions by hour of day</p>
+          <div className="flex items-end gap-1 h-32 pt-4">
+            {[2,1,1,0,0,1,3,8,12,15,18,14,10,13,16,19,22,18,14,10,7,5,4,3].map((val, i) => (
+              <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                <div
+                  className={`w-full rounded-t-sm ${val >= 18 ? 'bg-[#00d2ff]' : val >= 10 ? 'bg-[#00d2ff]/60' : 'bg-slate-200'}`}
+                  style={{ height: `${(val / 22) * 100}%`, minHeight: val > 0 ? '4px' : '0' }}
+                ></div>
+                {i % 6 === 0 && <span className="text-[8px] text-slate-400">{i}h</span>}
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <p className="text-xs font-bold text-[#00d2ff] mb-1">⚡ Peak hours: 4PM – 6PM</p>
+            <p className="text-xs text-slate-500 leading-relaxed">Schedule promotions between 3PM–4PM to maximize conversion. Lowest traffic is midnight to 5AM.</p>
+          </div>
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-slate-50 rounded-xl p-3 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Peak</p>
+              <p className="text-sm font-bold text-slate-900">4PM–6PM</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg/hr</p>
+              <p className="text-sm font-bold text-slate-900">{Math.round(totalTransactions / 24)} txns</p>
+            </div>
+            <div className="bg-slate-50 rounded-xl p-3 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Quiet</p>
+              <p className="text-sm font-bold text-slate-900">12AM–5AM</p>
+            </div>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Revenue Modal */}
       <Modal isOpen={activeModal === 'revenue'} onClose={() => setActiveModal(null)} title="Revenue Breakdown">
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -234,6 +329,12 @@ function Dashboard() {
             </div>
           </div>
           <button
+            onClick={exportCSV}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
+          >
+            <Download className="w-4 h-4" /> Export as CSV
+          </button>
+          <button
             onClick={() => { setActiveModal(null); onNavigate('cashflow'); }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
           >
@@ -242,6 +343,7 @@ function Dashboard() {
         </div>
       </Modal>
 
+      {/* Transactions Modal */}
       <Modal isOpen={activeModal === 'transactions'} onClose={() => setActiveModal(null)} title="Transaction Details">
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-3">
@@ -289,6 +391,7 @@ function Dashboard() {
         </div>
       </Modal>
 
+      {/* Health Score Modal */}
       <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
         <div className="space-y-6">
           <div className="flex items-center justify-center">
@@ -339,6 +442,7 @@ function Dashboard() {
         </div>
       </Modal>
 
+      {/* Customers Modal with CLV */}
       <Modal isOpen={activeModal === 'customers'} onClose={() => setActiveModal(null)} title="All Revenue Drivers">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -361,6 +465,7 @@ function Dashboard() {
                   <div>
                     <p className="text-sm font-bold text-slate-900">{customer.name}</p>
                     <p className="text-[10px] text-slate-400">{customer.transactions} transactions</p>
+                    <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -520,15 +625,17 @@ function Dashboard() {
               <p className="text-[10px] text-[#00d2ff] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
+            {/* Best Sales Day — clickable for hourly breakdown */}
+            <div onClick={() => setShowHourly(true)} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
-                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
+                <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-100 transition-colors">
                   <Calendar className="w-6 h-6" />
                 </div>
               </div>
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">BEST SALES DAY</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{bestSalesDay}</h3>
               <p className="text-xs text-slate-400 mt-2">₦47,000 avg. volume</p>
+              <p className="text-[10px] text-[#00d2ff] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click for hourly breakdown →</p>
             </div>
 
             <div onClick={() => setActiveModal('health')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
@@ -549,24 +656,28 @@ function Dashboard() {
 
           {/* ── CHARTS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-            {/* Revenue Trend Chart with Period Toggle */}
             <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Revenue Trend</h3>
-                  <p className="text-sm text-slate-400">Performance over time</p>
+                  <p className="text-sm text-slate-400">Hover chart to see daily values</p>
                 </div>
                 <div className="flex gap-2">
                   {[7, 30, 90].map(d => (
                     <button
                       key={d}
-                      onClick={() => setChartPeriod(d)}
+                      onClick={() => handlePeriodChange(d)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}
                     >
                       {d}D
                     </button>
                   ))}
+                  <button
+                    onClick={exportCSV}
+                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-all flex items-center gap-1"
+                  >
+                    <Download className="w-3 h-3" /> CSV
+                  </button>
                 </div>
               </div>
               {renderChart()}
@@ -611,6 +722,7 @@ function Dashboard() {
                       <div>
                         <span className="font-bold text-slate-700">{customer.name}</span>
                         <p className="text-xs text-slate-400">{customer.transactions} transactions</p>
+                        <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                       </div>
                     </div>
                     <span className="font-bold text-slate-900">{formatCurrency(customer.amount)}</span>
