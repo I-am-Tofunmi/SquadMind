@@ -22,8 +22,7 @@ export const authFetch = async (endpoint, options = {}) => {
 
     if (response.status === 401) {
       removeToken();
-      window.location.href = '/login';
-      throw new Error('Unauthorized');
+      throw new Error('Session expired. Please login again.');
     }
 
     const data = await response.json();
@@ -81,7 +80,6 @@ export const register = async (businessName, email, password) => {
       throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Registration failed');
     }
 
-    // Save token after registration
     if (data.access_token) {
       setToken(data.access_token);
     }
@@ -97,13 +95,23 @@ export const getMe = async () => {
 };
 
 export const saveSquadCredentials = async (secretKey, publicKey) => {
-  return await authFetch('/auth/squad-credentials', {
+  const token = getToken();
+  const response = await fetch(`${API_BASE}/auth/squad-credentials`, {
     method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'Authorization': `Bearer ${token}`,
+    },
     body: JSON.stringify({
       squad_secret_key: secretKey,
       squad_public_key: publicKey,
     }),
   });
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Invalid credentials');
+  }
+  return data;
 };
 
 // --- 4. DASHBOARD FUNCTIONS ---
