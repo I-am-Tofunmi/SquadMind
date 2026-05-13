@@ -55,7 +55,6 @@ function Dashboard() {
   const [showHourly, setShowHourly] = useState(false);
 
   const navigate = useNavigate();
-  const periodMap = { 7: 'last_7_days', 30: 'last_30_days', 90: 'last_30_days' };
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -69,13 +68,13 @@ function Dashboard() {
       navigate('/login');
       return;
     }
-    fetchDashboard('last_30_days');
+    fetchDashboard();
   }, []);
 
-  const fetchDashboard = async (period = 'last_30_days') => {
+  const fetchDashboard = async () => {
     try {
       setLoading(true);
-      const response = await getDashboard(period);
+      const response = await getDashboard();
       const data = response?.data || response;
       setDashboardData(data && typeof data === 'object' ? data : {});
     } catch (err) {
@@ -84,12 +83,6 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const handlePeriodChange = (days) => {
-    setChartPeriod(days);
-    setHoveredPoint(null);
-    fetchDashboard(periodMap[days]);
   };
 
   const formatCurrency = (amount) => {
@@ -251,7 +244,6 @@ function Dashboard() {
 
       {/* ── MODALS ── */}
 
-      {/* Hourly Breakdown Modal */}
       <Modal isOpen={showHourly} onClose={() => setShowHourly(false)} title="Hourly Sales Breakdown">
         <div className="space-y-4">
           <p className="text-xs text-slate-400 font-medium">Average transactions by hour of day</p>
@@ -287,7 +279,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Revenue Modal */}
       <Modal isOpen={activeModal === 'revenue'} onClose={() => setActiveModal(null)} title="Revenue Breakdown">
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -343,7 +334,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Transactions Modal */}
       <Modal isOpen={activeModal === 'transactions'} onClose={() => setActiveModal(null)} title="Transaction Details">
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-3">
@@ -391,7 +381,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Health Score Modal */}
       <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
         <div className="space-y-6">
           <div className="flex items-center justify-center">
@@ -442,7 +431,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Customers Modal with CLV */}
       <Modal isOpen={activeModal === 'customers'} onClose={() => setActiveModal(null)} title="All Revenue Drivers">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -625,7 +613,6 @@ function Dashboard() {
               <p className="text-[10px] text-[#00d2ff] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
-            {/* Best Sales Day — clickable for hourly breakdown */}
             <div onClick={() => setShowHourly(true)} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-100 transition-colors">
@@ -666,7 +653,7 @@ function Dashboard() {
                   {[7, 30, 90].map(d => (
                     <button
                       key={d}
-                      onClick={() => handlePeriodChange(d)}
+                      onClick={() => setChartPeriod(d)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}
                     >
                       {d}D
