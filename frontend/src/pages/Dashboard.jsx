@@ -47,9 +47,12 @@ function Dashboard() {
     try {
       setLoading(true);
       const response = await getDashboard();
-      setDashboardData(response.data || response);
+      // Handle nested response - backend wraps in success_response
+      const data = response?.data || response;
+      setDashboardData(data && typeof data === 'object' ? data : {});
     } catch (err) {
-      setError(err.message || 'Failed to load dashboard');
+      setError('Failed to load — showing demo data');
+      setDashboardData({});
     } finally {
       setLoading(false);
     }
@@ -60,17 +63,24 @@ function Dashboard() {
     return `₦${Number(amount).toLocaleString('en-NG', { minimumFractionDigits: 2 })}`;
   };
 
-  const totalRevenue = dashboardData?.total_revenue || dashboardData?.revenue?.total || 342500;
-  const totalTransactions = dashboardData?.transaction_count || dashboardData?.transactions?.count || 84;
-  const bestSalesDay = dashboardData?.best_sales_day || 'Friday';
-  const healthScore = dashboardData?.health_score || 78;
-  const revenueChange = dashboardData?.revenue_change_percent || 12;
-  const topCustomers = dashboardData?.top_customers || [
+  const safeString = (val, fallback) => {
+    if (!val) return fallback;
+    if (typeof val === 'string') return val;
+    if (typeof val === 'number') return String(val);
+    return fallback;
+  };
+
+  const totalRevenue = Number(dashboardData?.total_revenue || dashboardData?.revenue?.total || 342500);
+  const totalTransactions = Number(dashboardData?.transaction_count || dashboardData?.transactions?.count || 84);
+  const bestSalesDay = safeString(dashboardData?.best_sales_day, 'Friday');
+  const healthScore = Number(dashboardData?.health_score || 78);
+  const revenueChange = Number(dashboardData?.revenue_change_percent || 12);
+  const businessName = safeString(dashboardData?.business_name || dashboardData?.user?.business_name, 'Lekan Adeyemi');
+  const topCustomers = Array.isArray(dashboardData?.top_customers) ? dashboardData.top_customers : [
     { id: 'CS', name: 'Chinedu Stores', amount: 750000 },
     { id: 'BL', name: 'Bright Logistics', amount: 420000 },
     { id: 'TB', name: 'Tolu Boutique', amount: 310000 },
   ];
-  const businessName = dashboardData?.business_name || 'Lekan Adeyemi';
 
   if (loading) {
     return (
@@ -142,7 +152,7 @@ function Dashboard() {
           </div>
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#00d2ff] flex items-center justify-center text-[#001f3f] font-bold overflow-hidden">
-              <img src={`https://ui-avatars.com/api/?name=${businessName}&background=00d2ff&color=001f3f`} alt={businessName} />
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=00d2ff&color=001f3f`} alt={businessName} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate">{businessName}</p>
@@ -184,7 +194,7 @@ function Dashboard() {
 
           {error && (
             <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">
-              {error} — showing demo data
+              {error}
             </div>
           )}
 
@@ -309,11 +319,11 @@ function Dashboard() {
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                        {customer.id || customer.name?.substring(0, 2).toUpperCase()}
+                        {safeString(customer.id || customer.name?.substring(0, 2), 'CU').toUpperCase()}
                       </div>
-                      <span className="font-bold text-slate-700">{customer.name}</span>
+                      <span className="font-bold text-slate-700">{safeString(customer.name, 'Customer')}</span>
                     </div>
-                    <span className="font-bold text-slate-900">{formatCurrency(customer.amount || customer.total_revenue)}</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(customer.amount || customer.total_revenue || 0)}</span>
                   </div>
                 ))}
               </div>
@@ -352,8 +362,8 @@ function Dashboard() {
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">GROWTH OPPORTUNITY</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
                         {isEnglish
-                          ? <>Your sales consistently peak on <span className="font-bold text-slate-900">Fridays at 4 PM</span>. Consider running a flash promo at 3 PM.</>
-                          : <>Your Friday sales strong well well 💪 — <span className="font-bold text-slate-900">₦47,000 average</span>. Try run promo before 4PM.</>
+                          ? <span>Your sales consistently peak on <span className="font-bold text-slate-900">Fridays at 4 PM</span>. Consider running a flash promo at 3 PM.</span>
+                          : <span>Your Friday sales strong well well 💪 — <span className="font-bold text-slate-900">₦47,000 average</span>. Try run promo before 4PM.</span>
                         }
                       </p>
                     </div>
@@ -369,8 +379,8 @@ function Dashboard() {
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">CUSTOMER INSIGHTS</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
                         {isEnglish
-                          ? <>Customer concentration high: <span className="font-bold text-slate-900">60% of revenue</span> comes from only 3 regular customers.</>
-                          : <>3 customers account for 60% of your revenue. <span className="font-bold text-slate-900">Dem be your VIPs.</span></>
+                          ? <span>Customer concentration high: <span className="font-bold text-slate-900">60% of revenue</span> comes from only 3 regular customers.</span>
+                          : <span>3 customers account for 60% of your revenue. <span className="font-bold text-slate-900">Dem be your VIPs.</span></span>
                         }
                       </p>
                     </div>
@@ -386,8 +396,8 @@ function Dashboard() {
                       <h4 className="text-[11px] font-bold text-red-500 uppercase tracking-wider mb-2">SECURITY ALERT</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed mb-4">
                         {isEnglish
-                          ? <>Suspicious transaction flagged for <span className="text-red-500 font-bold text-lg">₦12,500</span> from a new IP location.</>
-                          : <>One transaction from Tuesday looks suspicious — <span className="text-red-500 font-bold">₦12,500 reversal</span>. Dem flagged am from new location.</>
+                          ? <span>Suspicious transaction flagged for <span className="text-red-500 font-bold text-lg">₦12,500</span> from a new IP location.</span>
+                          : <span>One transaction from Tuesday looks suspicious — <span className="text-red-500 font-bold">₦12,500 reversal</span>. Dem flagged am from new location.</span>
                         }
                       </p>
                       <button onClick={() => onNavigate('frauddetection')} className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-widest hover:gap-3 transition-all">
