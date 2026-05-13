@@ -81,6 +81,11 @@ export const register = async (businessName, email, password) => {
       throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Registration failed');
     }
 
+    // Save token after registration
+    if (data.access_token) {
+      setToken(data.access_token);
+    }
+
     return data;
   } catch (error) {
     throw error;
