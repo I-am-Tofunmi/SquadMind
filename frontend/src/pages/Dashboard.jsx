@@ -53,6 +53,8 @@ function Dashboard() {
 
   const navigate = useNavigate();
 
+  const periodMap = { 7: 'last_7_days', 30: 'last_30_days', 90: 'last_30_days' };
+
   const onLogout = () => {
     localStorage.removeItem('token');
     navigate('/login');
@@ -65,13 +67,13 @@ function Dashboard() {
       navigate('/login');
       return;
     }
-    fetchDashboard();
+    fetchDashboard('last_30_days');
   }, []);
 
-  const fetchDashboard = async () => {
+  const fetchDashboard = async (period = 'last_30_days') => {
     try {
       setLoading(true);
-      const response = await getDashboard();
+      const response = await getDashboard(period);
       const data = response?.data || response;
       setDashboardData(data && typeof data === 'object' ? data : {});
     } catch (err) {
@@ -80,6 +82,11 @@ function Dashboard() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handlePeriodChange = (days) => {
+    setChartPeriod(days);
+    fetchDashboard(periodMap[days]);
   };
 
   const formatCurrency = (amount) => {
@@ -128,7 +135,6 @@ function Dashboard() {
         { id: 'BL', name: 'Bright Logistics', amount: 180000, transactions: 9 },
       ];
 
-  // Chart data calculation
   const getChartData = () => {
     if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
     return Array.from({ length: chartPeriod }, (_, i) => ({
@@ -153,7 +159,7 @@ function Dashboard() {
       ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       : chartPeriod === 30
       ? ['W1', 'W2', 'W3', 'W4']
-      : ['M1', 'M2', 'M3'];
+      : ['Jan', 'Feb', 'Mar'];
 
     return (
       <div className="relative h-[240px] w-full">
@@ -549,8 +555,6 @@ function Dashboard() {
 
           {/* ── CHARTS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-
-            {/* Revenue Trend Chart with Period Toggle */}
             <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-6">
                 <div>
@@ -561,7 +565,7 @@ function Dashboard() {
                   {[7, 30, 90].map(d => (
                     <button
                       key={d}
-                      onClick={() => setChartPeriod(d)}
+                      onClick={() => handlePeriodChange(d)}
                       className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}
                     >
                       {d}D
