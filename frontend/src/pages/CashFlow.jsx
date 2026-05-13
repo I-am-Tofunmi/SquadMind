@@ -79,11 +79,10 @@ const fetchForecast = async () => {
   };
 
   // Extract forecast data with fallbacks
-  const minRevenue = forecastData?.predicted_min || forecastData?.min_revenue || 340000;
-  const maxRevenue = forecastData?.predicted_max || forecastData?.max_revenue || 380000;
-  const confidenceScore = forecastData?.confidence_score || 92;
-  const aiNarrative = forecastData?.ai_narrative || forecastData?.narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';
-  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
+  const minRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 340000) * 0.9 || 340000;
+  const maxRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 380000) * 1.1 || 380000;
+  const confidenceScore = Number(forecastData?.data?.confidence_score || forecastData?.confidence_score || 92) || 92;
+  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
   const liquidityPeaks = forecastData?.liquidity_peaks || [
     { time: 'Oct 24 — Oct 31', source: 'Payroll Cycle Spike', flow: 85900, risk: 'LOW', status: 'Stable' },
     { time: 'Nov 01 — Nov 07', source: 'Post-Month End Dip', flow: -23450, risk: 'MODERATE', status: 'Watch' },
