@@ -71,8 +71,7 @@ export const register = async (businessName, email, password) => {
       body: JSON.stringify({ 
         business_name: businessName, 
         email, 
-        password,
-        username: email
+        password
       }),
     });
 
