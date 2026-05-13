@@ -115,8 +115,9 @@ function FraudDetection() {
     return <span className="px-4 py-1 bg-[#f0f9ff] text-[#0ea5e9] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#0ea5e9]/20">Low Risk</span>;
   };
 
-  const flaggedTransactions = Array.isArray(fraudData?.fraud_flags || fraudData?.flags || fraudData?.items)
-    ? (fraudData?.fraud_flags || fraudData?.flags || fraudData?.items)
+const rawFlags = fraudData?.fraud_flags || fraudData?.flags || fraudData?.items || fraudData;
+const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
+    ? rawFlags
     : [
         { id: 1, transaction_date: '2026-05-12', description: 'Reversal from POS-221', reference: 'TXN-9921-XF', amount: 12500, risk_level: 'high', ai_reason: 'Unusual reversal at 2:14 AM from new device location. Pattern matches known fraud signature.' },
         { id: 2, transaction_date: '2026-05-11', description: 'Duplicate Payment', reference: 'TXN-4820-MQ', amount: 5000, risk_level: 'medium', ai_reason: 'Two identical payments within 3 minutes from same customer ID. Possible double-charge attempt.' },
