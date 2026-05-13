@@ -46,17 +46,20 @@ function CashFlow() {
     fetchForecast();
   }, []);
 
-  const fetchForecast = async () => {
-    try {
-      setLoading(true);
-      const data = await getLatestForecast();
-      setForecastData(data);
-    } catch (err) {
-      setError('Using demo forecast data');
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchForecast = async () => {
+  try {
+    setLoading(true);
+    const response = await getLatestForecast();
+    console.log('FORECAST RESPONSE:', JSON.stringify(response));
+    const data = response?.data || response;
+    setForecastData(data && typeof data === 'object' ? data : null);
+  } catch (err) {
+    setError('Using demo forecast data');
+    setForecastData(null);
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleGenerateForecast = async () => {
     try {
