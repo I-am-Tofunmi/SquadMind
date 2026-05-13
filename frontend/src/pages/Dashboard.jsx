@@ -43,20 +43,20 @@ function Dashboard() {
     fetchDashboard();
   }, []);
 
-  const fetchDashboard = async () => {
-    try {
-      setLoading(true);
-      const response = await getDashboard();
-      // Handle nested response - backend wraps in success_response
-      const data = response?.data || response;
-      setDashboardData(data && typeof data === 'object' ? data : {});
-    } catch (err) {
-      setError('Failed to load — showing demo data');
-      setDashboardData({});
-    } finally {
-      setLoading(false);
-    }
-  };
+const fetchDashboard = async () => {
+  try {
+    setLoading(true);
+    const response = await getDashboard();
+    console.log('RAW RESPONSE:', JSON.stringify(response));
+    const data = response?.data || response;
+    setDashboardData(data && typeof data === 'object' ? data : {});
+  } catch (err) {
+    setError('Failed to load — showing demo data');
+    setDashboardData({});
+  } finally {
+    setLoading(false);
+  }
+};
 
   const formatCurrency = (amount) => {
     if (!amount) return '₦0.00';
