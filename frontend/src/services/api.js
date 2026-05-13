@@ -52,8 +52,10 @@ export const login = async (email, password) => {
       throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Login failed');
     }
 
-    if (data.access_token) {
-      setToken(data.access_token);
+    // Token is nested inside data.data
+    const token = data.data?.access_token || data.access_token;
+    if (token) {
+      setToken(token);
     }
 
     return data;
@@ -80,8 +82,10 @@ export const register = async (businessName, email, password) => {
       throw new Error(data.message || data.detail?.[0]?.msg || data.detail || 'Registration failed');
     }
 
-    if (data.access_token) {
-      setToken(data.access_token);
+    // Token is nested inside data.data
+    const token = data.data?.access_token || data.access_token;
+    if (token) {
+      setToken(token);
     }
 
     return data;
