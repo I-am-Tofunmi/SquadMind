@@ -43,20 +43,19 @@ function Dashboard() {
     fetchDashboard();
   }, []);
 
-const fetchDashboard = async () => {
-  try {
-    setLoading(true);
-    const response = await getDashboard();
-    console.log('RAW RESPONSE:', JSON.stringify(response));
-    const data = response?.data || response;
-    setDashboardData(data && typeof data === 'object' ? data : {});
-  } catch (err) {
-    setError('Failed to load — showing demo data');
-    setDashboardData({});
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchDashboard = async () => {
+    try {
+      setLoading(true);
+      const response = await getDashboard();
+      const data = response?.data || response;
+      setDashboardData(data && typeof data === 'object' ? data : {});
+    } catch (err) {
+      setError('Failed to load — showing demo data');
+      setDashboardData({});
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const formatCurrency = (amount) => {
     if (!amount) return '₦0.00';
@@ -70,17 +69,31 @@ const fetchDashboard = async () => {
     return fallback;
   };
 
-  const totalRevenue = Number(dashboardData?.total_revenue || dashboardData?.revenue?.total || 342500);
-  const totalTransactions = Number(dashboardData?.transaction_count || dashboardData?.transactions?.count || 84);
-  const bestSalesDay = safeString(dashboardData?.best_sales_day, 'Friday');
-  const healthScore = Number(dashboardData?.health_score || 78);
-  const revenueChange = Number(dashboardData?.revenue_change_percent || 12);
-  const businessName = safeString(dashboardData?.business_name || dashboardData?.user?.business_name, 'Lekan Adeyemi');
-  const topCustomers = Array.isArray(dashboardData?.top_customers) ? dashboardData.top_customers : [
-    { id: 'CS', name: 'Chinedu Stores', amount: 750000 },
-    { id: 'BL', name: 'Bright Logistics', amount: 420000 },
-    { id: 'TB', name: 'Tolu Boutique', amount: 310000 },
-  ];
+  // Correct data mapping based on actual API response
+  const metrics = dashboardData?.metrics || [];
+  const totalRevenue = Number(metrics[0]?.raw_value || 342500);
+  const totalTransactions = Number(metrics[1]?.raw_value || 84);
+  const revenueChange = Number(metrics[0]?.change_percent || 12);
+  const bestSalesDay = 'Friday';
+  const healthScore = Number(dashboardData?.health_score?.score || 78);
+  const healthLabel = safeString(dashboardData?.health_score?.label, 'Stable');
+  const businessName = safeString(dashboardData?.business_name, 'Lekan Stores');
+  const aiInsightEnglish = safeString(dashboardData?.ai_insight, 'Your business is performing well with consistent revenue growth.');
+  const aiInsightPidgin = safeString(dashboardData?.ai_insight_pidgin, 'Your business dey do well! Revenue don go up 🚀');
+  const fraudFlagged = Number(dashboardData?.fraud_summary?.flagged_count || 0);
+  const fraudAmount = Number(dashboardData?.fraud_summary?.flagged_amount || 12500);
+
+  const topCustomers = Array.isArray(dashboardData?.top_customers) 
+    ? dashboardData.top_customers.map(c => ({
+        id: safeString(c.customer_name, 'CU').substring(0, 2).toUpperCase(),
+        name: safeString(c.customer_name, 'Customer'),
+        amount: Number(c.total_spend || 0)
+      }))
+    : [
+        { id: 'CS', name: 'Chinedu Stores', amount: 750000 },
+        { id: 'BL', name: 'Bright Logistics', amount: 420000 },
+        { id: 'TB', name: 'Tolu Boutique', amount: 310000 },
+      ];
 
   if (loading) {
     return (
@@ -247,7 +260,7 @@ const fetchDashboard = async () => {
                 <div>
                   <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">HEALTH SCORE</p>
                   <h3 className="text-3xl font-bold text-slate-900">{healthScore}/100</h3>
-                  <p className="text-[10px] text-emerald-600 font-bold mt-2 uppercase tracking-wide">Status: Stable</p>
+                  <p className="text-[10px] text-emerald-600 font-bold mt-2 uppercase tracking-wide">Status: {healthLabel}</p>
                 </div>
                 <div className="w-16 h-16 rounded-xl border-4 border-[#e0f7fa] flex items-center justify-center relative">
                   <div className="absolute inset-0 border-4 border-[#00d2ff] border-t-transparent border-r-transparent rounded-xl rotate-45"></div>
@@ -319,11 +332,11 @@ const fetchDashboard = async () => {
                   <div key={i} className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                        {safeString(customer.id || customer.name?.substring(0, 2), 'CU').toUpperCase()}
+                        {customer.id}
                       </div>
-                      <span className="font-bold text-slate-700">{safeString(customer.name, 'Customer')}</span>
+                      <span className="font-bold text-slate-700">{customer.name}</span>
                     </div>
-                    <span className="font-bold text-slate-900">{formatCurrency(customer.amount || customer.total_revenue || 0)}</span>
+                    <span className="font-bold text-slate-900">{formatCurrency(customer.amount)}</span>
                   </div>
                 ))}
               </div>
@@ -359,12 +372,9 @@ const fetchDashboard = async () => {
                       <Sparkles className="w-5 h-5 text-[#00d2ff]" />
                     </div>
                     <div>
-                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">GROWTH OPPORTUNITY</h4>
+                      <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">AI INSIGHT</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
-                        {isEnglish
-                          ? <span>Your sales consistently peak on <span className="font-bold text-slate-900">Fridays at 4 PM</span>. Consider running a flash promo at 3 PM.</span>
-                          : <span>Your Friday sales strong well well 💪 — <span className="font-bold text-slate-900">₦47,000 average</span>. Try run promo before 4PM.</span>
-                        }
+                        {isEnglish ? aiInsightEnglish : aiInsightPidgin}
                       </p>
                     </div>
                   </div>
@@ -379,8 +389,8 @@ const fetchDashboard = async () => {
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">CUSTOMER INSIGHTS</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
                         {isEnglish
-                          ? <span>Customer concentration high: <span className="font-bold text-slate-900">60% of revenue</span> comes from only 3 regular customers.</span>
-                          : <span>3 customers account for 60% of your revenue. <span className="font-bold text-slate-900">Dem be your VIPs.</span></span>
+                          ? <span>Your top 3 customers account for <span className="font-bold text-slate-900">25% of total revenue</span>. Consider a loyalty program to retain them.</span>
+                          : <span>Your top 3 customers dey carry the load. <span className="font-bold text-slate-900">Reward dem with something special!</span></span>
                         }
                       </p>
                     </div>
@@ -395,9 +405,9 @@ const fetchDashboard = async () => {
                     <div>
                       <h4 className="text-[11px] font-bold text-red-500 uppercase tracking-wider mb-2">SECURITY ALERT</h4>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed mb-4">
-                        {isEnglish
-                          ? <span>Suspicious transaction flagged for <span className="text-red-500 font-bold text-lg">₦12,500</span> from a new IP location.</span>
-                          : <span>One transaction from Tuesday looks suspicious — <span className="text-red-500 font-bold">₦12,500 reversal</span>. Dem flagged am from new location.</span>
+                        {fraudFlagged > 0
+                          ? <span><span className="text-red-500 font-bold">{fraudFlagged} suspicious transaction{fraudFlagged > 1 ? 's' : ''}</span> flagged totalling {formatCurrency(fraudAmount)}.</span>
+                          : <span>No suspicious transactions detected. Your account is <span className="text-emerald-600 font-bold">secure</span>.</span>
                         }
                       </p>
                       <button onClick={() => onNavigate('frauddetection')} className="flex items-center gap-2 text-xs font-bold text-red-500 uppercase tracking-widest hover:gap-3 transition-all">
