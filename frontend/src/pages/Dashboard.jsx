@@ -17,15 +17,43 @@ import {
   FileText,
   Users,
   Calendar,
-  Loader2
+  Loader2,
+  X,
+  TrendingUp,
+  TrendingDown,
+  CheckCircle2,
+  Info
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
+
+// ── Modal Component ──────────────────────────────────────────────────────────
+function Modal({ isOpen, onClose, title, children }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto z-10">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-slate-600" />
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 function Dashboard() {
   const [isEnglish, setIsEnglish] = useState(true);
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+
+  // Modal states
+  const [activeModal, setActiveModal] = useState(null);
+
   const navigate = useNavigate();
 
   const onLogout = () => {
@@ -69,31 +97,40 @@ function Dashboard() {
     return fallback;
   };
 
-  // Correct data mapping based on actual API response
   const metrics = dashboardData?.metrics || [];
   const totalRevenue = Number(metrics[0]?.raw_value || 342500);
   const totalTransactions = Number(metrics[1]?.raw_value || 84);
+  const avgTransactionValue = Number(metrics[2]?.raw_value || 3368);
+  const uniqueCustomers = Number(metrics[3]?.raw_value || 342);
   const revenueChange = Number(metrics[0]?.change_percent || 12);
   const bestSalesDay = safeString(dashboardData?.best_sales_day, 'Friday');
   const healthScore = Number(dashboardData?.health_score?.score || 78);
   const healthLabel = safeString(dashboardData?.health_score?.label, 'Stable');
+  const healthBreakdown = dashboardData?.health_score?.breakdown || { revenue_growth: 82, fraud_safety: 91, transaction_volume: 65 };
+  const healthAiSummary = safeString(dashboardData?.health_score?.ai_summary, 'Your business scores 78/100 — Good financial health.');
   const businessName = safeString(dashboardData?.business_name, 'Lekan Stores');
   const aiInsightEnglish = safeString(dashboardData?.ai_insight, 'Your business is performing well with consistent revenue growth.');
   const aiInsightPidgin = safeString(dashboardData?.ai_insight_pidgin, 'Your business dey do well! Revenue don go up 🚀');
   const fraudFlagged = Number(dashboardData?.fraud_summary?.flagged_count || 0);
   const fraudAmount = Number(dashboardData?.fraud_summary?.flagged_amount || 12500);
+  const returningRate = Number(dashboardData?.returning_customer_rate || 67.4);
 
   const topCustomers = Array.isArray(dashboardData?.top_customers) 
     ? dashboardData.top_customers.map(c => ({
         id: safeString(c.customer_name, 'CU').substring(0, 2).toUpperCase(),
         name: safeString(c.customer_name, 'Customer'),
-        amount: Number(c.total_spend || 0)
+        amount: Number(c.total_spend || 0),
+        transactions: Number(c.transaction_count || 0),
       }))
     : [
-        { id: 'CS', name: 'Chinedu Stores', amount: 750000 },
-        { id: 'BL', name: 'Bright Logistics', amount: 420000 },
-        { id: 'TB', name: 'Tolu Boutique', amount: 310000 },
+        { id: 'AS', name: 'Adebayo Stores', amount: 450000, transactions: 23 },
+        { id: 'NE', name: 'Ngozi Enterprises', amount: 320000, transactions: 18 },
+        { id: 'ET', name: 'Emeka Trading Co', amount: 280000, transactions: 15 },
+        { id: 'CS', name: 'Chinedu Stores', amount: 220000, transactions: 12 },
+        { id: 'BL', name: 'Bright Logistics', amount: 180000, transactions: 9 },
       ];
+
+  const revenueTrend = dashboardData?.revenue_trend || [];
 
   if (loading) {
     return (
@@ -108,7 +145,214 @@ function Dashboard() {
 
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden">
-      
+
+      {/* ── MODALS ──────────────────────────────────────────────────────────── */}
+
+      {/* Revenue Modal */}
+      <Modal isOpen={activeModal === 'revenue'} onClose={() => setActiveModal(null)} title="Revenue Breakdown">
+        <div className="space-y-6">
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-emerald-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Total Revenue</p>
+              <p className="text-xl font-bold text-slate-900">{formatCurrency(totalRevenue)}</p>
+            </div>
+            <div className="bg-blue-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Growth</p>
+              <p className="text-xl font-bold text-slate-900">+{revenueChange}%</p>
+            </div>
+            <div className="bg-purple-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">Avg Transaction</p>
+              <p className="text-xl font-bold text-slate-900">{formatCurrency(avgTransactionValue)}</p>
+            </div>
+            <div className="bg-cyan-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider mb-1">Best Day</p>
+              <p className="text-xl font-bold text-slate-900">{bestSalesDay}</p>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-700 mb-3">Recent Daily Revenue</h4>
+            <div className="space-y-2 max-h-48 overflow-y-auto">
+              {revenueTrend.slice(-7).reverse().map((point, i) => (
+                <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                  <span className="text-xs font-medium text-slate-500">{point.date}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs text-slate-400">{point.transactions} txns</span>
+                    <span className="text-sm font-bold text-slate-900">{formatCurrency(point.revenue)}</span>
+                  </div>
+                </div>
+              ))}
+              {revenueTrend.length === 0 && (
+                <div className="space-y-2">
+                  {[
+                    { date: 'May 13, 2026', revenue: 140000, transactions: 40 },
+                    { date: 'May 12, 2026', revenue: 143000, transactions: 41 },
+                    { date: 'May 11, 2026', revenue: 146000, transactions: 42 },
+                    { date: 'May 10, 2026', revenue: 149000, transactions: 43 },
+                    { date: 'May 09, 2026', revenue: 152000, transactions: 44 },
+                  ].map((point, i) => (
+                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                      <span className="text-xs font-medium text-slate-500">{point.date}</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-slate-400">{point.transactions} txns</span>
+                        <span className="text-sm font-bold text-slate-900">{formatCurrency(point.revenue)}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+          <button
+            onClick={() => { setActiveModal(null); onNavigate('cashflow'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
+          >
+            View Full Cash Flow Analysis <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </Modal>
+
+      {/* Transactions Modal */}
+      <Modal isOpen={activeModal === 'transactions'} onClose={() => setActiveModal(null)} title="Transaction Details">
+        <div className="space-y-6">
+          <div className="grid grid-cols-3 gap-3">
+            <div className="bg-blue-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Total</p>
+              <p className="text-2xl font-bold text-slate-900">{totalTransactions}</p>
+            </div>
+            <div className="bg-emerald-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Success</p>
+              <p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.9)}</p>
+            </div>
+            <div className="bg-red-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Failed</p>
+              <p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.1)}</p>
+            </div>
+          </div>
+          <div>
+            <h4 className="text-sm font-bold text-slate-700 mb-3">Payment Channels</h4>
+            <div className="space-y-3">
+              {[
+                { channel: 'Bank Transfer', count: Math.round(totalTransactions * 0.35), color: 'bg-blue-500' },
+                { channel: 'POS Terminal', count: Math.round(totalTransactions * 0.28), color: 'bg-emerald-500' },
+                { channel: 'Virtual Account', count: Math.round(totalTransactions * 0.22), color: 'bg-cyan-500' },
+                { channel: 'USSD', count: Math.round(totalTransactions * 0.15), color: 'bg-purple-500' },
+              ].map((item, i) => (
+                <div key={i} className="flex items-center gap-3">
+                  <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
+                  <span className="text-sm text-slate-600 flex-1">{item.channel}</span>
+                  <span className="text-sm font-bold text-slate-900">{item.count} txns</span>
+                  <span className="text-xs text-slate-400">{Math.round((item.count / totalTransactions) * 100)}%</span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <p className="text-xs font-bold text-amber-700">72% of daily target reached</p>
+            <p className="text-xs text-amber-600 mt-1">You need {Math.round(totalTransactions * 0.38)} more transactions to hit today's goal</p>
+          </div>
+          <button
+            onClick={() => { setActiveModal(null); onNavigate('frauddetection'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
+          >
+            View Fraud Analysis <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </Modal>
+
+      {/* Health Score Modal */}
+      <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
+        <div className="space-y-6">
+          <div className="flex items-center justify-center">
+            <div className="w-32 h-32 rounded-full border-8 border-[#e0f7fa] flex items-center justify-center relative">
+              <div className="absolute inset-0 border-8 border-[#00d2ff] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
+              <div className="text-center z-10">
+                <span className="text-3xl font-bold text-slate-900">{healthScore}</span>
+                <span className="text-sm text-slate-400">/100</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-slate-500 text-center font-medium">{healthAiSummary}</p>
+          <div className="space-y-4">
+            <h4 className="text-sm font-bold text-slate-700">Score Components</h4>
+            {[
+              { label: 'Revenue Growth', score: healthBreakdown.revenue_growth, color: 'bg-emerald-500', icon: <TrendingUp className="w-4 h-4 text-emerald-500" /> },
+              { label: 'Fraud Safety', score: healthBreakdown.fraud_safety, color: 'bg-blue-500', icon: <ShieldAlert className="w-4 h-4 text-blue-500" /> },
+              { label: 'Transaction Volume', score: healthBreakdown.transaction_volume, color: 'bg-cyan-500', icon: <FileText className="w-4 h-4 text-cyan-500" /> },
+            ].map((item, i) => (
+              <div key={i} className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {item.icon}
+                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
+                  </div>
+                  <span className="text-sm font-bold text-slate-900">{item.score}/100</span>
+                </div>
+                <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
+                  <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.score}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <div className="flex items-start gap-3">
+              <Info className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
+              <p className="text-xs text-slate-600 leading-relaxed">
+                To improve your score, focus on increasing transaction volume and maintaining your current fraud prevention success rate.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={() => { setActiveModal(null); onNavigate('trustscore'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
+          >
+            View Full TrustScore Report <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+      </Modal>
+
+      {/* View All Customers Modal */}
+      <Modal isOpen={activeModal === 'customers'} onClose={() => setActiveModal(null)} title="All Revenue Drivers">
+        <div className="space-y-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-slate-50 rounded-2xl p-3 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Total Customers</p>
+              <p className="text-xl font-bold text-slate-900">{uniqueCustomers}</p>
+            </div>
+            <div className="bg-slate-50 rounded-2xl p-3 text-center">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Returning Rate</p>
+              <p className="text-xl font-bold text-slate-900">{returningRate}%</p>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {topCustomers.map((customer, i) => (
+              <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-[#001f3f] flex items-center justify-center text-white font-bold text-xs">
+                    {i + 1}
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-slate-900">{customer.name}</p>
+                    <p className="text-[10px] text-slate-400">{customer.transactions} transactions</p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-slate-900">{formatCurrency(customer.amount)}</p>
+                  <div className="flex items-center gap-1 justify-end mt-1">
+                    <CheckCircle2 className="w-3 h-3 text-emerald-500" />
+                    <span className="text-[10px] text-emerald-600 font-bold">Active</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-blue-50 rounded-2xl border border-blue-100">
+            <p className="text-xs font-bold text-blue-700 mb-1">💡 Loyalty Opportunity</p>
+            <p className="text-xs text-blue-600">Your top 3 customers account for 25% of revenue. A loyalty program could increase their spend by 20%.</p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
       <aside className="w-[260px] bg-[#001f3f] flex flex-col justify-between shrink-0 h-full overflow-y-auto hidden md:flex">
         <div>
           <div className="p-8 pb-10">
@@ -175,6 +419,7 @@ function Dashboard() {
         </div>
       </aside>
 
+      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-4 w-full md:w-1/2">
@@ -216,10 +461,16 @@ function Dashboard() {
             <p className="text-slate-500 text-sm">Real-time intelligence and performance metrics for your business.</p>
           </div>
 
+          {/* ── KPI CARDS ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
+
+            {/* Revenue Card */}
+            <div
+              onClick={() => setActiveModal('revenue')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
+            >
               <div className="flex justify-between items-start mb-6">
-                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600">
+                <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
                   <Banknote className="w-6 h-6" />
                 </div>
                 <div className="px-2 py-1 bg-emerald-50 text-emerald-600 text-[10px] font-bold rounded-md">+{revenueChange}%</div>
@@ -227,11 +478,16 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">TOTAL REVENUE</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{formatCurrency(totalRevenue)}</h3>
               <p className="text-xs text-slate-400 mt-2">vs last month</p>
+              <p className="text-[10px] text-[#00d2ff] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
+            {/* Transactions Card */}
+            <div
+              onClick={() => setActiveModal('transactions')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
+            >
               <div className="flex justify-between items-start mb-6">
-                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600">
+                <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
                   <FileText className="w-6 h-6" />
                 </div>
                 <div className="text-[10px] text-blue-600 font-bold uppercase tracking-wider">Daily Goal</div>
@@ -242,8 +498,10 @@ function Dashboard() {
                 <div className="bg-blue-500 h-full w-[72%] rounded-full"></div>
               </div>
               <p className="text-[10px] text-slate-400 font-medium mt-2">72% of target reached</p>
+              <p className="text-[10px] text-[#00d2ff] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
+            {/* Best Sales Day Card */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
@@ -255,7 +513,11 @@ function Dashboard() {
               <p className="text-xs text-slate-400 mt-2">₦47,000 avg. volume</p>
             </div>
 
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
+            {/* Health Score Card */}
+            <div
+              onClick={() => setActiveModal('health')}
+              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
+            >
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">HEALTH SCORE</p>
@@ -267,9 +529,11 @@ function Dashboard() {
                   <span className="text-sm font-bold text-[#00d2ff]">{healthScore}%</span>
                 </div>
               </div>
+              <p className="text-[10px] text-[#00d2ff] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
           </div>
 
+          {/* ── CHARTS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-10">
@@ -321,20 +585,29 @@ function Dashboard() {
             </div>
           </div>
 
+          {/* ── TOP CUSTOMERS + AI INTELLIGENCE ── */}
           <div className="grid grid-cols-1 gap-8 mb-12">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-lg font-bold text-slate-900">Top Revenue Drivers</h3>
-                <button className="text-sm font-bold text-[#00d2ff] hover:underline">View All</button>
+                <button
+                  onClick={() => setActiveModal('customers')}
+                  className="text-sm font-bold text-[#00d2ff] hover:underline cursor-pointer"
+                >
+                  View All
+                </button>
               </div>
               <div className="space-y-6">
                 {topCustomers.slice(0, 3).map((customer, i) => (
-                  <div key={i} className="flex items-center justify-between">
+                  <div key={i} className="flex items-center justify-between hover:bg-slate-50 rounded-xl p-2 -mx-2 transition-colors cursor-pointer" onClick={() => setActiveModal('customers')}>
                     <div className="flex items-center gap-4">
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
                         {customer.id}
                       </div>
-                      <span className="font-bold text-slate-700">{customer.name}</span>
+                      <div>
+                        <span className="font-bold text-slate-700">{customer.name}</span>
+                        <p className="text-xs text-slate-400">{customer.transactions} transactions</p>
+                      </div>
                     </div>
                     <span className="font-bold text-slate-900">{formatCurrency(customer.amount)}</span>
                   </div>
