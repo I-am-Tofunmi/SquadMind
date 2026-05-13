@@ -74,7 +74,7 @@ function Dashboard() {
   const totalRevenue = Number(metrics[0]?.raw_value || 342500);
   const totalTransactions = Number(metrics[1]?.raw_value || 84);
   const revenueChange = Number(metrics[0]?.change_percent || 12);
-  const bestSalesDay = 'Friday';
+  const bestSalesDay = safeString(dashboardData?.best_sales_day, 'Friday');
   const healthScore = Number(dashboardData?.health_score?.score || 78);
   const healthLabel = safeString(dashboardData?.health_score?.label, 'Stable');
   const businessName = safeString(dashboardData?.business_name, 'Lekan Stores');
