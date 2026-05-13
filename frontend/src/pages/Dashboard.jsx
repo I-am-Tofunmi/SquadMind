@@ -20,13 +20,11 @@ import {
   Loader2,
   X,
   TrendingUp,
-  TrendingDown,
   CheckCircle2,
   Info
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
 
-// ── Modal Component ──────────────────────────────────────────────────────────
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
   return (
@@ -50,9 +48,8 @@ function Dashboard() {
   const [dashboardData, setDashboardData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-
-  // Modal states
   const [activeModal, setActiveModal] = useState(null);
+  const [chartPeriod, setChartPeriod] = useState(30);
 
   const navigate = useNavigate();
 
@@ -114,8 +111,9 @@ function Dashboard() {
   const fraudFlagged = Number(dashboardData?.fraud_summary?.flagged_count || 0);
   const fraudAmount = Number(dashboardData?.fraud_summary?.flagged_amount || 12500);
   const returningRate = Number(dashboardData?.returning_customer_rate || 67.4);
+  const revenueTrend = dashboardData?.revenue_trend || [];
 
-  const topCustomers = Array.isArray(dashboardData?.top_customers) 
+  const topCustomers = Array.isArray(dashboardData?.top_customers)
     ? dashboardData.top_customers.map(c => ({
         id: safeString(c.customer_name, 'CU').substring(0, 2).toUpperCase(),
         name: safeString(c.customer_name, 'Customer'),
@@ -130,7 +128,55 @@ function Dashboard() {
         { id: 'BL', name: 'Bright Logistics', amount: 180000, transactions: 9 },
       ];
 
-  const revenueTrend = dashboardData?.revenue_trend || [];
+  // Chart data calculation
+  const getChartData = () => {
+    if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
+    return Array.from({ length: chartPeriod }, (_, i) => ({
+      date: `Day ${i + 1}`,
+      revenue: 140000 + Math.sin(i * 0.4) * 40000 + i * 1000,
+      transactions: 40 + i,
+    }));
+  };
+
+  const renderChart = () => {
+    const filtered = getChartData();
+    const max = Math.max(...filtered.map(p => p.revenue));
+    const min = Math.min(...filtered.map(p => p.revenue));
+    const range = max - min || 1;
+    const points = filtered.map((p, i) => {
+      const x = (i / Math.max(filtered.length - 1, 1)) * 1000;
+      const y = 280 - ((p.revenue - min) / range) * 240;
+      return `${x},${y}`;
+    }).join(' ');
+    const areaPoints = `0,280 ${points} 1000,280`;
+    const labels = chartPeriod === 7
+      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      : chartPeriod === 30
+      ? ['W1', 'W2', 'W3', 'W4']
+      : ['M1', 'M2', 'M3'];
+
+    return (
+      <div className="relative h-[240px] w-full">
+        <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
+          <line x1="0" y1="100" x2="1000" y2="100" stroke="#f1f5f9" strokeWidth="1" />
+          <line x1="0" y1="200" x2="1000" y2="200" stroke="#f1f5f9" strokeWidth="1" />
+          <polyline points={points} fill="none" stroke="#00d2ff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <polygon points={areaPoints} fill="url(#grad2)" opacity="0.15" />
+          <defs>
+            <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#00d2ff" />
+              <stop offset="100%" stopColor="#00d2ff" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+        </svg>
+        <div className="absolute bottom-0 w-full flex justify-between px-2">
+          {labels.map(d => (
+            <span key={d} className="text-[10px] font-bold text-slate-400">{d}</span>
+          ))}
+        </div>
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -146,9 +192,7 @@ function Dashboard() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden">
 
-      {/* ── MODALS ──────────────────────────────────────────────────────────── */}
-
-      {/* Revenue Modal */}
+      {/* ── MODALS ── */}
       <Modal isOpen={activeModal === 'revenue'} onClose={() => setActiveModal(null)} title="Revenue Breakdown">
         <div className="space-y-6">
           <div className="grid grid-cols-2 gap-4">
@@ -172,7 +216,13 @@ function Dashboard() {
           <div>
             <h4 className="text-sm font-bold text-slate-700 mb-3">Recent Daily Revenue</h4>
             <div className="space-y-2 max-h-48 overflow-y-auto">
-              {revenueTrend.slice(-7).reverse().map((point, i) => (
+              {(revenueTrend.length > 0 ? revenueTrend.slice(-7).reverse() : [
+                { date: 'May 13, 2026', revenue: 140000, transactions: 40 },
+                { date: 'May 12, 2026', revenue: 143000, transactions: 41 },
+                { date: 'May 11, 2026', revenue: 146000, transactions: 42 },
+                { date: 'May 10, 2026', revenue: 149000, transactions: 43 },
+                { date: 'May 09, 2026', revenue: 152000, transactions: 44 },
+              ]).map((point, i) => (
                 <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                   <span className="text-xs font-medium text-slate-500">{point.date}</span>
                   <div className="flex items-center gap-3">
@@ -181,25 +231,6 @@ function Dashboard() {
                   </div>
                 </div>
               ))}
-              {revenueTrend.length === 0 && (
-                <div className="space-y-2">
-                  {[
-                    { date: 'May 13, 2026', revenue: 140000, transactions: 40 },
-                    { date: 'May 12, 2026', revenue: 143000, transactions: 41 },
-                    { date: 'May 11, 2026', revenue: 146000, transactions: 42 },
-                    { date: 'May 10, 2026', revenue: 149000, transactions: 43 },
-                    { date: 'May 09, 2026', revenue: 152000, transactions: 44 },
-                  ].map((point, i) => (
-                    <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
-                      <span className="text-xs font-medium text-slate-500">{point.date}</span>
-                      <div className="flex items-center gap-3">
-                        <span className="text-xs text-slate-400">{point.transactions} txns</span>
-                        <span className="text-sm font-bold text-slate-900">{formatCurrency(point.revenue)}</span>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
             </div>
           </div>
           <button
@@ -211,7 +242,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Transactions Modal */}
       <Modal isOpen={activeModal === 'transactions'} onClose={() => setActiveModal(null)} title="Transaction Details">
         <div className="space-y-6">
           <div className="grid grid-cols-3 gap-3">
@@ -259,7 +289,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Health Score Modal */}
       <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
         <div className="space-y-6">
           <div className="flex items-center justify-center">
@@ -310,7 +339,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* View All Customers Modal */}
       <Modal isOpen={activeModal === 'customers'} onClose={() => setActiveModal(null)} title="All Revenue Drivers">
         <div className="space-y-4">
           <div className="grid grid-cols-2 gap-3 mb-4">
@@ -352,7 +380,7 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
+      {/* ── SIDEBAR ── */}
       <aside className="w-[260px] bg-[#001f3f] flex flex-col justify-between shrink-0 h-full overflow-y-auto hidden md:flex">
         <div>
           <div className="p-8 pb-10">
@@ -419,7 +447,7 @@ function Dashboard() {
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ────────────────────────────────────────────────────── */}
+      {/* ── MAIN CONTENT ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-4 w-full md:w-1/2">
@@ -463,12 +491,7 @@ function Dashboard() {
 
           {/* ── KPI CARDS ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-
-            {/* Revenue Card */}
-            <div
-              onClick={() => setActiveModal('revenue')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
-            >
+            <div onClick={() => setActiveModal('revenue')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
                   <Banknote className="w-6 h-6" />
@@ -481,11 +504,7 @@ function Dashboard() {
               <p className="text-[10px] text-[#00d2ff] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
 
-            {/* Transactions Card */}
-            <div
-              onClick={() => setActiveModal('transactions')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
-            >
+            <div onClick={() => setActiveModal('transactions')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
                   <FileText className="w-6 h-6" />
@@ -501,7 +520,6 @@ function Dashboard() {
               <p className="text-[10px] text-[#00d2ff] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
-            {/* Best Sales Day Card */}
             <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md transition-shadow">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600">
@@ -513,11 +531,7 @@ function Dashboard() {
               <p className="text-xs text-slate-400 mt-2">₦47,000 avg. volume</p>
             </div>
 
-            {/* Health Score Card */}
-            <div
-              onClick={() => setActiveModal('health')}
-              className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group"
-            >
+            <div onClick={() => setActiveModal('health')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">HEALTH SCORE</p>
@@ -535,34 +549,27 @@ function Dashboard() {
 
           {/* ── CHARTS ── */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+
+            {/* Revenue Trend Chart with Period Toggle */}
             <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
-              <div className="flex justify-between items-center mb-10">
+              <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Revenue Trend</h3>
-                  <p className="text-sm text-slate-400">Last 30 days performance</p>
+                  <p className="text-sm text-slate-400">Performance over time</p>
                 </div>
-                <div className="px-4 py-1.5 bg-[#f8fafc] border border-slate-100 rounded-lg text-xs font-medium text-slate-600">Last 30 Days</div>
-              </div>
-              <div className="relative h-[240px] w-full flex items-end">
-                <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                  <line x1="0" y1="100" x2="1000" y2="100" stroke="#f1f5f9" strokeWidth="1" />
-                  <line x1="0" y1="200" x2="1000" y2="200" stroke="#f1f5f9" strokeWidth="1" />
-                  <path d="M0,250 C100,220 200,100 300,150 C400,200 500,50 600,120 C700,180 800,280 900,150 C950,100 1000,50 1000,50" fill="none" stroke="#00d2ff" strokeWidth="4" strokeLinecap="round" />
-                  <path d="M0,250 C100,220 200,100 300,150 C400,200 500,50 600,120 C700,180 800,280 900,150 C950,100 1000,50 1000,50 L1000,300 L0,300 Z" fill="url(#gradient)" className="opacity-10" />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#00d2ff" />
-                      <stop offset="100%" stopColor="#00d2ff" stopOpacity="0" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-                <div className="absolute bottom-0 w-full flex justify-between px-2 pt-4">
-                  <span className="text-[11px] font-bold text-slate-400">W1</span>
-                  <span className="text-[11px] font-bold text-slate-400">W2</span>
-                  <span className="text-[11px] font-bold text-slate-400">W3</span>
-                  <span className="text-[11px] font-bold text-slate-400">W4</span>
+                <div className="flex gap-2">
+                  {[7, 30, 90].map(d => (
+                    <button
+                      key={d}
+                      onClick={() => setChartPeriod(d)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}
+                    >
+                      {d}D
+                    </button>
+                  ))}
                 </div>
               </div>
+              {renderChart()}
             </div>
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col">
@@ -590,10 +597,7 @@ function Dashboard() {
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-lg font-bold text-slate-900">Top Revenue Drivers</h3>
-                <button
-                  onClick={() => setActiveModal('customers')}
-                  className="text-sm font-bold text-[#00d2ff] hover:underline cursor-pointer"
-                >
+                <button onClick={() => setActiveModal('customers')} className="text-sm font-bold text-[#00d2ff] hover:underline cursor-pointer">
                   View All
                 </button>
               </div>
