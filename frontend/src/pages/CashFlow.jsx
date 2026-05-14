@@ -50,6 +50,7 @@ function CashFlow() {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedPeak, setSelectedPeak] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [selectedPeriod, setSelectedPeriod] = useState('today');
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -157,6 +158,81 @@ function CashFlow() {
     return 'bg-emerald-500';
   };
 
+  const periodLabels = {
+    oct14: 'Week of Oct 14 — Early period, slow accumulation phase.',
+    oct21: 'Week of Oct 21 — Volatility detected, mid-cycle fluctuation.',
+    today: 'Current — Steady upward trend based on live data.',
+    nov07: 'Nov 07 Forecast — Peak revenue window approaching end.',
+  };
+
+  const renderForecastChart = () => {
+    const chartPaths = {
+      oct14: {
+        area: 'M0,280 L250,268 L500,255 L750,245 L1000,230 L1000,275 L750,282 L500,285 L250,288 L0,290 Z',
+        line: 'M0,280 L250,268 L500,255 L750,245 L1000,230',
+      },
+      oct21: {
+        area: 'M0,260 L200,230 L350,250 L500,200 L650,230 L800,170 L1000,155 L1000,220 L800,235 L650,280 L500,260 L350,290 L200,275 L0,285 Z',
+        line: 'M0,260 L200,230 L350,250 L500,200 L650,230 L800,170 L1000,155',
+      },
+      today: {
+        area: 'M0,250 L330,220 L660,190 L1000,160 L1000,210 L660,240 L330,270 L0,300 Z',
+        line: 'M0,275 L330,245 L660,215 L1000,185',
+      },
+      nov07: {
+        area: 'M0,235 L200,195 L400,140 L550,90 L700,60 L850,50 L1000,45 L1000,110 L850,120 L700,130 L550,160 L400,210 L200,255 L0,270 Z',
+        line: 'M0,235 L200,195 L400,140 L550,90 L700,60 L850,50 L1000,45',
+      },
+    };
+
+    const current = chartPaths[selectedPeriod];
+
+    return (
+      <div className="relative h-[240px] md:h-[320px] w-full flex items-end">
+        <div className="absolute top-0 left-0 text-[10px] font-bold text-slate-300">₦500k</div>
+        <div className="absolute bottom-12 left-0 text-[10px] font-bold text-slate-300">₦200k</div>
+
+        {/* Period context label */}
+        <div className="absolute top-0 right-0 text-[10px] font-bold text-[#00d2ff] max-w-[180px] text-right leading-tight">
+          {periodLabels[selectedPeriod]}
+        </div>
+
+        <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
+          <path d={current.area} fill="#f0f9ff" className="opacity-60" />
+          <path d={current.line} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="4 4" />
+          <line x1="500" y1="40" x2="500" y2="280" stroke="#00d2ff" strokeWidth="1.5" strokeDasharray="2 2" />
+          <circle cx="500" cy="40" r="4" fill="#0ea5e9" />
+        </svg>
+
+        <div className="absolute bottom-0 w-full flex justify-between px-1 pt-6 border-t border-slate-50">
+          {[
+            { key: 'oct14', label: 'OCT 14' },
+            { key: 'oct21', label: 'OCT 21' },
+            { key: 'today', label: 'TODAY' },
+            { key: 'nov07', label: 'NOV 07, 2026' },
+          ].map(item => (
+            <button
+              key={item.key}
+              onClick={() => setSelectedPeriod(item.key)}
+              className="flex flex-col items-center gap-1 cursor-pointer group"
+            >
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
+                selectedPeriod === item.key
+                  ? 'text-[#001f3f]'
+                  : 'text-slate-300 hover:text-slate-500'
+              }`}>
+                {item.label}
+              </span>
+              <div className={`h-1 rounded-full transition-all duration-300 ${
+                selectedPeriod === item.key ? 'w-8 bg-[#001f3f]' : 'w-0 bg-transparent'
+              }`}></div>
+            </button>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
@@ -173,7 +249,6 @@ function CashFlow() {
 
       {/* ── MODALS ── */}
 
-      {/* Smart Insights Modal */}
       <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
         <div className="space-y-5">
           <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
@@ -210,7 +285,6 @@ function CashFlow() {
         </div>
       </Modal>
 
-      {/* Potential Risks Modal */}
       <Modal isOpen={activeModal === 'risks'} onClose={() => setActiveModal(null)} title="Potential Risks — Nov 1-7">
         <div className="space-y-5">
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
@@ -262,7 +336,6 @@ function CashFlow() {
         </div>
       </Modal>
 
-      {/* Confidence Score Modal */}
       <Modal isOpen={activeModal === 'confidence'} onClose={() => setActiveModal(null)} title="Confidence Score Explained">
         <div className="space-y-5">
           <div className="flex items-center justify-center py-4">
@@ -305,7 +378,6 @@ function CashFlow() {
         </div>
       </Modal>
 
-      {/* Liquidity Peak Detail Modal */}
       <Modal isOpen={activeModal === 'peak'} onClose={() => setActiveModal(null)} title="Liquidity Peak Details">
         {selectedPeak && (
           <div className="space-y-5">
@@ -368,7 +440,6 @@ function CashFlow() {
         )}
       </Modal>
 
-      {/* Bridge Loan Modal */}
       <Modal isOpen={activeModal === 'bridge'} onClose={() => setActiveModal(null)} title="Squad Bridge Loan Offer">
         <div className="space-y-5">
           <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
@@ -569,31 +640,13 @@ function CashFlow() {
               <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-12 tracking-tight">
                 {formatCurrency(minRevenue)} – {formatCurrency(maxRevenue)}
               </h3>
-              <div className="relative h-[240px] md:h-[320px] w-full flex items-end">
-                <div className="absolute top-0 left-0 text-[10px] font-bold text-slate-300">₦500k</div>
-                <div className="absolute bottom-12 left-0 text-[10px] font-bold text-slate-300">₦200k</div>
-                <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-                  <path d="M0,250 L330,220 L660,190 L1000,160 L1000,210 L660,240 L330,270 L0,300 Z" fill="#f0f9ff" className="opacity-60" />
-                  <path d="M0,275 L330,245 L660,215 L1000,185" fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="4 4" />
-                  <line x1="500" y1="40" x2="500" y2="280" stroke="#00d2ff" strokeWidth="1.5" strokeDasharray="2 2" />
-                  <circle cx="500" cy="40" r="4" fill="#0ea5e9" />
-                </svg>
-                <div className="absolute bottom-0 w-full flex justify-between px-1 pt-6 border-t border-slate-50">
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">OCT 14</span>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">OCT 21</span>
-                  <div className="flex flex-col items-center">
-                    <span className="text-[9px] font-black text-[#001f3f] uppercase tracking-widest">TODAY</span>
-                    <div className="w-8 h-1 bg-[#001f3f] rounded-full mt-1"></div>
-                  </div>
-                  <span className="text-[9px] font-black text-slate-300 uppercase tracking-widest">NOV 07, 2026</span>
-                </div>
-              </div>
+
+              {/* Interactive chart */}
+              {renderForecastChart()}
             </div>
 
-            {/* Side Insights — all clickable */}
+            {/* Side Insights */}
             <div className="flex flex-col gap-6">
-
-              {/* Smart Insights */}
               <div
                 onClick={() => setActiveModal('insights')}
                 className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
@@ -612,7 +665,6 @@ function CashFlow() {
                 </div>
               </div>
 
-              {/* Potential Risks */}
               <div
                 onClick={() => setActiveModal('risks')}
                 className="bg-[#fff7ed] rounded-[24px] p-8 border border-[#ffedd5] cursor-pointer hover:shadow-md hover:border-orange-300 transition-all group"
@@ -634,7 +686,6 @@ function CashFlow() {
                 </div>
               </div>
 
-              {/* Confidence Score */}
               <div
                 onClick={() => setActiveModal('confidence')}
                 className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
@@ -657,7 +708,7 @@ function CashFlow() {
             </div>
           </div>
 
-          {/* Forecast Table — rows clickable */}
+          {/* Forecast Table */}
           <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
