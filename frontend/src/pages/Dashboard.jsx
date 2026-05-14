@@ -154,47 +154,45 @@ function Dashboard() {
       ];
 
   const getChartData = () => {
-  if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
-  
-  if (chartPeriod === 7) {
-    // 7D — volatile, spiky week
-    return [
-      { date: 'Mon', revenue: 180000, transactions: 55 },
-      { date: 'Tue', revenue: 120000, transactions: 38 },
-      { date: 'Wed', revenue: 210000, transactions: 64 },
-      { date: 'Thu', revenue: 95000, transactions: 29 },
-      { date: 'Fri', revenue: 310000, transactions: 94 },
-      { date: 'Sat', revenue: 250000, transactions: 76 },
-      { date: 'Sun', revenue: 140000, transactions: 43 },
-    ];
-  }
+    if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
 
-  if (chartPeriod === 30) {
-   // 30D — clean upward slope
-  return Array.from({ length: 30 }, (_, i) => ({
-  date: `Day ${i + 1}`,
-  revenue: 80000 + (i * 8000),
-  transactions: 40 + i,
-  }));
-  }
+    if (chartPeriod === 7) {
+      return [
+        { date: 'Mon', revenue: 180000, transactions: 55 },
+        { date: 'Tue', revenue: 120000, transactions: 38 },
+        { date: 'Wed', revenue: 210000, transactions: 64 },
+        { date: 'Thu', revenue: 95000, transactions: 29 },
+        { date: 'Fri', revenue: 310000, transactions: 94 },
+        { date: 'Sat', revenue: 250000, transactions: 76 },
+        { date: 'Sun', revenue: 140000, transactions: 43 },
+      ];
+    }
 
- // 90D — aggressive zigzag pattern
-return Array.from({ length: 90 }, (_, i) => ({
-  date: `Day ${i + 1}`,
-  revenue: i % 6 === 0 ? 350000
-    : i % 6 === 1 ? 120000
-    : i % 6 === 2 ? 300000
-    : i % 6 === 3 ? 80000
-    : i % 6 === 4 ? 280000
-    : 100000,
-  transactions: 30 + Math.floor(i * 0.5),
-}));
+    if (chartPeriod === 30) {
+      return Array.from({ length: 30 }, (_, i) => ({
+        date: `Day ${i + 1}`,
+        revenue: 80000 + (i * 8000),
+        transactions: 40 + i,
+      }));
+    }
+
+    return Array.from({ length: 90 }, (_, i) => ({
+      date: `Day ${i + 1}`,
+      revenue: i % 6 === 0 ? 350000
+        : i % 6 === 1 ? 120000
+        : i % 6 === 2 ? 300000
+        : i % 6 === 3 ? 80000
+        : i % 6 === 4 ? 280000
+        : 100000,
+      transactions: 30 + Math.floor(i * 0.5),
+    }));
+  };  // ← this closing was missing!
 
   const renderChart = () => {
-  const filtered = getChartData();
-  const max = 400000; // fixed ceiling
-  const min = 0;      // fixed floor
-  const range = 250000;
+    const filtered = getChartData();
+    const max = 400000;
+    const min = 0;
+    const range = 400000;
 
     const coords = filtered.map((p, i) => ({
       x: (i / Math.max(filtered.length - 1, 1)) * 1000,
@@ -255,7 +253,6 @@ return Array.from({ length: 90 }, (_, i) => ({
       </div>
     );
   };
-
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
