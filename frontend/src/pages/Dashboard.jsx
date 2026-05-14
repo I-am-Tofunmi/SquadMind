@@ -1,28 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  Bell, 
-  Settings, 
-  LogOut, 
-  HelpCircle,
-  Sparkles,
-  Award,
-  AlertTriangle,
-  ArrowRight,
-  Search,
-  User,
-  Banknote,
-  FileText,
-  Users,
-  Calendar,
-  Loader2,
-  X,
-  TrendingUp,
-  CheckCircle2,
-  Info,
-  Download
+  LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
+  Sparkles, Award, AlertTriangle, ArrowRight, Search, User, Banknote,
+  FileText, Users, Calendar, Loader2, X, TrendingUp, CheckCircle2, Info, Download
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
 
@@ -55,19 +36,12 @@ function Dashboard() {
   const [showHourly, setShowHourly] = useState(false);
 
   const navigate = useNavigate();
-
-  const onLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const onNavigate = (path) => navigate(`/${path}`);
 
   useEffect(() => {
     const token = getToken();
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    if (!token) { navigate('/login'); return; }
     fetchDashboard();
   }, []);
 
@@ -105,17 +79,12 @@ function Dashboard() {
       { date: 'May 10', revenue: 149000, transactions: 43 },
       { date: 'May 09', revenue: 152000, transactions: 44 },
     ];
-    const rows = [
-      ['Date', 'Revenue (NGN)', 'Transactions'],
-      ...data.map(p => [p.date, p.revenue, p.transactions])
-    ];
+    const rows = [['Date', 'Revenue (NGN)', 'Transactions'], ...data.map(p => [p.date, p.revenue, p.transactions])];
     const csv = rows.map(r => r.join(',')).join('\n');
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = `squadmind-revenue-${chartPeriod}d.csv`;
-    a.click();
+    a.href = url; a.download = `squadmind-revenue-${chartPeriod}d.csv`; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -155,7 +124,6 @@ function Dashboard() {
 
   const getChartData = () => {
     if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
-
     if (chartPeriod === 7) {
       return [
         { date: 'Mon', revenue: 180000, transactions: 55 },
@@ -167,97 +135,68 @@ function Dashboard() {
         { date: 'Sun', revenue: 140000, transactions: 43 },
       ];
     }
-
     if (chartPeriod === 30) {
-      return Array.from({ length: 30 }, (_, i) => ({
-        date: `Day ${i + 1}`,
-        revenue: 80000 + (i * 8000),
-        transactions: 40 + i,
-      }));
+      return Array.from({ length: 30 }, (_, i) => ({ date: `Day ${i + 1}`, revenue: 80000 + (i * 8000), transactions: 40 + i }));
     }
-
     return Array.from({ length: 90 }, (_, i) => ({
       date: `Day ${i + 1}`,
-      revenue: i % 6 === 0 ? 350000
-        : i % 6 === 1 ? 120000
-        : i % 6 === 2 ? 300000
-        : i % 6 === 3 ? 80000
-        : i % 6 === 4 ? 280000
-        : 100000,
+      revenue: i % 6 === 0 ? 350000 : i % 6 === 1 ? 120000 : i % 6 === 2 ? 300000 : i % 6 === 3 ? 80000 : i % 6 === 4 ? 280000 : 100000,
       transactions: 30 + Math.floor(i * 0.5),
     }));
-  };  // ← this closing was missing!
+  };
 
   const renderChart = () => {
     const filtered = getChartData();
-    const max = 400000;
-    const min = 0;
-    const range = 400000;
-
+    const min = 0; const range = 400000;
     const coords = filtered.map((p, i) => ({
       x: (i / Math.max(filtered.length - 1, 1)) * 1000,
       y: 280 - ((p.revenue - min) / range) * 240,
       ...p,
     }));
-
     const points = coords.map(c => `${c.x},${c.y}`).join(' ');
     const areaPoints = `0,280 ${points} 1000,280`;
-    const labels = chartPeriod === 7
-      ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
-      : chartPeriod === 30
-      ? ['W1', 'W2', 'W3', 'W4']
-      : ['Jan', 'Feb', 'Mar'];
+    const labels = chartPeriod === 7 ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
+      : chartPeriod === 30 ? ['W1', 'W2', 'W3', 'W4'] : ['Jan', 'Feb', 'Mar'];
 
     return (
       <div className="relative h-[240px] w-full">
         {hoveredPoint && (
-          <div
-            className="absolute bg-[#001f3f] text-white text-xs font-bold px-3 py-2 rounded-xl pointer-events-none shadow-xl z-10 whitespace-nowrap"
-            style={{ left: `${(hoveredPoint.x / 1000) * 100}%`, top: '8px', transform: 'translateX(-50%)' }}
-          >
+          <div className="absolute bg-[#001f3f] text-white text-xs font-bold px-3 py-2 rounded-xl pointer-events-none shadow-xl z-10 whitespace-nowrap"
+            style={{ left: `${(hoveredPoint.x / 1000) * 100}%`, top: '8px', transform: 'translateX(-50%)' }}>
             <p className="text-slate-300 text-[10px]">{hoveredPoint.date}</p>
-            <p className="text-[#00d2ff]">{formatCurrency(hoveredPoint.revenue)}</p>
+            <p className="text-[#E8762E]">{formatCurrency(hoveredPoint.revenue)}</p>
             <p className="text-slate-300">{hoveredPoint.transactions} txns</p>
           </div>
         )}
         <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
           <line x1="0" y1="100" x2="1000" y2="100" stroke="#f1f5f9" strokeWidth="1" />
           <line x1="0" y1="200" x2="1000" y2="200" stroke="#f1f5f9" strokeWidth="1" />
-          <polyline points={points} fill="none" stroke="#00d2ff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
+          <polyline points={points} fill="none" stroke="#E8762E" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" />
           <polygon points={areaPoints} fill="url(#grad2)" opacity="0.15" />
           <defs>
             <linearGradient id="grad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#00d2ff" />
-              <stop offset="100%" stopColor="#00d2ff" stopOpacity="0" />
+              <stop offset="0%" stopColor="#E8762E" />
+              <stop offset="100%" stopColor="#E8762E" stopOpacity="0" />
             </linearGradient>
           </defs>
           {coords.map((c, i) => (
-            <circle
-              key={i}
-              cx={c.x} cy={c.y} r="18"
-              fill="transparent"
-              style={{ cursor: 'crosshair' }}
-              onMouseEnter={() => setHoveredPoint(c)}
-              onMouseLeave={() => setHoveredPoint(null)}
-            />
+            <circle key={i} cx={c.x} cy={c.y} r="18" fill="transparent" style={{ cursor: 'crosshair' }}
+              onMouseEnter={() => setHoveredPoint(c)} onMouseLeave={() => setHoveredPoint(null)} />
           ))}
-          {hoveredPoint && (
-            <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="5" fill="#00d2ff" stroke="white" strokeWidth="2" />
-          )}
+          {hoveredPoint && <circle cx={hoveredPoint.x} cy={hoveredPoint.y} r="5" fill="#E8762E" stroke="white" strokeWidth="2" />}
         </svg>
         <div className="absolute bottom-0 w-full flex justify-between px-2">
-          {labels.map(d => (
-            <span key={d} className="text-[10px] font-bold text-slate-400">{d}</span>
-          ))}
+          {labels.map(d => <span key={d} className="text-[10px] font-bold text-slate-400">{d}</span>)}
         </div>
       </div>
     );
   };
+
   if (loading) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-[#00d2ff] animate-spin" />
+          <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
           <p className="text-slate-500 font-medium">Loading your dashboard...</p>
         </div>
       </div>
@@ -268,38 +207,29 @@ function Dashboard() {
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden">
 
       {/* ── MODALS ── */}
-
       <Modal isOpen={showHourly} onClose={() => setShowHourly(false)} title="Hourly Sales Breakdown">
         <div className="space-y-4">
           <p className="text-xs text-slate-400 font-medium">Average transactions by hour of day</p>
           <div className="flex items-end gap-1 h-32 pt-4">
             {[2,1,1,0,0,1,3,8,12,15,18,14,10,13,16,19,22,18,14,10,7,5,4,3].map((val, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
-                <div
-                  className={`w-full rounded-t-sm ${val >= 18 ? 'bg-[#00d2ff]' : val >= 10 ? 'bg-[#00d2ff]/60' : 'bg-slate-200'}`}
-                  style={{ height: `${(val / 22) * 100}%`, minHeight: val > 0 ? '4px' : '0' }}
-                ></div>
+                <div className={`w-full rounded-t-sm ${val >= 18 ? 'bg-[#E8762E]' : val >= 10 ? 'bg-[#E8762E]/60' : 'bg-slate-200'}`}
+                  style={{ height: `${(val / 22) * 100}%`, minHeight: val > 0 ? '4px' : '0' }}></div>
                 {i % 6 === 0 && <span className="text-[8px] text-slate-400">{i}h</span>}
               </div>
             ))}
           </div>
-          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
-            <p className="text-xs font-bold text-[#00d2ff] mb-1">⚡ Peak hours: 4PM – 6PM</p>
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+            <p className="text-xs font-bold text-[#E8762E] mb-1">⚡ Peak hours: 4PM – 6PM</p>
             <p className="text-xs text-slate-500 leading-relaxed">Schedule promotions between 3PM–4PM to maximize conversion. Lowest traffic is midnight to 5AM.</p>
           </div>
           <div className="grid grid-cols-3 gap-3">
-            <div className="bg-slate-50 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Peak</p>
-              <p className="text-sm font-bold text-slate-900">4PM–6PM</p>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Avg/hr</p>
-              <p className="text-sm font-bold text-slate-900">{Math.round(totalTransactions / 24)} txns</p>
-            </div>
-            <div className="bg-slate-50 rounded-xl p-3 text-center">
-              <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">Quiet</p>
-              <p className="text-sm font-bold text-slate-900">12AM–5AM</p>
-            </div>
+            {[{ l: 'Peak', v: '4PM–6PM' }, { l: 'Avg/hr', v: `${Math.round(totalTransactions / 24)} txns` }, { l: 'Quiet', v: '12AM–5AM' }].map((item, i) => (
+              <div key={i} className="bg-slate-50 rounded-xl p-3 text-center">
+                <p className="text-[10px] font-bold text-slate-400 uppercase mb-1">{item.l}</p>
+                <p className="text-sm font-bold text-slate-900">{item.v}</p>
+              </div>
+            ))}
           </div>
         </div>
       </Modal>
@@ -319,8 +249,8 @@ function Dashboard() {
               <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">Avg Transaction</p>
               <p className="text-xl font-bold text-slate-900">{formatCurrency(avgTransactionValue)}</p>
             </div>
-            <div className="bg-cyan-50 rounded-2xl p-4">
-              <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider mb-1">Best Day</p>
+            <div className="bg-orange-50 rounded-2xl p-4">
+              <p className="text-[10px] font-bold text-[#E8762E] uppercase tracking-wider mb-1">Best Day</p>
               <p className="text-xl font-bold text-slate-900">{bestSalesDay}</p>
             </div>
           </div>
@@ -344,16 +274,11 @@ function Dashboard() {
               ))}
             </div>
           </div>
-          <button
-            onClick={exportCSV}
-            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer"
-          >
+          <button onClick={exportCSV} className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer">
             <Download className="w-4 h-4" /> Export as CSV
           </button>
-          <button
-            onClick={() => { setActiveModal(null); onNavigate('cashflow'); }}
-            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
-          >
+          <button onClick={() => { setActiveModal(null); onNavigate('cashflow'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Full Cash Flow Analysis <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -381,7 +306,7 @@ function Dashboard() {
               {[
                 { channel: 'Bank Transfer', count: Math.round(totalTransactions * 0.35), color: 'bg-blue-500' },
                 { channel: 'POS Terminal', count: Math.round(totalTransactions * 0.28), color: 'bg-emerald-500' },
-                { channel: 'Virtual Account', count: Math.round(totalTransactions * 0.22), color: 'bg-cyan-500' },
+                { channel: 'Virtual Account', count: Math.round(totalTransactions * 0.22), color: 'bg-[#E8762E]' },
                 { channel: 'USSD', count: Math.round(totalTransactions * 0.15), color: 'bg-purple-500' },
               ].map((item, i) => (
                 <div key={i} className="flex items-center gap-3">
@@ -397,10 +322,8 @@ function Dashboard() {
             <p className="text-xs font-bold text-amber-700">72% of daily target reached</p>
             <p className="text-xs text-amber-600 mt-1">You need {Math.round(totalTransactions * 0.38)} more transactions to hit today's goal</p>
           </div>
-          <button
-            onClick={() => { setActiveModal(null); onNavigate('frauddetection'); }}
-            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
-          >
+          <button onClick={() => { setActiveModal(null); onNavigate('frauddetection'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Fraud Analysis <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -409,8 +332,8 @@ function Dashboard() {
       <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
         <div className="space-y-6">
           <div className="flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full border-8 border-[#e0f7fa] flex items-center justify-center relative">
-              <div className="absolute inset-0 border-8 border-[#00d2ff] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
+            <div className="w-32 h-32 rounded-full border-8 border-orange-100 flex items-center justify-center relative">
+              <div className="absolute inset-0 border-8 border-[#E8762E] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
               <div className="text-center z-10">
                 <span className="text-3xl font-bold text-slate-900">{healthScore}</span>
                 <span className="text-sm text-slate-400">/100</span>
@@ -423,14 +346,11 @@ function Dashboard() {
             {[
               { label: 'Revenue Growth', score: healthBreakdown.revenue_growth, color: 'bg-emerald-500', icon: <TrendingUp className="w-4 h-4 text-emerald-500" /> },
               { label: 'Fraud Safety', score: healthBreakdown.fraud_safety, color: 'bg-blue-500', icon: <ShieldAlert className="w-4 h-4 text-blue-500" /> },
-              { label: 'Transaction Volume', score: healthBreakdown.transaction_volume, color: 'bg-cyan-500', icon: <FileText className="w-4 h-4 text-cyan-500" /> },
+              { label: 'Transaction Volume', score: healthBreakdown.transaction_volume, color: 'bg-[#E8762E]', icon: <FileText className="w-4 h-4 text-[#E8762E]" /> },
             ].map((item, i) => (
               <div key={i} className="space-y-2">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {item.icon}
-                    <span className="text-sm font-medium text-slate-700">{item.label}</span>
-                  </div>
+                  <div className="flex items-center gap-2">{item.icon}<span className="text-sm font-medium text-slate-700">{item.label}</span></div>
                   <span className="text-sm font-bold text-slate-900">{item.score}/100</span>
                 </div>
                 <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden">
@@ -439,18 +359,14 @@ function Dashboard() {
               </div>
             ))}
           </div>
-          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <div className="flex items-start gap-3">
-              <Info className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
-              <p className="text-xs text-slate-600 leading-relaxed">
-                To improve your score, focus on increasing transaction volume and maintaining your current fraud prevention success rate.
-              </p>
+              <Info className="w-4 h-4 text-[#E8762E] mt-0.5 shrink-0" />
+              <p className="text-xs text-slate-600 leading-relaxed">To improve your score, focus on increasing transaction volume and maintaining your current fraud prevention success rate.</p>
             </div>
           </div>
-          <button
-            onClick={() => { setActiveModal(null); onNavigate('trustscore'); }}
-            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
-          >
+          <button onClick={() => { setActiveModal(null); onNavigate('trustscore'); }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Full TrustScore Report <ArrowRight className="w-4 h-4" />
           </button>
         </div>
@@ -472,9 +388,7 @@ function Dashboard() {
             {topCustomers.map((customer, i) => (
               <div key={i} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-[#001f3f] flex items-center justify-center text-white font-bold text-xs">
-                    {i + 1}
-                  </div>
+                  <div className="w-8 h-8 rounded-full bg-[#001f3f] flex items-center justify-center text-white font-bold text-xs">{i + 1}</div>
                   <div>
                     <p className="text-sm font-bold text-slate-900">{customer.name}</p>
                     <p className="text-[10px] text-slate-400">{customer.transactions} transactions</p>
@@ -506,56 +420,44 @@ function Dashboard() {
             <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
           </div>
           <nav className="px-4 space-y-1">
-            <button onClick={() => onNavigate('dashboard')} className="w-full flex items-center gap-3 px-4 py-3 bg-[#112f4d] text-white rounded-lg transition-colors cursor-pointer">
-              <LayoutDashboard className="w-5 h-5 text-white" />
-              <span className="font-medium text-[15px]">Dashboard</span>
-            </button>
-            <button onClick={() => onNavigate('cashflow')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Banknote className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Cash Flow</span>
-            </button>
-            <button onClick={() => onNavigate('frauddetection')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <ShieldAlert className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Fraud Detection</span>
-            </button>
-            <button onClick={() => onNavigate('alerts')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Bell className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Alerts</span>
-            </button>
-            <button onClick={() => onNavigate('trustscore')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Award className="w-5 h-5" />
-              <span className="font-medium text-[15px]">TrustScore</span>
-            </button>
-            <button onClick={() => onNavigate('settings')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Settings className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Settings</span>
-            </button>
+            {[
+              { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, path: 'dashboard', active: true },
+              { label: 'Cash Flow', icon: <Banknote className="w-5 h-5" />, path: 'cashflow' },
+              { label: 'Fraud Detection', icon: <ShieldAlert className="w-5 h-5" />, path: 'frauddetection' },
+              { label: 'Alerts', icon: <Bell className="w-5 h-5" />, path: 'alerts' },
+              { label: 'TrustScore', icon: <Award className="w-5 h-5" />, path: 'trustscore' },
+              { label: 'Settings', icon: <Settings className="w-5 h-5" />, path: 'settings' },
+            ].map((item) => (
+              <button key={item.path} onClick={() => onNavigate(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${item.active ? 'bg-[#E8762E] text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                {item.icon}
+                <span className="font-medium text-[15px]">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
         <div className="p-6 space-y-6">
-          <div className="bg-[#112f4d] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">CURRENT TIER</p>
               <p className="text-base font-bold text-white mb-4">Pro Business</p>
-              <button className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-[#001f3f] font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#00d2ff]/20">
+              <button className="w-full bg-[#E8762E] hover:bg-[#E8762E]/90 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#E8762E]/20">
                 Upgrade Plan
               </button>
             </div>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#00d2ff]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E8762E]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
           </div>
           <div className="space-y-1">
             <button className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <HelpCircle className="w-4 h-4" />
-              <span className="text-sm font-medium">Help Center</span>
+              <HelpCircle className="w-4 h-4" /><span className="text-sm font-medium">Help Center</span>
             </button>
             <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium">Logout</span>
+              <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#00d2ff] flex items-center justify-center text-[#001f3f] font-bold overflow-hidden">
-              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=00d2ff&color=001f3f`} alt={businessName} />
+            <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt={businessName} />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate">{businessName}</p>
@@ -565,18 +467,18 @@ function Dashboard() {
         </div>
       </aside>
 
-      {/* ── MAIN CONTENT ── */}
+      {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex items-center gap-4 w-full md:w-1/2">
             <div className="relative w-full max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-              <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-[#f1f5f9] border-none rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-[#00d2ff]/30 outline-none" />
+              <input type="text" placeholder="Search..." className="w-full pl-10 pr-4 py-2 md:py-2.5 bg-[#f1f5f9] border-none rounded-lg text-xs md:text-sm focus:ring-2 focus:ring-[#E8762E]/20 outline-none" />
             </div>
           </div>
           <div className="hidden md:flex items-center gap-6">
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-[#e0f7fa] text-[#00838f] rounded-full">
-              <div className="w-2 h-2 bg-[#00acc1] rounded-full animate-pulse"></div>
+            <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#E8762E] rounded-full">
+              <div className="w-2 h-2 bg-[#E8762E] rounded-full animate-pulse"></div>
               <span className="text-[10px] font-bold tracking-wider uppercase">AI LIVE MONITORING</span>
             </div>
             <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors">
@@ -595,12 +497,7 @@ function Dashboard() {
         </header>
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
-
-          {error && (
-            <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
           <div className="mb-10">
             <h2 className="text-3xl font-bold text-slate-900 mb-1">Business Overview</h2>
@@ -609,7 +506,7 @@ function Dashboard() {
 
           {/* ── KPI CARDS ── */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-10">
-            <div onClick={() => setActiveModal('revenue')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
+            <div onClick={() => setActiveModal('revenue')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-600 group-hover:bg-emerald-100 transition-colors">
                   <Banknote className="w-6 h-6" />
@@ -619,10 +516,10 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">TOTAL REVENUE</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{formatCurrency(totalRevenue)}</h3>
               <p className="text-xs text-slate-400 mt-2">vs last month</p>
-              <p className="text-[10px] text-[#00d2ff] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
+              <p className="text-[10px] text-[#E8762E] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
 
-            <div onClick={() => setActiveModal('transactions')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
+            <div onClick={() => setActiveModal('transactions')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-600 group-hover:bg-blue-100 transition-colors">
                   <FileText className="w-6 h-6" />
@@ -632,13 +529,13 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">TRANSACTIONS</p>
               <h3 className="text-3xl font-bold text-slate-900 mb-4">{totalTransactions}</h3>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
-                <div className="bg-blue-500 h-full w-[72%] rounded-full"></div>
+                <div className="bg-[#E8762E] h-full w-[72%] rounded-full"></div>
               </div>
               <p className="text-[10px] text-slate-400 font-medium mt-2">72% of target reached</p>
-              <p className="text-[10px] text-[#00d2ff] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
+              <p className="text-[10px] text-[#E8762E] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
-            <div onClick={() => setShowHourly(true)} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
+            <div onClick={() => setShowHourly(true)} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div className="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-600 group-hover:bg-purple-100 transition-colors">
                   <Calendar className="w-6 h-6" />
@@ -647,22 +544,22 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">BEST SALES DAY</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{bestSalesDay}</h3>
               <p className="text-xs text-slate-400 mt-2">₦47,000 avg. volume</p>
-              <p className="text-[10px] text-[#00d2ff] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click for hourly breakdown →</p>
+              <p className="text-[10px] text-[#E8762E] font-bold mt-3 opacity-0 group-hover:opacity-100 transition-opacity">Click for hourly breakdown →</p>
             </div>
 
-            <div onClick={() => setActiveModal('health')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#00d2ff]/30 transition-all cursor-pointer group">
+            <div onClick={() => setActiveModal('health')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-6">
                 <div>
                   <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">HEALTH SCORE</p>
                   <h3 className="text-3xl font-bold text-slate-900">{healthScore}/100</h3>
                   <p className="text-[10px] text-emerald-600 font-bold mt-2 uppercase tracking-wide">Status: {healthLabel}</p>
                 </div>
-                <div className="w-16 h-16 rounded-xl border-4 border-[#e0f7fa] flex items-center justify-center relative">
-                  <div className="absolute inset-0 border-4 border-[#00d2ff] border-t-transparent border-r-transparent rounded-xl rotate-45"></div>
-                  <span className="text-sm font-bold text-[#00d2ff]">{healthScore}%</span>
+                <div className="w-16 h-16 rounded-xl border-4 border-orange-100 flex items-center justify-center relative">
+                  <div className="absolute inset-0 border-4 border-[#E8762E] border-t-transparent border-r-transparent rounded-xl rotate-45"></div>
+                  <span className="text-sm font-bold text-[#E8762E]">{healthScore}%</span>
                 </div>
               </div>
-              <p className="text-[10px] text-[#00d2ff] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
+              <p className="text-[10px] text-[#E8762E] font-bold opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
           </div>
 
@@ -676,18 +573,12 @@ function Dashboard() {
                 </div>
                 <div className="flex gap-2">
                   {[7, 30, 90].map(d => (
-                    <button
-                      key={d}
-                      onClick={() => setChartPeriod(d)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}
-                    >
+                    <button key={d} onClick={() => setChartPeriod(d)}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${chartPeriod === d ? 'bg-[#001f3f] text-white' : 'bg-[#f8fafc] border border-slate-100 text-slate-500 hover:text-slate-900'}`}>
                       {d}D
                     </button>
                   ))}
-                  <button
-                    onClick={exportCSV}
-                    className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-all flex items-center gap-1"
-                  >
+                  <button onClick={exportCSV} className="px-3 py-1.5 rounded-lg text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-100 hover:bg-emerald-100 transition-all flex items-center gap-1">
                     <Download className="w-3 h-3" /> CSV
                   </button>
                 </div>
@@ -706,9 +597,9 @@ function Dashboard() {
                 ].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-4 w-full">
                     <div className="w-full bg-[#f1f5f9] rounded-md relative overflow-hidden" style={{ height: '140px' }}>
-                      <div className={`absolute bottom-0 left-0 w-full rounded-md ${item.active ? 'bg-[#00d2ff]' : 'bg-[#e2e8f0]'}`} style={{ height: item.h }}></div>
+                      <div className={`absolute bottom-0 left-0 w-full rounded-md ${item.active ? 'bg-[#E8762E]' : 'bg-[#e2e8f0]'}`} style={{ height: item.h }}></div>
                     </div>
-                    <span className={`text-[10px] font-bold ${item.active ? 'text-[#00d2ff]' : 'text-slate-400'}`}>{item.d}</span>
+                    <span className={`text-[10px] font-bold ${item.active ? 'text-[#E8762E]' : 'text-slate-400'}`}>{item.d}</span>
                   </div>
                 ))}
               </div>
@@ -720,17 +611,13 @@ function Dashboard() {
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-8">
                 <h3 className="text-lg font-bold text-slate-900">Top Revenue Drivers</h3>
-                <button onClick={() => setActiveModal('customers')} className="text-sm font-bold text-[#00d2ff] hover:underline cursor-pointer">
-                  View All
-                </button>
+                <button onClick={() => setActiveModal('customers')} className="text-sm font-bold text-[#E8762E] hover:underline cursor-pointer">View All</button>
               </div>
               <div className="space-y-6">
                 {topCustomers.slice(0, 3).map((customer, i) => (
                   <div key={i} className="flex items-center justify-between hover:bg-slate-50 rounded-xl p-2 -mx-2 transition-colors cursor-pointer" onClick={() => setActiveModal('customers')}>
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">
-                        {customer.id}
-                      </div>
+                      <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">{customer.id}</div>
                       <div>
                         <span className="font-bold text-slate-700">{customer.name}</span>
                         <p className="text-xs text-slate-400">{customer.transactions} transactions</p>
@@ -757,26 +644,24 @@ function Dashboard() {
                 <div className="flex items-center gap-6">
                   <div className="flex items-center gap-3">
                     <span className={`text-[10px] font-bold ${isEnglish ? 'text-slate-900' : 'text-slate-400'}`}>ENGLISH</span>
-                    <button onClick={() => setIsEnglish(!isEnglish)} className={`w-10 h-5 rounded-full p-1 transition-colors ${isEnglish ? 'bg-slate-200' : 'bg-[#00d2ff]'}`}>
+                    <button onClick={() => setIsEnglish(!isEnglish)} className={`w-10 h-5 rounded-full p-1 transition-colors ${isEnglish ? 'bg-slate-200' : 'bg-[#E8762E]'}`}>
                       <div className={`w-3 h-3 rounded-full bg-white transition-transform ${isEnglish ? 'translate-x-0' : 'translate-x-5'}`}></div>
                     </button>
                     <span className={`text-[10px] font-bold ${!isEnglish ? 'text-slate-900' : 'text-slate-400'}`}>PIDGIN</span>
                   </div>
-                  <button onClick={() => onNavigate('settings')} className="text-xs font-bold text-[#00d2ff] hover:underline cursor-pointer">Settings</button>
+                  <button onClick={() => onNavigate('settings')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer">Settings</button>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-3 divide-y md:divide-y-0 md:divide-x divide-slate-50">
                 <div className="p-8 hover:bg-slate-50 transition-colors">
                   <div className="flex items-start gap-4">
-                    <div className="w-10 h-10 rounded-full bg-cyan-50 flex items-center justify-center shrink-0">
-                      <Sparkles className="w-5 h-5 text-[#00d2ff]" />
+                    <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0">
+                      <Sparkles className="w-5 h-5 text-[#E8762E]" />
                     </div>
                     <div>
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-2">AI INSIGHT</h4>
-                      <p className="text-sm font-medium text-slate-700 leading-relaxed">
-                        {isEnglish ? aiInsightEnglish : aiInsightPidgin}
-                      </p>
+                      <p className="text-sm font-medium text-slate-700 leading-relaxed">{isEnglish ? aiInsightEnglish : aiInsightPidgin}</p>
                     </div>
                   </div>
                 </div>
@@ -828,26 +713,23 @@ function Dashboard() {
               © 2026 SquadMind. Powered by Squad.
             </p>
             <div className="flex gap-8">
-              <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Privacy Policy</a>
-              <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Terms of Service</a>
-              <a href="#" className="text-sm text-slate-500 hover:text-slate-900 transition-colors font-medium">Contact Support</a>
+              <a href="#" className="text-sm text-slate-500 hover:text-[#E8762E] transition-colors font-medium">Privacy Policy</a>
+              <a href="#" className="text-sm text-slate-500 hover:text-[#E8762E] transition-colors font-medium">Terms of Service</a>
+              <a href="#" className="text-sm text-slate-500 hover:text-[#E8762E] transition-colors font-medium">Contact Support</a>
             </div>
           </footer>
         </div>
       </main>
 
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
-        <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-[#001f3f]">
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Home</span>
+        <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-[#E8762E]">
+          <LayoutDashboard className="w-5 h-5" /><span className="text-[10px] font-bold">Home</span>
         </button>
         <button onClick={() => onNavigate('cashflow')} className="flex flex-col items-center gap-1 text-slate-400">
-          <Banknote className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Cash</span>
+          <Banknote className="w-5 h-5" /><span className="text-[10px] font-bold">Cash</span>
         </button>
         <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-slate-400">
-          <ShieldAlert className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Fraud</span>
+          <ShieldAlert className="w-5 h-5" /><span className="text-[10px] font-bold">Fraud</span>
         </button>
         <button onClick={() => onNavigate('alerts')} className="flex flex-col items-center gap-1 text-slate-400 relative">
           <Bell className="w-5 h-5" />
@@ -855,12 +737,11 @@ function Dashboard() {
           <span className="text-[10px] font-bold">Alerts</span>
         </button>
         <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400">
-          <Settings className="w-5 h-5" />
-          <span className="text-[10px] font-bold">More</span>
+          <Settings className="w-5 h-5" /><span className="text-[10px] font-bold">More</span>
         </button>
       </nav>
 
-      <button className="fixed bottom-24 right-6 w-12 h-12 bg-[#001f3f] text-white rounded-xl shadow-2xl flex items-center justify-center md:bottom-8 md:right-8 md:w-14 md:h-14 transition-all z-40">
+      <button className="fixed bottom-24 right-6 w-12 h-12 bg-[#E8762E] text-white rounded-xl shadow-2xl shadow-[#E8762E]/30 flex items-center justify-center md:bottom-8 md:right-8 md:w-14 md:h-14 transition-all z-40">
         <Sparkles className="w-6 h-6" />
       </button>
     </div>
