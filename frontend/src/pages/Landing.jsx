@@ -30,7 +30,7 @@ function Landing() {
     <div className="min-h-screen bg-surface flex flex-col font-outfit text-slate-900 overflow-x-hidden">
       
       {/* Navbar */}
-      <nav className="w-full h-20 bg-primary flex items-center justify-between px-6 md:px-20 relative z-50">
+      <nav className="w-full h-20 bg-[#001f3f] flex items-center justify-between px-6 md:px-20 relative z-50">
         <div className="text-xl font-bold text-white tracking-tight">
           SquadMind
         </div>
@@ -63,7 +63,7 @@ function Landing() {
         </div>
 
         {isMenuOpen && (
-          <div className="absolute top-20 left-0 w-full bg-primary border-t border-white/5 p-6 flex flex-col gap-6 md:hidden shadow-2xl z-50">
+          <div className="absolute top-20 left-0 w-full bg-[#001f3f] border-t border-white/5 p-6 flex flex-col gap-6 md:hidden shadow-2xl z-50">
              <a href="#features" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Features</a>
              <a href="#intelligence" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Intelligence</a>
              <a href="#pricing" onClick={() => setIsMenuOpen(false)} className="text-lg font-bold text-white">Pricing</a>
@@ -78,7 +78,7 @@ function Landing() {
            <span className="text-[10px] font-extrabold text-[#E8762E] uppercase tracking-wider">AI DRIVEN BUSINESS INTELLIGENCE</span>
         </div>
 
-        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-primary tracking-tight mb-8 leading-[1.1] max-w-4xl">
+        <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-[#001f3f] tracking-tight mb-8 leading-[1.1] max-w-4xl">
           Your AI CFO.<br />Built for Your Business.
         </h1>
 
@@ -93,7 +93,7 @@ function Landing() {
           >
             Connect My Squad Account
           </button>
-          <button className="w-full sm:w-auto bg-card border border-slate-200 text-primary px-10 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm cursor-pointer">
+          <button className="w-full sm:w-auto bg-card border border-slate-200 text-[#001f3f] px-10 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm cursor-pointer">
             View Demo
           </button>
         </div>
@@ -104,9 +104,9 @@ function Landing() {
               {/* Browser bar */}
               <div className="h-10 md:h-12 border-b border-slate-200/60 bg-card flex items-center justify-between px-4 md:px-6">
                  <div className="flex gap-1.5 md:gap-2">
-                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-red-400"></div>
-                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-yellow-400"></div>
-                    <div className="w-2.5 h-2.5 md:w-3 h-3 rounded-full bg-emerald-400"></div>
+                    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-red-400"></div>
+                    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-yellow-400"></div>
+                    <div className="w-2.5 h-2.5 md:w-3 md:h-3 rounded-full bg-emerald-400"></div>
                  </div>
                  <div className="w-1/2 md:w-1/3 h-5 md:h-6 bg-slate-100 rounded-lg flex items-center px-4">
                     <span className="text-[7px] md:text-[8px] text-slate-300 font-bold uppercase tracking-widest truncate">squadmind.ai/dashboard</span>
@@ -221,7 +221,7 @@ function Landing() {
             <div className="w-10 h-10 md:w-12 md:h-12 bg-orange-50 rounded-2xl flex items-center justify-center mb-6 md:mb-8">
               {f.icon}
             </div>
-            <h4 className="text-base md:text-lg font-bold text-primary mb-3 md:mb-4">{f.title}</h4>
+            <h4 className="text-base md:text-lg font-bold text-[#001f3f] mb-3 md:mb-4">{f.title}</h4>
             <p className="text-[11px] md:text-xs text-slate-400 font-medium leading-relaxed">{f.text}</p>
           </div>
         ))}
@@ -290,7 +290,7 @@ function Landing() {
         </div>
         <button 
            onClick={handleGetStarted}
-           className="px-8 py-3 border border-slate-200 rounded-full text-[10px] font-black text-slate-900 uppercase tracking-widest hover:bg-slate-50 transition-all cursor-pointer"
+           className="px-8 py-3 border border-slate-200 rounded-full text-[10px] font-black text-[#001f3f] uppercase tracking-widest hover:bg-slate-50 transition-all cursor-pointer"
         >
            Connect Now
         </button>
