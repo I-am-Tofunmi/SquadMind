@@ -194,7 +194,7 @@ function Dashboard() {
   const filtered = getChartData();
   const max = 400000; // fixed ceiling
   const min = 0;      // fixed floor
-  const range = max - min;
+  const range = 250000;
 
     const coords = filtered.map((p, i) => ({
       x: (i / Math.max(filtered.length - 1, 1)) * 1000,
