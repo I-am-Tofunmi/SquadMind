@@ -7,8 +7,6 @@ import {
   Settings, 
   LogOut, 
   HelpCircle,
-  Search,
-  User,
   Download,
   Play,
   CheckCircle2,
@@ -19,10 +17,29 @@ import {
   TrendingUp,
   Banknote,
   Award,
-  Upload,
-  Loader2
+  Loader2,
+  X,
+  Zap
 } from 'lucide-react';
 import { getLatestForecast, generateForecast, getToken } from '../services/api';
+
+function Modal({ isOpen, onClose, title, children }) {
+  if (!isOpen) return null;
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      <div className="absolute inset-0 bg-black/40 backdrop-blur-sm" onClick={onClose} />
+      <div className="relative bg-white rounded-3xl shadow-2xl w-full max-w-lg max-h-[80vh] overflow-y-auto z-10">
+        <div className="flex items-center justify-between p-6 border-b border-slate-100">
+          <h3 className="text-lg font-bold text-slate-900">{title}</h3>
+          <button onClick={onClose} className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center hover:bg-slate-200 transition-colors cursor-pointer">
+            <X className="w-4 h-4 text-slate-600" />
+          </button>
+        </div>
+        <div className="p-6">{children}</div>
+      </div>
+    </div>
+  );
+}
 
 function CashFlow() {
   const navigate = useNavigate();
@@ -30,6 +47,9 @@ function CashFlow() {
   const [loading, setLoading] = useState(true);
   const [generating, setGenerating] = useState(false);
   const [error, setError] = useState('');
+  const [activeModal, setActiveModal] = useState(null);
+  const [selectedPeak, setSelectedPeak] = useState(null);
+  const [successMsg, setSuccessMsg] = useState('');
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -46,26 +66,27 @@ function CashFlow() {
     fetchForecast();
   }, []);
 
-const fetchForecast = async () => {
-  try {
-    setLoading(true);
-    const response = await getLatestForecast();
-    console.log('FORECAST RESPONSE:', JSON.stringify(response));
-    const data = response?.data || response;
-    setForecastData(data && typeof data === 'object' ? data : null);
-  } catch (err) {
-    setError('Using demo forecast data');
-    setForecastData(null);
-  } finally {
-    setLoading(false);
-  }
-};
+  const fetchForecast = async () => {
+    try {
+      setLoading(true);
+      const response = await getLatestForecast();
+      const data = response?.data || response;
+      setForecastData(data && typeof data === 'object' ? data : null);
+    } catch (err) {
+      setError('Using demo forecast data');
+      setForecastData(null);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGenerateForecast = async () => {
     try {
       setGenerating(true);
       await generateForecast();
       await fetchForecast();
+      setSuccessMsg('New analysis generated successfully!');
+      setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
       setError('Failed to generate forecast');
     } finally {
@@ -73,16 +94,49 @@ const fetchForecast = async () => {
     }
   };
 
+  const exportReport = () => {
+    const rows = [
+      ['SquadMind Cash Flow Report'],
+      ['Generated:', new Date().toLocaleDateString('en-NG')],
+      [''],
+      ['FORECAST SUMMARY'],
+      ['Expected Min Revenue', formatCurrency(minRevenue)],
+      ['Expected Max Revenue', formatCurrency(maxRevenue)],
+      ['Confidence Score', `${confidenceScore}%`],
+      [''],
+      ['LIQUIDITY PEAKS'],
+      ['Timeline', 'Source', 'Predicted Flow', 'Risk Level', 'Status'],
+      ...liquidityPeaks.map(p => [
+        p.time || p.timeline,
+        p.source || p.predictor,
+        formatCurrency(Math.abs(p.flow || p.predicted_flow || 0)),
+        p.risk || p.risk_level,
+        p.status
+      ]),
+      [''],
+      ['AI NARRATIVE'],
+      [aiNarrative],
+    ];
+    const csv = rows.map(r => r.join(',')).join('\n');
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'squadmind-cashflow-report.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   const formatCurrency = (amount) => {
     if (!amount) return '₦0';
     return `₦${Number(amount).toLocaleString('en-NG')}`;
   };
 
-  // Extract forecast data with fallbacks
   const minRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 340000) * 0.9 || 340000;
   const maxRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 380000) * 1.1 || 380000;
   const confidenceScore = Number(forecastData?.data?.confidence_score || forecastData?.confidence_score || 92) || 92;
-  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
+  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';
+  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
   const liquidityPeaks = forecastData?.liquidity_peaks || [
     { time: 'Oct 24 — Oct 31', source: 'Payroll Cycle Spike', flow: 85900, risk: 'LOW', status: 'Stable' },
     { time: 'Nov 01 — Nov 07', source: 'Post-Month End Dip', flow: -23450, risk: 'MODERATE', status: 'Watch' },
@@ -116,8 +170,267 @@ const fetchForecast = async () => {
 
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
-      
-      {/* Sidebar */}
+
+      {/* ── MODALS ── */}
+
+      {/* Smart Insights Modal */}
+      <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
+        <div className="space-y-5">
+          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <div className="flex items-start gap-3">
+              <Lightbulb className="w-5 h-5 text-[#00d2ff] mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-[#00d2ff] uppercase tracking-wider mb-2">AI Narrative</p>
+                <p className="text-sm text-slate-600 leading-relaxed">{aiNarrative}</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Key Predictions</h4>
+            {[
+              { label: 'Revenue Trend', value: '+15% vs last month', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Peak Sales Window', value: 'Oct 24 – Oct 31', color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: 'Risk Period', value: 'Nov 01 – Nov 07', color: 'text-orange-600', bg: 'bg-orange-50' },
+              { label: 'Recovery Expected', value: 'Nov 08 onwards', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                <span className="text-xs font-medium text-slate-600">{item.label}</span>
+                <span className={`text-xs font-bold px-2 py-1 rounded-lg ${item.bg} ${item.color}`}>{item.value}</span>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-slate-50 rounded-2xl">
+            <p className="text-xs font-bold text-slate-500 mb-1">🇳🇬 Pidgin Summary</p>
+            <p className="text-sm text-slate-600 leading-relaxed">{pidginExplanation}</p>
+          </div>
+          <div className="p-4 bg-[#001f3f] rounded-2xl text-white">
+            <p className="text-xs font-bold mb-1">💡 Recommended Action</p>
+            <p className="text-xs text-slate-300 leading-relaxed">Run promotions before Oct 24 to capitalize on the payroll cycle spike. Consider delaying large expenditures until after Nov 7.</p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Potential Risks Modal */}
+      <Modal isOpen={activeModal === 'risks'} onClose={() => setActiveModal(null)} title="Potential Risks — Nov 1-7">
+        <div className="space-y-5">
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
+            <div className="flex items-start gap-3">
+              <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
+              <div>
+                <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-2">Risk Window: Nov 1–7</p>
+                <p className="text-sm text-slate-600 leading-relaxed">A cash flow dip of approximately ₦23,450 is predicted during this period based on post-month-end payment cycles and reduced inflow patterns.</p>
+              </div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Risk Breakdown</h4>
+            {[
+              { label: 'Predicted Shortfall', value: '₦23,450', severity: 'MODERATE', color: 'text-orange-600' },
+              { label: 'Affected Operations', value: 'Payroll & Supplier Payments', severity: 'HIGH', color: 'text-red-600' },
+              { label: 'Duration', value: '7 days', severity: 'LOW', color: 'text-emerald-600' },
+              { label: 'Recovery Probability', value: '94%', severity: 'LOW', color: 'text-emerald-600' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                <span className="text-xs font-medium text-slate-600">{item.label}</span>
+                <div className="text-right">
+                  <p className={`text-xs font-bold ${item.color}`}>{item.value}</p>
+                  <p className="text-[10px] text-slate-400">{item.severity} impact</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Mitigation Strategies</h4>
+            {[
+              'Send invoices early — before Oct 28 — to ensure payment before the dip',
+              'Negotiate extended payment terms with suppliers for Nov 1-7 period',
+              'Consider the ₦150,000 bridge loan offer for zero-interest liquidity cover',
+              'Hold off on non-essential capex until after Nov 7 recovery',
+            ].map((tip, i) => (
+              <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 rounded-xl">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-slate-600 leading-relaxed">{tip}</p>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={() => setActiveModal('bridge')}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
+          >
+            View Bridge Loan Offer <ChevronRight className="w-4 h-4" />
+          </button>
+        </div>
+      </Modal>
+
+      {/* Confidence Score Modal */}
+      <Modal isOpen={activeModal === 'confidence'} onClose={() => setActiveModal(null)} title="Confidence Score Explained">
+        <div className="space-y-5">
+          <div className="flex items-center justify-center py-4">
+            <div className="relative w-36 h-36 rounded-full border-8 border-[#e0f7fa] flex items-center justify-center">
+              <div className="absolute inset-0 border-8 border-[#00d2ff] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
+              <div className="text-center z-10">
+                <span className="text-4xl font-black text-slate-900">{confidenceScore}</span>
+                <span className="text-lg text-slate-400">%</span>
+              </div>
+            </div>
+          </div>
+          <p className="text-sm text-slate-500 text-center">A score of {confidenceScore}% means our AI model is highly confident in this forecast based on your transaction history.</p>
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Score Components</h4>
+            {[
+              { label: 'Transaction History Depth', score: 94, desc: '90+ days of Squad transaction data' },
+              { label: 'Pattern Consistency', score: 88, desc: 'Stable weekly revenue patterns detected' },
+              { label: 'Seasonal Adjustment', score: 91, desc: 'Q4 seasonal factors applied' },
+              { label: 'Anomaly Detection', score: 96, desc: 'No major anomalies in recent data' },
+            ].map((item, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs font-bold text-slate-700">{item.label}</p>
+                    <p className="text-[10px] text-slate-400">{item.desc}</p>
+                  </div>
+                  <span className="text-sm font-black text-[#00d2ff]">{item.score}%</span>
+                </div>
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#00d2ff] rounded-full" style={{ width: `${item.score}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <p className="text-xs text-slate-600 leading-relaxed">
+              <span className="font-bold text-[#00d2ff]">+2.4% from last run</span> — Your confidence score improved because more transaction data was added since the last forecast cycle.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* Liquidity Peak Detail Modal */}
+      <Modal isOpen={activeModal === 'peak'} onClose={() => setActiveModal(null)} title="Liquidity Peak Details">
+        {selectedPeak && (
+          <div className="space-y-5">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="bg-slate-50 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Timeline</p>
+                <p className="text-sm font-bold text-slate-900">{selectedPeak.time || selectedPeak.timeline}</p>
+              </div>
+              <div className="bg-slate-50 rounded-2xl p-4">
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Status</p>
+                <div className="flex items-center gap-2">
+                  <div className={`w-2 h-2 rounded-full ${getDotColor(selectedPeak.risk)}`}></div>
+                  <p className="text-sm font-bold text-slate-900">{selectedPeak.status}</p>
+                </div>
+              </div>
+              <div className={`rounded-2xl p-4 col-span-2 ${(selectedPeak.flow || 0) < 0 ? 'bg-red-50' : 'bg-emerald-50'}`}>
+                <p className="text-[10px] font-bold uppercase tracking-wider mb-1" style={{ color: (selectedPeak.flow || 0) < 0 ? '#dc2626' : '#16a34a' }}>Predicted Flow</p>
+                <p className={`text-2xl font-black ${(selectedPeak.flow || 0) < 0 ? 'text-red-600' : 'text-emerald-600'}`}>
+                  {(selectedPeak.flow || 0) < 0 ? '-' : '+'}{formatCurrency(Math.abs(selectedPeak.flow || selectedPeak.predicted_flow || 0))}
+                </p>
+              </div>
+            </div>
+            <div className="p-4 rounded-2xl border" style={getRiskStyle(selectedPeak.risk)}>
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold uppercase tracking-wider" style={{ color: getRiskStyle(selectedPeak.risk).color }}>Risk Level</span>
+                <span className="text-sm font-black" style={{ color: getRiskStyle(selectedPeak.risk).color }}>{selectedPeak.risk || selectedPeak.risk_level}</span>
+              </div>
+            </div>
+            <div className="p-4 bg-slate-50 rounded-2xl">
+              <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">Source / Predictor</p>
+              <p className="text-sm font-bold text-slate-900">{selectedPeak.source || selectedPeak.predictor}</p>
+            </div>
+            <div className="space-y-2">
+              <p className="text-xs font-bold text-slate-700">Recommended Actions</p>
+              {(selectedPeak.flow || 0) < 0 ? (
+                <>
+                  <div className="flex items-start gap-2 p-3 bg-orange-50 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-slate-600">Send outstanding invoices before this period to improve inflow.</p>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 bg-orange-50 rounded-xl">
+                    <AlertTriangle className="w-4 h-4 text-orange-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-slate-600">Consider the bridge loan offer to cover this shortfall at 0% interest.</p>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-xl">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-slate-600">Good period to schedule supplier payments and clear outstanding bills.</p>
+                  </div>
+                  <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-xl">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-slate-600">Consider running promotions to maximize revenue during this peak window.</p>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </Modal>
+
+      {/* Bridge Loan Modal */}
+      <Modal isOpen={activeModal === 'bridge'} onClose={() => setActiveModal(null)} title="Squad Bridge Loan Offer">
+        <div className="space-y-5">
+          <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">You Qualify For</p>
+            <p className="text-4xl font-black text-[#00d2ff] mb-1">₦150,000</p>
+            <p className="text-xs text-slate-400">Bridge Loan — 0% Interest</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-emerald-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Interest Rate</p>
+              <p className="text-xl font-black text-emerald-600">0%</p>
+              <p className="text-[10px] text-slate-400">if repaid in 14 days</p>
+            </div>
+            <div className="bg-blue-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Repayment</p>
+              <p className="text-xl font-black text-blue-600">14 Days</p>
+              <p className="text-[10px] text-slate-400">flexible extension available</p>
+            </div>
+            <div className="bg-purple-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">Approval Time</p>
+              <p className="text-xl font-black text-purple-600">Instant</p>
+              <p className="text-[10px] text-slate-400">powered by TrustScore</p>
+            </div>
+            <div className="bg-cyan-50 rounded-2xl p-4 text-center">
+              <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider mb-1">Disbursement</p>
+              <p className="text-xl font-black text-cyan-600">24hrs</p>
+              <p className="text-[10px] text-slate-400">to your Squad account</p>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <p className="text-xs font-bold text-slate-700">Why You Qualify</p>
+            {[
+              'TrustScore of 74/100 meets minimum threshold',
+              'Squad account active with consistent transaction history',
+              'Predicted cash flow dip of ₦23,450 during Nov 1-7',
+              'Revenue recovery confirmed after Nov 8',
+            ].map((reason, i) => (
+              <div key={i} className="flex items-start gap-2 p-3 bg-slate-50 rounded-xl">
+                <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
+                <p className="text-xs text-slate-600">{reason}</p>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <p className="text-xs text-amber-700 leading-relaxed">
+              <span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's lending API to process your application instantly using your TrustScore.
+            </p>
+          </div>
+          <button
+            onClick={() => {
+              setActiveModal(null);
+              setSuccessMsg('Bridge loan application submitted! You will receive a response within 24 hours.');
+              setTimeout(() => setSuccessMsg(''), 5000);
+            }}
+            className="w-full bg-[#00d2ff] text-[#001f3f] font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#00d2ff]/90 transition-colors cursor-pointer shadow-lg shadow-[#00d2ff]/20"
+          >
+            <Zap className="w-4 h-4" /> Apply Now — Instant Approval
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── SIDEBAR ── */}
       <aside className="w-[260px] bg-[#001f3f] flex flex-col justify-between shrink-0 h-full overflow-y-auto hidden md:flex">
         <div>
           <div className="p-8 pb-10">
@@ -184,7 +497,7 @@ const fetchForecast = async () => {
         </div>
       </aside>
 
-      {/* Main Content */}
+      {/* ── MAIN CONTENT ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex flex-col">
@@ -196,8 +509,11 @@ const fetchForecast = async () => {
             <h2 className="text-xl md:text-2xl font-black text-[#001f3f] leading-tight">Cash Flow Prediction</h2>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <button className="hidden sm:flex items-center gap-3 px-5 py-3 border border-slate-100 rounded-xl text-[11px] font-black text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest shadow-sm cursor-pointer">
-              <Upload className="w-4 h-4 text-[#001f3f]" />
+            <button
+              onClick={exportReport}
+              className="hidden sm:flex items-center gap-3 px-5 py-3 border border-slate-100 rounded-xl text-[11px] font-black text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest shadow-sm cursor-pointer"
+            >
+              <Download className="w-4 h-4 text-[#001f3f]" />
               <span>Export Report</span>
             </button>
             <button
@@ -227,6 +543,13 @@ const fetchForecast = async () => {
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
 
+          {successMsg && (
+            <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3">
+              <CheckCircle2 className="w-5 h-5 shrink-0" />
+              {successMsg}
+            </div>
+          )}
+
           {error && (
             <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">
               {error}
@@ -235,7 +558,7 @@ const fetchForecast = async () => {
 
           {/* Prediction & Insights Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
-            
+
             {/* Main Prediction Card */}
             <div className="lg:col-span-3 bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-10">
@@ -267,27 +590,42 @@ const fetchForecast = async () => {
               </div>
             </div>
 
-            {/* Side Insights */}
+            {/* Side Insights — all clickable */}
             <div className="flex flex-col gap-6">
-              <div className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100">
+
+              {/* Smart Insights */}
+              <div
+                onClick={() => setActiveModal('insights')}
+                className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
+              >
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center shrink-0">
+                  <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center shrink-0 group-hover:bg-cyan-100 transition-colors">
                     <Lightbulb className="w-6 h-6 text-[#00d2ff]" />
                   </div>
-                  <div>
-                    <h4 className="text-base font-black text-[#001f3f] mb-2">Smart Insights</h4>
-                    <p className="text-[12px] text-slate-400 leading-relaxed font-medium">{aiNarrative}</p>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-2">
+                      <h4 className="text-base font-black text-[#001f3f]">Smart Insights</h4>
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#00d2ff] transition-colors" />
+                    </div>
+                    <p className="text-[12px] text-slate-400 leading-relaxed font-medium line-clamp-3">{aiNarrative}</p>
                   </div>
                 </div>
               </div>
 
-              <div className="bg-[#fff7ed] rounded-[24px] p-8 border border-[#ffedd5]">
+              {/* Potential Risks */}
+              <div
+                onClick={() => setActiveModal('risks')}
+                className="bg-[#fff7ed] rounded-[24px] p-8 border border-[#ffedd5] cursor-pointer hover:shadow-md hover:border-orange-300 transition-all group"
+              >
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-orange-100/50 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-6 h-6 text-[#f97316]" />
                   </div>
-                  <div>
-                    <h4 className="text-base font-black text-[#9a3412] mb-1">Potential risks week ahead</h4>
+                  <div className="flex-1">
+                    <div className="flex items-center justify-between mb-1">
+                      <h4 className="text-base font-black text-[#9a3412]">Potential risks week ahead</h4>
+                      <ChevronRight className="w-4 h-4 text-orange-300 group-hover:text-orange-500 transition-colors" />
+                    </div>
                     <p className="text-[10px] font-black text-[#ea580c] uppercase tracking-widest mb-3">NOV 1-7 FORECAST</p>
                     <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
                       Plan your client invoicing strategically to maintain liquid balance during the dip.
@@ -296,8 +634,15 @@ const fetchForecast = async () => {
                 </div>
               </div>
 
-              <div className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col">
-                <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest mb-6">CONFIDENCE SCORE</p>
+              {/* Confidence Score */}
+              <div
+                onClick={() => setActiveModal('confidence')}
+                className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
+              >
+                <div className="flex items-center justify-between mb-6">
+                  <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">CONFIDENCE SCORE</p>
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#00d2ff] transition-colors" />
+                </div>
                 <div className="flex items-baseline justify-between mb-4">
                   <span className="text-4xl font-black text-[#001f3f]">{confidenceScore}%</span>
                   <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0ea5e9] uppercase tracking-tighter">
@@ -312,7 +657,7 @@ const fetchForecast = async () => {
             </div>
           </div>
 
-          {/* Forecast Table */}
+          {/* Forecast Table — rows clickable */}
           <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
@@ -337,7 +682,11 @@ const fetchForecast = async () => {
                     const style = getRiskStyle(row.risk);
                     const isNegative = (row.flow || 0) < 0;
                     return (
-                      <tr key={i} className="hover:bg-[#f8fafc] transition-all group">
+                      <tr
+                        key={i}
+                        onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }}
+                        className="hover:bg-[#f8fafc] transition-all cursor-pointer group"
+                      >
                         <td className="p-8 font-black text-[#001f3f] text-sm">{row.time || row.timeline}</td>
                         <td className="p-8 text-slate-400 font-bold text-xs">{row.source || row.predictor}</td>
                         <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#0ea5e9]'}`}>
@@ -349,9 +698,12 @@ const fetchForecast = async () => {
                           </span>
                         </td>
                         <td className="p-8">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-2 h-2 rounded-full ${getDotColor(row.risk)}`}></div>
-                            <span className="text-[11px] font-bold text-slate-500">{row.status}</span>
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-2 h-2 rounded-full ${getDotColor(row.risk)}`}></div>
+                              <span className="text-[11px] font-bold text-slate-500">{row.status}</span>
+                            </div>
+                            <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-slate-400 transition-colors" />
                           </div>
                         </td>
                       </tr>
@@ -373,7 +725,10 @@ const fetchForecast = async () => {
               <p className="text-slate-400 text-sm md:text-lg mb-10 leading-relaxed font-medium opacity-90">
                 Based on your predictions Nov 1-7 dip, you qualify for a <span className="text-[#0ea5e9] font-black italic underline decoration-[#0ea5e9]/30">₦150,000 bridge loan</span> with 0% interest if repaid within 14 days. Ensure your operations never stall.
               </p>
-              <button className="w-full md:w-auto bg-[#00d2ff] text-[#001f3f] font-black py-5 px-12 rounded-[20px] text-[13px] transition-all hover:scale-105 shadow-2xl shadow-[#00d2ff]/20 uppercase tracking-widest cursor-pointer">
+              <button
+                onClick={() => setActiveModal('bridge')}
+                className="w-full md:w-auto bg-[#00d2ff] text-[#001f3f] font-black py-5 px-12 rounded-[20px] text-[13px] transition-all hover:scale-105 shadow-2xl shadow-[#00d2ff]/20 uppercase tracking-widest cursor-pointer"
+              >
                 Get Bridge Offer
               </button>
             </div>
