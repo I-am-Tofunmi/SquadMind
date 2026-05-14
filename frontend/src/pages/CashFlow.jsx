@@ -51,6 +51,9 @@ function CashFlow() {
   const [selectedPeak, setSelectedPeak] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
   const [selectedPeriod, setSelectedPeriod] = useState('today');
+  const [applying, setApplying] = useState(false);
+  const [applied, setApplied] = useState(false);
+  const [appId] = useState('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000));
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -191,19 +194,15 @@ function CashFlow() {
       <div className="relative h-[240px] md:h-[320px] w-full flex items-end">
         <div className="absolute top-0 left-0 text-[10px] font-bold text-slate-300">₦500k</div>
         <div className="absolute bottom-12 left-0 text-[10px] font-bold text-slate-300">₦200k</div>
-
-        {/* Period context label */}
         <div className="absolute top-0 right-0 text-[10px] font-bold text-[#00d2ff] max-w-[180px] text-right leading-tight">
           {periodLabels[selectedPeriod]}
         </div>
-
         <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
           <path d={current.area} fill="#f0f9ff" className="opacity-60" />
           <path d={current.line} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="4 4" />
           <line x1="500" y1="40" x2="500" y2="280" stroke="#00d2ff" strokeWidth="1.5" strokeDasharray="2 2" />
           <circle cx="500" cy="40" r="4" fill="#0ea5e9" />
         </svg>
-
         <div className="absolute bottom-0 w-full flex justify-between px-1 pt-6 border-t border-slate-50">
           {[
             { key: 'oct14', label: 'OCT 14' },
@@ -217,9 +216,7 @@ function CashFlow() {
               className="flex flex-col items-center gap-1 cursor-pointer group"
             >
               <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
-                selectedPeriod === item.key
-                  ? 'text-[#001f3f]'
-                  : 'text-slate-300 hover:text-slate-500'
+                selectedPeriod === item.key ? 'text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'
               }`}>
                 {item.label}
               </span>
@@ -440,7 +437,12 @@ function CashFlow() {
         )}
       </Modal>
 
-      <Modal isOpen={activeModal === 'bridge'} onClose={() => setActiveModal(null)} title="Squad Bridge Loan Offer">
+      {/* ── BRIDGE LOAN MODAL ── */}
+      <Modal
+        isOpen={activeModal === 'bridge'}
+        onClose={() => { setActiveModal(null); setApplied(false); }}
+        title="Squad Bridge Loan Offer"
+      >
         <div className="space-y-5">
           <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">You Qualify For</p>
@@ -483,21 +485,71 @@ function CashFlow() {
               </div>
             ))}
           </div>
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-            <p className="text-xs text-amber-700 leading-relaxed">
-              <span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's lending API to process your application instantly using your TrustScore.
-            </p>
-          </div>
-          <button
-            onClick={() => {
-              setActiveModal(null);
-              setSuccessMsg('Bridge loan application submitted! You will receive a response within 24 hours.');
-              setTimeout(() => setSuccessMsg(''), 5000);
-            }}
-            className="w-full bg-[#00d2ff] text-[#001f3f] font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#00d2ff]/90 transition-colors cursor-pointer shadow-lg shadow-[#00d2ff]/20"
-          >
-            <Zap className="w-4 h-4" /> Apply Now — Instant Approval
-          </button>
+
+          {applied ? (
+            <div className="space-y-4">
+              <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-white" />
+                </div>
+                <p className="text-lg font-black text-emerald-700 mb-1">Application Submitted!</p>
+                <p className="text-xs text-emerald-600 leading-relaxed">Your bridge loan application for <span className="font-bold">₦150,000</span> has been received. Our system is processing it using your TrustScore of 74/100.</p>
+              </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'Application ID', value: appId, done: true },
+                  { label: 'TrustScore Check', value: '74/100 — Approved', done: true },
+                  { label: 'Disbursement', value: 'Within 24 hours', done: false },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <span className="text-xs font-medium text-slate-600">{step.label}</span>
+                    <div className="flex items-center gap-2">
+                      {step.done
+                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        : <Loader2 className="w-4 h-4 text-[#00d2ff] animate-spin" />
+                      }
+                      <span className="text-xs font-bold text-slate-900">{step.value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <button
+                onClick={() => {
+                  setActiveModal(null);
+                  setApplied(false);
+                  setSuccessMsg('Bridge loan application submitted! Disbursement within 24 hours.');
+                  setTimeout(() => setSuccessMsg(''), 5000);
+                }}
+                className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer"
+              >
+                Done
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  <span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's Transfer API to disburse funds instantly using your TrustScore.
+                </p>
+              </div>
+              <button
+                onClick={async () => {
+                  setApplying(true);
+                  await new Promise(r => setTimeout(r, 2000));
+                  setApplying(false);
+                  setApplied(true);
+                }}
+                disabled={applying}
+                className="w-full bg-[#00d2ff] text-[#001f3f] font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#00d2ff]/90 transition-colors cursor-pointer shadow-lg shadow-[#00d2ff]/20 disabled:opacity-70"
+              >
+                {applying ? (
+                  <><Loader2 className="w-4 h-4 animate-spin" /> Processing Application...</>
+                ) : (
+                  <><Zap className="w-4 h-4" /> Apply Now — Instant Approval</>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </Modal>
 
@@ -627,10 +679,7 @@ function CashFlow() {
             </div>
           )}
 
-          {/* Prediction & Insights Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
-
-            {/* Main Prediction Card */}
             <div className="lg:col-span-3 bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-10">
                 <div className="w-2 h-2 bg-[#00d2ff] rounded-full"></div>
@@ -640,17 +689,11 @@ function CashFlow() {
               <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-12 tracking-tight">
                 {formatCurrency(minRevenue)} – {formatCurrency(maxRevenue)}
               </h3>
-
-              {/* Interactive chart */}
               {renderForecastChart()}
             </div>
 
-            {/* Side Insights */}
             <div className="flex flex-col gap-6">
-              <div
-                onClick={() => setActiveModal('insights')}
-                className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
-              >
+              <div onClick={() => setActiveModal('insights')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center shrink-0 group-hover:bg-cyan-100 transition-colors">
                     <Lightbulb className="w-6 h-6 text-[#00d2ff]" />
@@ -665,10 +708,7 @@ function CashFlow() {
                 </div>
               </div>
 
-              <div
-                onClick={() => setActiveModal('risks')}
-                className="bg-[#fff7ed] rounded-[24px] p-8 border border-[#ffedd5] cursor-pointer hover:shadow-md hover:border-orange-300 transition-all group"
-              >
+              <div onClick={() => setActiveModal('risks')} className="bg-[#fff7ed] rounded-[24px] p-8 border border-[#ffedd5] cursor-pointer hover:shadow-md hover:border-orange-300 transition-all group">
                 <div className="flex items-start gap-4">
                   <div className="w-12 h-12 rounded-2xl bg-orange-100/50 flex items-center justify-center shrink-0">
                     <AlertTriangle className="w-6 h-6 text-[#f97316]" />
@@ -679,17 +719,12 @@ function CashFlow() {
                       <ChevronRight className="w-4 h-4 text-orange-300 group-hover:text-orange-500 transition-colors" />
                     </div>
                     <p className="text-[10px] font-black text-[#ea580c] uppercase tracking-widest mb-3">NOV 1-7 FORECAST</p>
-                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">
-                      Plan your client invoicing strategically to maintain liquid balance during the dip.
-                    </p>
+                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">Plan your client invoicing strategically to maintain liquid balance during the dip.</p>
                   </div>
                 </div>
               </div>
 
-              <div
-                onClick={() => setActiveModal('confidence')}
-                className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group"
-              >
+              <div onClick={() => setActiveModal('confidence')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group">
                 <div className="flex items-center justify-between mb-6">
                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">CONFIDENCE SCORE</p>
                   <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#00d2ff] transition-colors" />
@@ -733,11 +768,7 @@ function CashFlow() {
                     const style = getRiskStyle(row.risk);
                     const isNegative = (row.flow || 0) < 0;
                     return (
-                      <tr
-                        key={i}
-                        onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }}
-                        className="hover:bg-[#f8fafc] transition-all cursor-pointer group"
-                      >
+                      <tr key={i} onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }} className="hover:bg-[#f8fafc] transition-all cursor-pointer group">
                         <td className="p-8 font-black text-[#001f3f] text-sm">{row.time || row.timeline}</td>
                         <td className="p-8 text-slate-400 font-bold text-xs">{row.source || row.predictor}</td>
                         <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#0ea5e9]'}`}>
@@ -808,7 +839,6 @@ function CashFlow() {
         </div>
       </main>
 
-      {/* Mobile Bottom Navigation */}
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
         <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-slate-400">
           <LayoutDashboard className="w-5 h-5" />
