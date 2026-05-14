@@ -154,13 +154,41 @@ function Dashboard() {
       ];
 
   const getChartData = () => {
-    if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
-    return Array.from({ length: chartPeriod }, (_, i) => ({
+  if (revenueTrend.length > 0) return revenueTrend.slice(-chartPeriod);
+  
+  if (chartPeriod === 7) {
+    // 7D — volatile, spiky week
+    return [
+      { date: 'Mon', revenue: 180000, transactions: 55 },
+      { date: 'Tue', revenue: 120000, transactions: 38 },
+      { date: 'Wed', revenue: 210000, transactions: 64 },
+      { date: 'Thu', revenue: 95000, transactions: 29 },
+      { date: 'Fri', revenue: 310000, transactions: 94 },
+      { date: 'Sat', revenue: 250000, transactions: 76 },
+      { date: 'Sun', revenue: 140000, transactions: 43 },
+    ];
+  }
+
+  if (chartPeriod === 30) {
+    // 30D — steady upward trend with mid dip
+    return Array.from({ length: 30 }, (_, i) => ({
       date: `Day ${i + 1}`,
       revenue: 140000 + Math.sin(i * 0.4) * 40000 + i * 1000,
       transactions: 40 + i,
     }));
-  };
+  }
+
+  // 90D — slow growth with two big peaks
+  return Array.from({ length: 90 }, (_, i) => ({
+    date: `Day ${i + 1}`,
+    revenue: 100000
+      + (i * 1200)
+      + (i > 25 && i < 35 ? 80000 : 0)
+      + (i > 65 && i < 75 ? 120000 : 0)
+      + Math.sin(i * 0.2) * 15000,
+    transactions: 30 + Math.floor(i * 0.5),
+  }));
+};
 
   const renderChart = () => {
     const filtered = getChartData();
