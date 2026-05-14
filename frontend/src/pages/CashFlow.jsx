@@ -1,25 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  Bell, 
-  Settings, 
-  LogOut, 
-  HelpCircle,
-  Download,
-  Play,
-  CheckCircle2,
-  Lightbulb,
-  AlertTriangle,
-  ChevronRight,
-  Sparkles,
-  TrendingUp,
-  Banknote,
-  Award,
-  Loader2,
-  X,
-  Zap
+  LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
+  Download, Play, CheckCircle2, Lightbulb, AlertTriangle, ChevronRight,
+  Sparkles, TrendingUp, Banknote, Award, Loader2, X, Zap
 } from 'lucide-react';
 import { getLatestForecast, generateForecast, getToken } from '../services/api';
 
@@ -55,18 +39,12 @@ function CashFlow() {
   const [applied, setApplied] = useState(false);
   const [appId] = useState('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000));
 
-  const onLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const onNavigate = (path) => navigate(`/${path}`);
 
   useEffect(() => {
     const token = getToken();
-    if (!token) {
-      navigate('/login');
-      return;
-    }
+    if (!token) { navigate('/login'); return; }
     fetchForecast();
   }, []);
 
@@ -125,9 +103,7 @@ function CashFlow() {
     const blob = new Blob([csv], { type: 'text/csv' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
-    a.href = url;
-    a.download = 'squadmind-cashflow-report.csv';
-    a.click();
+    a.href = url; a.download = 'squadmind-cashflow-report.csv'; a.click();
     URL.revokeObjectURL(url);
   };
 
@@ -187,21 +163,19 @@ function CashFlow() {
         line: 'M0,235 L200,195 L400,140 L550,90 L700,60 L850,50 L1000,45',
       },
     };
-
     const current = chartPaths[selectedPeriod];
-
     return (
       <div className="relative h-[240px] md:h-[320px] w-full flex items-end">
         <div className="absolute top-0 left-0 text-[10px] font-bold text-slate-300">₦500k</div>
         <div className="absolute bottom-12 left-0 text-[10px] font-bold text-slate-300">₦200k</div>
-        <div className="absolute top-0 right-0 text-[10px] font-bold text-[#00d2ff] max-w-[180px] text-right leading-tight">
+        <div className="absolute top-0 right-0 text-[10px] font-bold text-[#E8762E] max-w-[180px] text-right leading-tight">
           {periodLabels[selectedPeriod]}
         </div>
         <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-          <path d={current.area} fill="#f0f9ff" className="opacity-60" />
-          <path d={current.line} fill="none" stroke="#0ea5e9" strokeWidth="2.5" strokeDasharray="4 4" />
-          <line x1="500" y1="40" x2="500" y2="280" stroke="#00d2ff" strokeWidth="1.5" strokeDasharray="2 2" />
-          <circle cx="500" cy="40" r="4" fill="#0ea5e9" />
+          <path d={current.area} fill="#fff4ed" className="opacity-60" />
+          <path d={current.line} fill="none" stroke="#E8762E" strokeWidth="2.5" strokeDasharray="4 4" />
+          <line x1="500" y1="40" x2="500" y2="280" stroke="#E8762E" strokeWidth="1.5" strokeDasharray="2 2" />
+          <circle cx="500" cy="40" r="4" fill="#E8762E" />
         </svg>
         <div className="absolute bottom-0 w-full flex justify-between px-1 pt-6 border-t border-slate-50">
           {[
@@ -210,19 +184,11 @@ function CashFlow() {
             { key: 'today', label: 'TODAY' },
             { key: 'nov07', label: 'NOV 07, 2026' },
           ].map(item => (
-            <button
-              key={item.key}
-              onClick={() => setSelectedPeriod(item.key)}
-              className="flex flex-col items-center gap-1 cursor-pointer group"
-            >
-              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${
-                selectedPeriod === item.key ? 'text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'
-              }`}>
+            <button key={item.key} onClick={() => setSelectedPeriod(item.key)} className="flex flex-col items-center gap-1 cursor-pointer group">
+              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${selectedPeriod === item.key ? 'text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'}`}>
                 {item.label}
               </span>
-              <div className={`h-1 rounded-full transition-all duration-300 ${
-                selectedPeriod === item.key ? 'w-8 bg-[#001f3f]' : 'w-0 bg-transparent'
-              }`}></div>
+              <div className={`h-1 rounded-full transition-all duration-300 ${selectedPeriod === item.key ? 'w-8 bg-[#E8762E]' : 'w-0 bg-transparent'}`}></div>
             </button>
           ))}
         </div>
@@ -234,7 +200,7 @@ function CashFlow() {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-[#00d2ff] animate-spin" />
+          <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
           <p className="text-slate-500 font-medium">Loading cash flow forecast...</p>
         </div>
       </div>
@@ -245,14 +211,13 @@ function CashFlow() {
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
       {/* ── MODALS ── */}
-
       <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
         <div className="space-y-5">
-          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <div className="flex items-start gap-3">
-              <Lightbulb className="w-5 h-5 text-[#00d2ff] mt-0.5 shrink-0" />
+              <Lightbulb className="w-5 h-5 text-[#E8762E] mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-[#00d2ff] uppercase tracking-wider mb-2">AI Narrative</p>
+                <p className="text-xs font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Narrative</p>
                 <p className="text-sm text-slate-600 leading-relaxed">{aiNarrative}</p>
               </div>
             </div>
@@ -324,10 +289,8 @@ function CashFlow() {
               </div>
             ))}
           </div>
-          <button
-            onClick={() => setActiveModal('bridge')}
-            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
-          >
+          <button onClick={() => setActiveModal('bridge')}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Bridge Loan Offer <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -336,8 +299,8 @@ function CashFlow() {
       <Modal isOpen={activeModal === 'confidence'} onClose={() => setActiveModal(null)} title="Confidence Score Explained">
         <div className="space-y-5">
           <div className="flex items-center justify-center py-4">
-            <div className="relative w-36 h-36 rounded-full border-8 border-[#e0f7fa] flex items-center justify-center">
-              <div className="absolute inset-0 border-8 border-[#00d2ff] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
+            <div className="relative w-36 h-36 rounded-full border-8 border-orange-100 flex items-center justify-center">
+              <div className="absolute inset-0 border-8 border-[#E8762E] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
               <div className="text-center z-10">
                 <span className="text-4xl font-black text-slate-900">{confidenceScore}</span>
                 <span className="text-lg text-slate-400">%</span>
@@ -359,17 +322,17 @@ function CashFlow() {
                     <p className="text-xs font-bold text-slate-700">{item.label}</p>
                     <p className="text-[10px] text-slate-400">{item.desc}</p>
                   </div>
-                  <span className="text-sm font-black text-[#00d2ff]">{item.score}%</span>
+                  <span className="text-sm font-black text-[#E8762E]">{item.score}%</span>
                 </div>
                 <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
-                  <div className="h-full bg-[#00d2ff] rounded-full" style={{ width: `${item.score}%` }}></div>
+                  <div className="h-full bg-[#E8762E] rounded-full" style={{ width: `${item.score}%` }}></div>
                 </div>
               </div>
             ))}
           </div>
-          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <p className="text-xs text-slate-600 leading-relaxed">
-              <span className="font-bold text-[#00d2ff]">+2.4% from last run</span> — Your confidence score improved because more transaction data was added since the last forecast cycle.
+              <span className="font-bold text-[#E8762E]">+2.4% from last run</span> — Your confidence score improved because more transaction data was added since the last forecast cycle.
             </p>
           </div>
         </div>
@@ -437,39 +400,26 @@ function CashFlow() {
         )}
       </Modal>
 
-      {/* ── BRIDGE LOAN MODAL ── */}
-      <Modal
-        isOpen={activeModal === 'bridge'}
-        onClose={() => { setActiveModal(null); setApplied(false); }}
-        title="Squad Bridge Loan Offer"
-      >
+      <Modal isOpen={activeModal === 'bridge'} onClose={() => { setActiveModal(null); setApplied(false); }} title="Squad Bridge Loan Offer">
         <div className="space-y-5">
           <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">You Qualify For</p>
-            <p className="text-4xl font-black text-[#00d2ff] mb-1">₦150,000</p>
+            <p className="text-4xl font-black text-[#E8762E] mb-1">₦150,000</p>
             <p className="text-xs text-slate-400">Bridge Loan — 0% Interest</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div className="bg-emerald-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Interest Rate</p>
-              <p className="text-xl font-black text-emerald-600">0%</p>
-              <p className="text-[10px] text-slate-400">if repaid in 14 days</p>
-            </div>
-            <div className="bg-blue-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Repayment</p>
-              <p className="text-xl font-black text-blue-600">14 Days</p>
-              <p className="text-[10px] text-slate-400">flexible extension available</p>
-            </div>
-            <div className="bg-purple-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-purple-600 uppercase tracking-wider mb-1">Approval Time</p>
-              <p className="text-xl font-black text-purple-600">Instant</p>
-              <p className="text-[10px] text-slate-400">powered by TrustScore</p>
-            </div>
-            <div className="bg-cyan-50 rounded-2xl p-4 text-center">
-              <p className="text-[10px] font-bold text-cyan-600 uppercase tracking-wider mb-1">Disbursement</p>
-              <p className="text-xl font-black text-cyan-600">24hrs</p>
-              <p className="text-[10px] text-slate-400">to your Squad account</p>
-            </div>
+            {[
+              { label: 'Interest Rate', value: '0%', sub: 'if repaid in 14 days', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              { label: 'Repayment', value: '14 Days', sub: 'flexible extension available', color: 'text-blue-600', bg: 'bg-blue-50' },
+              { label: 'Approval Time', value: 'Instant', sub: 'powered by TrustScore', color: 'text-purple-600', bg: 'bg-purple-50' },
+              { label: 'Disbursement', value: '24hrs', sub: 'to your Squad account', color: 'text-[#E8762E]', bg: 'bg-orange-50' },
+            ].map((item, i) => (
+              <div key={i} className={`${item.bg} rounded-2xl p-4 text-center`}>
+                <p className={`text-[10px] font-bold uppercase tracking-wider mb-1 ${item.color}`}>{item.label}</p>
+                <p className={`text-xl font-black ${item.color}`}>{item.value}</p>
+                <p className="text-[10px] text-slate-400">{item.sub}</p>
+              </div>
+            ))}
           </div>
           <div className="space-y-2">
             <p className="text-xs font-bold text-slate-700">Why You Qualify</p>
@@ -493,7 +443,7 @@ function CashFlow() {
                   <CheckCircle2 className="w-8 h-8 text-white" />
                 </div>
                 <p className="text-lg font-black text-emerald-700 mb-1">Application Submitted!</p>
-                <p className="text-xs text-emerald-600 leading-relaxed">Your bridge loan application for <span className="font-bold">₦150,000</span> has been received. Our system is processing it using your TrustScore of 74/100.</p>
+                <p className="text-xs text-emerald-600 leading-relaxed">Your bridge loan application for <span className="font-bold">₦150,000</span> has been received.</p>
               </div>
               <div className="space-y-2">
                 {[
@@ -504,49 +454,28 @@ function CashFlow() {
                   <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                     <span className="text-xs font-medium text-slate-600">{step.label}</span>
                     <div className="flex items-center gap-2">
-                      {step.done
-                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-                        : <Loader2 className="w-4 h-4 text-[#00d2ff] animate-spin" />
-                      }
+                      {step.done ? <CheckCircle2 className="w-4 h-4 text-emerald-500" /> : <Loader2 className="w-4 h-4 text-[#E8762E] animate-spin" />}
                       <span className="text-xs font-bold text-slate-900">{step.value}</span>
                     </div>
                   </div>
                 ))}
               </div>
-              <button
-                onClick={() => {
-                  setActiveModal(null);
-                  setApplied(false);
-                  setSuccessMsg('Bridge loan application submitted! Disbursement within 24 hours.');
-                  setTimeout(() => setSuccessMsg(''), 5000);
-                }}
-                className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer"
-              >
+              <button onClick={() => { setActiveModal(null); setApplied(false); setSuccessMsg('Bridge loan application submitted! Disbursement within 24 hours.'); setTimeout(() => setSuccessMsg(''), 5000); }}
+                className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer">
                 Done
               </button>
             </div>
           ) : (
             <>
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <p className="text-xs text-amber-700 leading-relaxed">
-                  <span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's Transfer API to disburse funds instantly using your TrustScore.
-                </p>
+                <p className="text-xs text-amber-700 leading-relaxed"><span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's Transfer API.</p>
               </div>
               <button
-                onClick={async () => {
-                  setApplying(true);
-                  await new Promise(r => setTimeout(r, 2000));
-                  setApplying(false);
-                  setApplied(true);
-                }}
+                onClick={async () => { setApplying(true); await new Promise(r => setTimeout(r, 2000)); setApplying(false); setApplied(true); }}
                 disabled={applying}
-                className="w-full bg-[#00d2ff] text-[#001f3f] font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#00d2ff]/90 transition-colors cursor-pointer shadow-lg shadow-[#00d2ff]/20 disabled:opacity-70"
+                className="w-full bg-[#E8762E] text-white font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#E8762E]/90 transition-colors cursor-pointer shadow-lg shadow-[#E8762E]/20 disabled:opacity-70"
               >
-                {applying ? (
-                  <><Loader2 className="w-4 h-4 animate-spin" /> Processing Application...</>
-                ) : (
-                  <><Zap className="w-4 h-4" /> Apply Now — Instant Approval</>
-                )}
+                {applying ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing Application...</> : <><Zap className="w-4 h-4" /> Apply Now — Instant Approval</>}
               </button>
             </>
           )}
@@ -561,56 +490,44 @@ function CashFlow() {
             <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
           </div>
           <nav className="px-4 space-y-1">
-            <button onClick={() => onNavigate('dashboard')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Dashboard</span>
-            </button>
-            <button onClick={() => onNavigate('cashflow')} className="w-full flex items-center gap-3 px-4 py-3 bg-[#112f4d] text-white rounded-lg transition-colors cursor-pointer">
-              <Banknote className="w-5 h-5 text-white" />
-              <span className="font-medium text-[15px]">Cash Flow</span>
-            </button>
-            <button onClick={() => onNavigate('frauddetection')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <ShieldAlert className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Fraud Detection</span>
-            </button>
-            <button onClick={() => onNavigate('alerts')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Bell className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Alerts</span>
-            </button>
-            <button onClick={() => onNavigate('trustscore')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Award className="w-5 h-5" />
-              <span className="font-medium text-[15px]">TrustScore</span>
-            </button>
-            <button onClick={() => onNavigate('settings')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Settings className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Settings</span>
-            </button>
+            {[
+              { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, path: 'dashboard' },
+              { label: 'Cash Flow', icon: <Banknote className="w-5 h-5" />, path: 'cashflow', active: true },
+              { label: 'Fraud Detection', icon: <ShieldAlert className="w-5 h-5" />, path: 'frauddetection' },
+              { label: 'Alerts', icon: <Bell className="w-5 h-5" />, path: 'alerts' },
+              { label: 'TrustScore', icon: <Award className="w-5 h-5" />, path: 'trustscore' },
+              { label: 'Settings', icon: <Settings className="w-5 h-5" />, path: 'settings' },
+            ].map(item => (
+              <button key={item.path} onClick={() => onNavigate(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${item.active ? 'bg-[#E8762E] text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                {item.icon}
+                <span className="font-medium text-[15px]">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
         <div className="p-6 space-y-6">
-          <div className="bg-[#112f4d] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">CURRENT TIER</p>
               <p className="text-base font-bold text-white mb-4">Pro Business</p>
-              <button className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-[#001f3f] font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#00d2ff]/20 cursor-pointer">
+              <button className="w-full bg-[#E8762E] hover:bg-[#E8762E]/90 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#E8762E]/20 cursor-pointer">
                 Upgrade Plan
               </button>
             </div>
-            <div className="absolute top-0 right-0 w-24 h-24 bg-[#00d2ff]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E8762E]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
           </div>
           <div className="flex flex-col gap-3">
             <button className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <HelpCircle className="w-5 h-5" />
-              <span className="text-[15px] font-medium">Help Center</span>
+              <HelpCircle className="w-5 h-5" /><span className="text-[15px] font-medium">Help Center</span>
             </button>
             <button onClick={onLogout} className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <LogOut className="w-5 h-5" />
-              <span className="text-[15px] font-medium">Logout</span>
+              <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#00d2ff] flex items-center justify-center text-[#001f3f] font-bold overflow-hidden">
-              <img src="https://ui-avatars.com/api/?name=Lekan+Adeyemi&background=00d2ff&color=001f3f" alt="Lekan Adeyemi" />
+            <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
+              <img src="https://ui-avatars.com/api/?name=Lekan+Adeyemi&background=E8762E&color=ffffff" alt="Lekan Adeyemi" />
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
@@ -627,28 +544,19 @@ function CashFlow() {
             <div className="hidden sm:flex items-center gap-1 text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">
               <span>Analysis</span>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-[#00d2ff]">Predictions</span>
+              <span className="text-[#E8762E]">Predictions</span>
             </div>
             <h2 className="text-xl md:text-2xl font-black text-[#001f3f] leading-tight">Cash Flow Prediction</h2>
           </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <button
-              onClick={exportReport}
-              className="hidden sm:flex items-center gap-3 px-5 py-3 border border-slate-100 rounded-xl text-[11px] font-black text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest shadow-sm cursor-pointer"
-            >
+            <button onClick={exportReport}
+              className="hidden sm:flex items-center gap-3 px-5 py-3 border border-slate-100 rounded-xl text-[11px] font-black text-slate-500 hover:bg-slate-50 transition-all uppercase tracking-widest shadow-sm cursor-pointer">
               <Download className="w-4 h-4 text-[#001f3f]" />
               <span>Export Report</span>
             </button>
-            <button
-              onClick={handleGenerateForecast}
-              disabled={generating}
-              className="flex items-center gap-3 px-6 py-3 bg-[#001f3f] text-white rounded-xl text-[11px] font-black hover:bg-[#002b55] transition-all shadow-xl shadow-[#001f3f]/10 uppercase tracking-widest cursor-pointer disabled:opacity-70"
-            >
-              {generating ? (
-                <Loader2 className="w-3.5 h-3.5 animate-spin" />
-              ) : (
-                <Play className="w-3.5 h-3.5 fill-white" />
-              )}
+            <button onClick={handleGenerateForecast} disabled={generating}
+              className="flex items-center gap-3 px-6 py-3 bg-[#001f3f] text-white rounded-xl text-[11px] font-black hover:bg-[#002b55] transition-all shadow-xl shadow-[#001f3f]/10 uppercase tracking-widest cursor-pointer disabled:opacity-70">
+              {generating ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Play className="w-3.5 h-3.5 fill-white" />}
               <span className="hidden sm:inline">{generating ? 'Generating...' : 'Run New Analysis'}</span>
               <span className="sm:hidden">Run</span>
             </button>
@@ -657,32 +565,23 @@ function CashFlow() {
                 <Bell className="w-5 h-5" />
                 <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
               </button>
-              <button className="p-2 text-slate-400">
-                <HelpCircle className="w-5 h-5" />
-              </button>
+              <button className="p-2 text-slate-400"><HelpCircle className="w-5 h-5" /></button>
             </div>
           </div>
         </header>
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
-
           {successMsg && (
             <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              {successMsg}
+              <CheckCircle2 className="w-5 h-5 shrink-0" />{successMsg}
             </div>
           )}
-
-          {error && (
-            <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
             <div className="lg:col-span-3 bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
               <div className="flex items-center gap-2 mb-10">
-                <div className="w-2 h-2 bg-[#00d2ff] rounded-full"></div>
+                <div className="w-2 h-2 bg-[#E8762E] rounded-full"></div>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AIDA PREDICTION MODEL V2.4</span>
               </div>
               <p className="text-xs md:text-sm font-bold text-slate-400 mb-4">Expected Revenue Next Month</p>
@@ -693,15 +592,15 @@ function CashFlow() {
             </div>
 
             <div className="flex flex-col gap-6">
-              <div onClick={() => setActiveModal('insights')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group">
+              <div onClick={() => setActiveModal('insights')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 cursor-pointer hover:shadow-md hover:border-[#E8762E]/30 transition-all group">
                 <div className="flex items-start gap-4">
-                  <div className="w-12 h-12 rounded-2xl bg-cyan-50 flex items-center justify-center shrink-0 group-hover:bg-cyan-100 transition-colors">
-                    <Lightbulb className="w-6 h-6 text-[#00d2ff]" />
+                  <div className="w-12 h-12 rounded-2xl bg-orange-50 flex items-center justify-center shrink-0 group-hover:bg-orange-100 transition-colors">
+                    <Lightbulb className="w-6 h-6 text-[#E8762E]" />
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center justify-between mb-2">
                       <h4 className="text-base font-black text-[#001f3f]">Smart Insights</h4>
-                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#00d2ff] transition-colors" />
+                      <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#E8762E] transition-colors" />
                     </div>
                     <p className="text-[12px] text-slate-400 leading-relaxed font-medium line-clamp-3">{aiNarrative}</p>
                   </div>
@@ -724,20 +623,19 @@ function CashFlow() {
                 </div>
               </div>
 
-              <div onClick={() => setActiveModal('confidence')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#00d2ff]/30 transition-all group">
+              <div onClick={() => setActiveModal('confidence')} className="bg-white rounded-[24px] p-8 shadow-sm border border-slate-100 flex flex-col cursor-pointer hover:shadow-md hover:border-[#E8762E]/30 transition-all group">
                 <div className="flex items-center justify-between mb-6">
                   <p className="text-[10px] text-slate-400 font-black uppercase tracking-widest">CONFIDENCE SCORE</p>
-                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#00d2ff] transition-colors" />
+                  <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#E8762E] transition-colors" />
                 </div>
                 <div className="flex items-baseline justify-between mb-4">
                   <span className="text-4xl font-black text-[#001f3f]">{confidenceScore}%</span>
-                  <div className="flex items-center gap-1.5 text-[10px] font-black text-[#0ea5e9] uppercase tracking-tighter">
-                    <TrendingUp className="w-3.5 h-3.5" />
-                    +2.4% from last run
+                  <div className="flex items-center gap-1.5 text-[10px] font-black text-[#E8762E] uppercase tracking-tighter">
+                    <TrendingUp className="w-3.5 h-3.5" />+2.4% from last run
                   </div>
                 </div>
                 <div className="w-full h-2 bg-[#f8fafc] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#001f3f] rounded-full shadow-[0_0_10px_rgba(0,31,63,0.1)]" style={{ width: `${confidenceScore}%` }}></div>
+                  <div className="h-full bg-[#E8762E] rounded-full" style={{ width: `${confidenceScore}%` }}></div>
                 </div>
               </div>
             </div>
@@ -756,11 +654,9 @@ function CashFlow() {
               <table className="w-full text-left min-w-[700px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/50">
-                    <th className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">TIMELINE</th>
-                    <th className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">SOURCE / PREDICTOR</th>
-                    <th className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">PREDICTED FLOW</th>
-                    <th className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">RISK LEVEL</th>
-                    <th className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">STATUS</th>
+                    {['TIMELINE', 'SOURCE / PREDICTOR', 'PREDICTED FLOW', 'RISK LEVEL', 'STATUS'].map(h => (
+                      <th key={h} className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -771,7 +667,7 @@ function CashFlow() {
                       <tr key={i} onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }} className="hover:bg-[#f8fafc] transition-all cursor-pointer group">
                         <td className="p-8 font-black text-[#001f3f] text-sm">{row.time || row.timeline}</td>
                         <td className="p-8 text-slate-400 font-bold text-xs">{row.source || row.predictor}</td>
-                        <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#0ea5e9]'}`}>
+                        <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#E8762E]'}`}>
                           {isNegative ? '-' : ''}{formatCurrency(Math.abs(row.flow || row.predicted_flow || 0))}
                         </td>
                         <td className="p-8">
@@ -799,26 +695,23 @@ function CashFlow() {
           {/* Promo Section */}
           <div className="bg-[#001f3f] rounded-[48px] p-10 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden group">
             <div className="relative z-10 max-w-2xl text-center md:text-left">
-              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#0ea5e9] text-white rounded-lg text-[9px] font-black tracking-widest mb-8 uppercase shadow-lg shadow-[#0ea5e9]/20">
-                <Sparkles className="w-3.5 h-3.5" />
-                PRO FEATURE
+              <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#E8762E] text-white rounded-lg text-[9px] font-black tracking-widest mb-8 uppercase shadow-lg shadow-[#E8762E]/20">
+                <Sparkles className="w-3.5 h-3.5" />PRO FEATURE
               </div>
               <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight tracking-tight">Optimize your liquidity with Squad Loans</h2>
               <p className="text-slate-400 text-sm md:text-lg mb-10 leading-relaxed font-medium opacity-90">
-                Based on your predictions Nov 1-7 dip, you qualify for a <span className="text-[#0ea5e9] font-black italic underline decoration-[#0ea5e9]/30">₦150,000 bridge loan</span> with 0% interest if repaid within 14 days. Ensure your operations never stall.
+                Based on your predictions Nov 1-7 dip, you qualify for a <span className="text-[#E8762E] font-black italic underline decoration-[#E8762E]/30">₦150,000 bridge loan</span> with 0% interest if repaid within 14 days.
               </p>
-              <button
-                onClick={() => setActiveModal('bridge')}
-                className="w-full md:w-auto bg-[#00d2ff] text-[#001f3f] font-black py-5 px-12 rounded-[20px] text-[13px] transition-all hover:scale-105 shadow-2xl shadow-[#00d2ff]/20 uppercase tracking-widest cursor-pointer"
-              >
+              <button onClick={() => setActiveModal('bridge')}
+                className="w-full md:w-auto bg-[#E8762E] text-white font-black py-5 px-12 rounded-[20px] text-[13px] transition-all hover:scale-105 shadow-2xl shadow-[#E8762E]/20 uppercase tracking-widest cursor-pointer">
                 Get Bridge Offer
               </button>
             </div>
             <div className="hidden lg:flex relative z-10 w-72 h-72 items-center justify-center">
               <div className="absolute inset-0 bg-white/5 rounded-[64px] backdrop-blur-2xl border border-white/10 group-hover:rotate-6 transition-transform"></div>
               <div className="relative flex flex-col items-center gap-4">
-                <div className="w-24 h-24 rounded-[32px] bg-[#00d2ff] flex items-center justify-center shadow-2xl shadow-[#00d2ff]/30">
-                  <TrendingUp className="w-12 h-12 text-[#001f3f]" />
+                <div className="w-24 h-24 rounded-[32px] bg-[#E8762E] flex items-center justify-center shadow-2xl shadow-[#E8762E]/30">
+                  <TrendingUp className="w-12 h-12 text-white" />
                 </div>
                 <span className="text-4xl font-black text-white/90">₦</span>
               </div>
@@ -831,9 +724,9 @@ function CashFlow() {
               <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">© 2026 SQUADMIND. POWERED BY SQUAD INTELLIGENCE</p>
             </div>
             <div className="flex items-center gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
-              <a href="#" className="hover:text-[#001f3f] transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-[#001f3f] transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-[#001f3f] transition-colors">Contact Support</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Contact Support</a>
             </div>
           </footer>
         </div>
@@ -841,16 +734,13 @@ function CashFlow() {
 
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
         <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-slate-400">
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Home</span>
+          <LayoutDashboard className="w-5 h-5" /><span className="text-[10px] font-bold">Home</span>
         </button>
-        <button onClick={() => onNavigate('cashflow')} className="flex flex-col items-center gap-1 text-[#001f3f]">
-          <Banknote className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Cash</span>
+        <button onClick={() => onNavigate('cashflow')} className="flex flex-col items-center gap-1 text-[#E8762E]">
+          <Banknote className="w-5 h-5" /><span className="text-[10px] font-bold">Cash</span>
         </button>
         <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-slate-400">
-          <ShieldAlert className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Fraud</span>
+          <ShieldAlert className="w-5 h-5" /><span className="text-[10px] font-bold">Fraud</span>
         </button>
         <button onClick={() => onNavigate('alerts')} className="flex flex-col items-center gap-1 text-slate-400 relative">
           <Bell className="w-5 h-5" />
@@ -858,8 +748,7 @@ function CashFlow() {
           <span className="text-[10px] font-bold">Alerts</span>
         </button>
         <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400">
-          <Settings className="w-5 h-5" />
-          <span className="text-[10px] font-bold">More</span>
+          <Settings className="w-5 h-5" /><span className="text-[10px] font-bold">More</span>
         </button>
       </nav>
     </div>
