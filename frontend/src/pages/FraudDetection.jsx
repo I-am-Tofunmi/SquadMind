@@ -1,26 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
-  LayoutDashboard, 
-  ShieldAlert, 
-  Bell, 
-  Settings, 
-  LogOut, 
-  User,
-  ShieldCheck,
-  Banknote,
-  Award,
-  CheckCircle2,
-  AlertTriangle,
-  Sparkles,
-  Grid,
-  History,
-  Loader2,
-  X,
-  ThumbsUp,
-  ThumbsDown,
-  TrendingUp,
-  Shield
+  LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, User,
+  ShieldCheck, Banknote, Award, CheckCircle2, AlertTriangle, Sparkles,
+  Grid, History, Loader2, X, ThumbsUp, ThumbsDown, TrendingUp, Shield
 } from 'lucide-react';
 import { getFraudAlerts, resolveFraud, getToken } from '../services/api';
 
@@ -53,10 +36,7 @@ function FraudDetection() {
   const [successMsg, setSuccessMsg] = useState('');
   const [showReport, setShowReport] = useState(false);
 
-  const onLogout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
-  };
+  const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const onNavigate = (path) => navigate(`/${path}`);
 
   useEffect(() => {
@@ -113,7 +93,7 @@ function FraudDetection() {
     const l = (level || '').toLowerCase();
     if (l === 'high' || l === 'critical') return <span className="px-4 py-1 bg-red-500 text-white text-[9px] font-black uppercase tracking-widest rounded-full shadow-lg shadow-red-500/20">High Risk</span>;
     if (l === 'medium') return <span className="px-4 py-1 bg-[#fff7ed] text-[#f97316] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#f97316]/20">Medium Risk</span>;
-    return <span className="px-4 py-1 bg-[#f0f9ff] text-[#0ea5e9] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#0ea5e9]/20">Low Risk</span>;
+    return <span className="px-4 py-1 bg-orange-50 text-[#E8762E] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#E8762E]/20">Low Risk</span>;
   };
 
   const rawFlags = fraudData?.fraud_flags || fraudData?.flags || fraudData?.items || fraudData;
@@ -133,7 +113,7 @@ function FraudDetection() {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
-          <Loader2 className="w-12 h-12 text-[#00d2ff] animate-spin" />
+          <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
           <p className="text-slate-500 font-medium">Loading fraud detection...</p>
         </div>
       </div>
@@ -148,12 +128,12 @@ function FraudDetection() {
         <div className="space-y-5">
           <div className="p-5 bg-[#001f3f] rounded-2xl text-white">
             <div className="flex items-center gap-3 mb-4">
-              <ShieldCheck className="w-6 h-6 text-[#00d2ff]" />
+              <ShieldCheck className="w-6 h-6 text-[#E8762E]" />
               <p className="text-sm font-bold">SquadMind AI — Active Protection</p>
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div className="text-center">
-                <p className="text-2xl font-black text-[#00d2ff]">{transactionsMonitored.toLocaleString()}</p>
+                <p className="text-2xl font-black text-[#E8762E]">{transactionsMonitored.toLocaleString()}</p>
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Monitored</p>
               </div>
               <div className="text-center">
@@ -213,11 +193,11 @@ function FraudDetection() {
             ))}
           </div>
 
-          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <div className="flex items-start gap-3">
-              <Sparkles className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
+              <Sparkles className="w-4 h-4 text-[#E8762E] mt-0.5 shrink-0" />
               <p className="text-xs text-slate-600 leading-relaxed">
-                <span className="font-bold text-[#00d2ff]">AI Recommendation:</span> Enable 2FA for all transfers above ₦50,000 to reduce your risk score from 94 to an estimated 72. This single action eliminates 60% of your current exposure.
+                <span className="font-bold text-[#E8762E]">AI Recommendation:</span> Enable 2FA for all transfers above ₦50,000 to reduce your risk score from 94 to an estimated 72. This single action eliminates 60% of your current exposure.
               </p>
             </div>
           </div>
@@ -235,20 +215,13 @@ function FraudDetection() {
                 [''],
                 ['FLAGGED TRANSACTIONS'],
                 ['Date', 'Description', 'Amount', 'Risk Level'],
-                ...flaggedTransactions.map(tx => [
-                  formatDate(tx.transaction_date),
-                  tx.description,
-                  formatCurrency(tx.amount),
-                  tx.risk_level
-                ])
+                ...flaggedTransactions.map(tx => [formatDate(tx.transaction_date), tx.description, formatCurrency(tx.amount), tx.risk_level])
               ];
               const csv = rows.map(r => r.join(',')).join('\n');
               const blob = new Blob([csv], { type: 'text/csv' });
               const url = URL.createObjectURL(blob);
               const a = document.createElement('a');
-              a.href = url;
-              a.download = 'squadmind-protection-report.csv';
-              a.click();
+              a.href = url; a.download = 'squadmind-protection-report.csv'; a.click();
               URL.revokeObjectURL(url);
             }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
@@ -288,44 +261,30 @@ function FraudDetection() {
               </div>
               {getRiskBadge(selectedTx.risk_level)}
             </div>
-            <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
               <div className="flex items-start gap-3">
-                <Sparkles className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
+                <Sparkles className="w-4 h-4 text-[#E8762E] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-[#00d2ff] uppercase tracking-wider mb-2">AI Analysis</p>
+                  <p className="text-[10px] font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Analysis</p>
                   <p className="text-sm text-slate-600 leading-relaxed">{selectedTx.ai_reason || selectedTx.reason || 'Suspicious pattern detected by SquadMind AI engine.'}</p>
                 </div>
               </div>
             </div>
             {!resolvedIds.has(selectedTx.id || selectedTx.flag_id) && (
               <div className="grid grid-cols-2 gap-3">
-                <button
-                  onClick={() => handleResolve(selectedTx, 'approve')}
-                  disabled={!!resolving}
-                  className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm transition-all cursor-pointer disabled:opacity-70"
-                >
-                  {resolving === `${selectedTx.id || selectedTx.flag_id}-approve`
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <ThumbsUp className="w-4 h-4" />
-                  }
+                <button onClick={() => handleResolve(selectedTx, 'approve')} disabled={!!resolving}
+                  className="flex items-center justify-center gap-2 bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-3 rounded-xl text-sm transition-all cursor-pointer disabled:opacity-70">
+                  {resolving === `${selectedTx.id || selectedTx.flag_id}-approve` ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsUp className="w-4 h-4" />}
                   Approve
                 </button>
-                <button
-                  onClick={() => handleResolve(selectedTx, 'reject')}
-                  disabled={!!resolving}
-                  className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl text-sm transition-all cursor-pointer disabled:opacity-70"
-                >
-                  {resolving === `${selectedTx.id || selectedTx.flag_id}-reject`
-                    ? <Loader2 className="w-4 h-4 animate-spin" />
-                    : <ThumbsDown className="w-4 h-4" />
-                  }
+                <button onClick={() => handleResolve(selectedTx, 'reject')} disabled={!!resolving}
+                  className="flex items-center justify-center gap-2 bg-red-500 hover:bg-red-600 text-white font-bold py-3 rounded-xl text-sm transition-all cursor-pointer disabled:opacity-70">
+                  {resolving === `${selectedTx.id || selectedTx.flag_id}-reject` ? <Loader2 className="w-4 h-4 animate-spin" /> : <ThumbsDown className="w-4 h-4" />}
                   Flag Fraud
                 </button>
               </div>
             )}
-            <p className="text-[10px] text-slate-400 text-center">
-              Approve = legitimate transaction. Flag Fraud = escalate for investigation.
-            </p>
+            <p className="text-[10px] text-slate-400 text-center">Approve = legitimate transaction. Flag Fraud = escalate for investigation.</p>
           </div>
         )}
       </Modal>
@@ -338,50 +297,39 @@ function FraudDetection() {
             <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
           </div>
           <nav className="px-4 space-y-1">
-            <button onClick={() => onNavigate('dashboard')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <LayoutDashboard className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Dashboard</span>
-            </button>
-            <button onClick={() => onNavigate('cashflow')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Banknote className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Cash Flow</span>
-            </button>
-            <button onClick={() => onNavigate('frauddetection')} className="w-full flex items-center gap-3 px-4 py-3 bg-[#112f4d] text-white rounded-lg transition-colors cursor-pointer">
-              <ShieldAlert className="w-5 h-5 text-white" />
-              <span className="font-medium text-[15px]">Fraud Detection</span>
-            </button>
-            <button onClick={() => onNavigate('alerts')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Bell className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Alerts</span>
-            </button>
-            <button onClick={() => onNavigate('trustscore')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Award className="w-5 h-5" />
-              <span className="font-medium text-[15px]">TrustScore</span>
-            </button>
-            <button onClick={() => onNavigate('settings')} className="w-full flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-[#112f4d]/50 rounded-lg transition-colors cursor-pointer">
-              <Settings className="w-5 h-5" />
-              <span className="font-medium text-[15px]">Settings</span>
-            </button>
+            {[
+              { label: 'Dashboard', icon: <LayoutDashboard className="w-5 h-5" />, path: 'dashboard' },
+              { label: 'Cash Flow', icon: <Banknote className="w-5 h-5" />, path: 'cashflow' },
+              { label: 'Fraud Detection', icon: <ShieldAlert className="w-5 h-5" />, path: 'frauddetection', active: true },
+              { label: 'Alerts', icon: <Bell className="w-5 h-5" />, path: 'alerts' },
+              { label: 'TrustScore', icon: <Award className="w-5 h-5" />, path: 'trustscore' },
+              { label: 'Settings', icon: <Settings className="w-5 h-5" />, path: 'settings' },
+            ].map(item => (
+              <button key={item.path} onClick={() => onNavigate(item.path)}
+                className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg transition-colors cursor-pointer ${item.active ? 'bg-[#E8762E] text-white' : 'text-slate-400 hover:text-white hover:bg-white/5'}`}>
+                {item.icon}
+                <span className="font-medium text-[15px]">{item.label}</span>
+              </button>
+            ))}
           </nav>
         </div>
         <div className="p-6 space-y-6">
-          <div className="bg-[#112f4d] rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden">
             <div className="relative z-10">
               <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">SECURITY TIER</p>
               <p className="text-base font-bold text-white mb-4">Enterprise</p>
               <div className="w-full h-1 bg-white/10 rounded-full">
-                <div className="w-full h-full bg-[#00d2ff] rounded-full"></div>
+                <div className="w-full h-full bg-[#E8762E] rounded-full"></div>
               </div>
             </div>
           </div>
           <div className="space-y-1">
             <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <LogOut className="w-4 h-4" />
-              <span className="text-sm font-medium">Logout</span>
+              <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#00d2ff] flex items-center justify-center text-[#001f3f] font-bold">
+            <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold">
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
@@ -408,42 +356,32 @@ function FraudDetection() {
         </header>
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
-
           {successMsg && (
             <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3">
-              <CheckCircle2 className="w-5 h-5 shrink-0" />
-              {successMsg}
+              <CheckCircle2 className="w-5 h-5 shrink-0" />{successMsg}
             </div>
           )}
-
-          {error && (
-            <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">
-              {error}
-            </div>
-          )}
+          {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
           {/* Active Protection Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-10">
             <div className="lg:col-span-2 bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row">
               <div className="p-6 md:p-10 flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#e0faff] text-[#00d2ff] rounded-lg text-[9px] font-bold tracking-widest mb-10 border border-[#00d2ff]/20 uppercase">
-                  <Sparkles className="w-3 h-3" />
-                  AI Insight
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#E8762E] rounded-lg text-[9px] font-bold tracking-widest mb-10 border border-[#E8762E]/20 uppercase">
+                  <Sparkles className="w-3 h-3" />AI Insight
                 </div>
                 <h3 className="text-2xl md:text-4xl font-bold text-[#001f3f] mb-4 leading-tight">Active Protection Enabled</h3>
                 <p className="text-slate-400 text-sm md:text-base mb-12 leading-relaxed max-w-md font-medium opacity-80">
                   SquadMind is currently monitoring {transactionsMonitored.toLocaleString()} real-time transaction streams. {threatsNeutralized} threats were successfully neutralized in the last 24 hours.
                 </p>
-                <button
-                  onClick={() => setShowReport(true)}
-                  className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20 cursor-pointer"
-                >
+                <button onClick={() => setShowReport(true)}
+                  className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20 cursor-pointer">
                   View Protection Report
                 </button>
               </div>
               <div className="w-full md:w-1/3 bg-[#f8fafc] border-l border-slate-50 flex items-center justify-center p-8 relative overflow-hidden">
-                <div className="w-full h-full absolute inset-0 opacity-10 bg-[radial-gradient(#00d2ff_1px,transparent_1px)] [background-size:16px_16px]"></div>
-                <ShieldCheck className="w-20 h-20 md:w-24 md:h-24 text-[#00d2ff] relative z-10 drop-shadow-[0_0_20px_rgba(0,210,255,0.4)]" />
+                <div className="w-full h-full absolute inset-0 opacity-10 bg-[radial-gradient(#E8762E_1px,transparent_1px)] [background-size:16px_16px]"></div>
+                <ShieldCheck className="w-20 h-20 md:w-24 md:h-24 text-[#E8762E] relative z-10 drop-shadow-[0_0_20px_rgba(232,118,46,0.4)]" />
               </div>
             </div>
 
@@ -489,11 +427,9 @@ function FraudDetection() {
               <table className="w-full text-left min-w-[600px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/50 border-b border-slate-50">
-                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">DATE</th>
-                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">DESCRIPTION</th>
-                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">AMOUNT</th>
-                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest">RISK LEVEL</th>
-                    <th className="p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest text-center">ACTION</th>
+                    {['DATE', 'DESCRIPTION', 'AMOUNT', 'RISK LEVEL', 'ACTION'].map(h => (
+                      <th key={h} className={`p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest ${h === 'ACTION' ? 'text-center' : ''}`}>{h}</th>
+                    ))}
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
@@ -501,11 +437,7 @@ function FraudDetection() {
                     const txId = tx.id || tx.flag_id || i;
                     const isResolved = resolvedIds.has(txId);
                     return (
-                      <tr
-                        key={txId}
-                        onClick={() => setSelectedTx(tx)}
-                        className="hover:bg-[#f8fafc] transition-colors cursor-pointer group"
-                      >
+                      <tr key={txId} onClick={() => setSelectedTx(tx)} className="hover:bg-[#f8fafc] transition-colors cursor-pointer group">
                         <td className="p-6 text-[11px] font-bold text-slate-400 uppercase">{formatDate(tx.transaction_date || tx.date)}</td>
                         <td className="p-6">
                           <p className="text-sm font-black text-[#001f3f] mb-1">{tx.description || tx.narration || 'Transaction'}</p>
@@ -520,21 +452,13 @@ function FraudDetection() {
                             </span>
                           ) : (
                             <div className="flex items-center justify-center gap-2">
-                              <button
-                                onClick={() => handleResolve(tx, 'approve')}
-                                disabled={!!resolving}
-                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-black transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1"
-                              >
-                                {resolving === `${txId}-approve` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ThumbsUp className="w-3 h-3" />}
-                                Approve
+                              <button onClick={() => handleResolve(tx, 'approve')} disabled={!!resolving}
+                                className="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-[10px] font-black transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1">
+                                {resolving === `${txId}-approve` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ThumbsUp className="w-3 h-3" />}Approve
                               </button>
-                              <button
-                                onClick={() => handleResolve(tx, 'reject')}
-                                disabled={!!resolving}
-                                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1"
-                              >
-                                {resolving === `${txId}-reject` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ThumbsDown className="w-3 h-3" />}
-                                Fraud
+                              <button onClick={() => handleResolve(tx, 'reject')} disabled={!!resolving}
+                                className="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white rounded-lg text-[10px] font-black transition-all cursor-pointer disabled:opacity-50 flex items-center gap-1">
+                                {resolving === `${txId}-reject` ? <Loader2 className="w-3 h-3 animate-spin" /> : <ThumbsDown className="w-3 h-3" />}Fraud
                               </button>
                             </div>
                           )}
@@ -556,10 +480,7 @@ function FraudDetection() {
               </div>
               <div className="flex gap-4 w-full max-w-[480px]">
                 <div className="flex flex-col justify-between py-1 text-[9px] font-black text-slate-300 uppercase h-[180px]">
-                  <span>Morning</span>
-                  <span>Afternoon</span>
-                  <span>Evening</span>
-                  <span>Night</span>
+                  <span>Morning</span><span>Afternoon</span><span>Evening</span><span>Night</span>
                 </div>
                 <div className="flex-1 flex flex-col gap-3">
                   <div className="flex justify-between px-2 text-[9px] font-black text-slate-300 uppercase mb-2">
@@ -573,18 +494,16 @@ function FraudDetection() {
                 </div>
               </div>
               <div className="mt-12 flex justify-center gap-8">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-[#f1f5f9]"></div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">LOW</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-orange-100"></div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">MEDIUM</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-4 rounded bg-red-500"></div>
-                  <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SUSPICIOUS</span>
-                </div>
+                {[
+                  { color: 'bg-[#f1f5f9]', label: 'LOW' },
+                  { color: 'bg-orange-100', label: 'MEDIUM' },
+                  { color: 'bg-red-500', label: 'SUSPICIOUS' },
+                ].map((item, i) => (
+                  <div key={i} className="flex items-center gap-2">
+                    <div className={`w-4 h-4 rounded ${item.color}`}></div>
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{item.label}</span>
+                  </div>
+                ))}
               </div>
             </div>
 
@@ -597,9 +516,9 @@ function FraudDetection() {
               </div>
               <div className="space-y-6">
                 {[
-                  { text: 'Update withdrawal limits for POS-221 to prevent further automated reversal spam.', icon: <CheckCircle2 className="text-[#00d2ff]" />, bg: 'bg-[#f0f9ff]' },
-                  { text: 'Enable 2FA for all transfers exceeding ₦50,000 to mitigate high-value transfer risks.', icon: <CheckCircle2 className="text-[#00d2ff]" />, bg: 'bg-[#f0f9ff]' },
-                  { text: 'Merchant account verification pending for 12 secondary terminals.', icon: <History className="text-slate-400" />, bg: 'bg-slate-50' }
+                  { text: 'Update withdrawal limits for POS-221 to prevent further automated reversal spam.', icon: <CheckCircle2 className="text-[#E8762E]" />, bg: 'bg-orange-50' },
+                  { text: 'Enable 2FA for all transfers exceeding ₦50,000 to mitigate high-value transfer risks.', icon: <CheckCircle2 className="text-[#E8762E]" />, bg: 'bg-orange-50' },
+                  { text: 'Merchant account verification pending for 12 secondary terminals.', icon: <History className="text-slate-400" />, bg: 'bg-slate-50' },
                 ].map((rec, i) => (
                   <div key={i} className={`p-6 rounded-2xl border border-slate-50 flex items-center gap-5 ${rec.bg}`}>
                     <div className="shrink-0">{React.cloneElement(rec.icon, { className: 'w-5 h-5' })}</div>
@@ -613,9 +532,9 @@ function FraudDetection() {
           <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
             <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
               <span className="text-slate-400 font-black">SQUADMIND AI</span>
-              <a href="#" className="hover:text-slate-500 transition-colors">Privacy Policy</a>
-              <a href="#" className="hover:text-slate-500 transition-colors">Terms of Service</a>
-              <a href="#" className="hover:text-slate-500 transition-colors">Contact Support</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy Policy</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Terms of Service</a>
+              <a href="#" className="hover:text-[#E8762E] transition-colors">Contact Support</a>
             </div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND. POWERED BY SQUAD.</p>
           </footer>
@@ -624,16 +543,13 @@ function FraudDetection() {
 
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
         <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-slate-400">
-          <LayoutDashboard className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Home</span>
+          <LayoutDashboard className="w-5 h-5" /><span className="text-[10px] font-bold">Home</span>
         </button>
         <button onClick={() => onNavigate('cashflow')} className="flex flex-col items-center gap-1 text-slate-400">
-          <Banknote className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Cash</span>
+          <Banknote className="w-5 h-5" /><span className="text-[10px] font-bold">Cash</span>
         </button>
-        <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-[#001f3f]">
-          <ShieldAlert className="w-5 h-5" />
-          <span className="text-[10px] font-bold">Fraud</span>
+        <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-[#E8762E]">
+          <ShieldAlert className="w-5 h-5" /><span className="text-[10px] font-bold">Fraud</span>
         </button>
         <button onClick={() => onNavigate('alerts')} className="flex flex-col items-center gap-1 text-slate-400 relative">
           <Bell className="w-5 h-5" />
@@ -641,8 +557,7 @@ function FraudDetection() {
           <span className="text-[10px] font-bold">Alerts</span>
         </button>
         <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400">
-          <Settings className="w-5 h-5" />
-          <span className="text-[10px] font-bold">More</span>
+          <Settings className="w-5 h-5" /><span className="text-[10px] font-bold">More</span>
         </button>
       </nav>
     </div>
