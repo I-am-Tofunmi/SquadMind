@@ -52,6 +52,9 @@ function TrustScore() {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedComponent, setSelectedComponent] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
+  const [applyingLender, setApplyingLender] = useState(null);
+  const [appliedLender, setAppliedLender] = useState(null);
+  const [appId] = useState('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000));
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -61,7 +64,7 @@ function TrustScore() {
 
   const showSuccess = (msg) => {
     setSuccessMsg(msg);
-    setTimeout(() => setSuccessMsg(''), 3000);
+    setTimeout(() => setSuccessMsg(''), 4000);
   };
 
   useEffect(() => {
@@ -130,6 +133,13 @@ function TrustScore() {
     showSuccess('TrustScore report downloaded!');
   };
 
+  const handleApplyLender = async (lender) => {
+    setApplyingLender(lender.name);
+    await new Promise(r => setTimeout(r, 2000));
+    setApplyingLender(null);
+    setAppliedLender(lender);
+  };
+
   const rawScore = safeNumber(trustData?.score || trustData?.trust_score, 0);
   const score = rawScore > 30 ? rawScore : 74;
   const scoreLabel = score >= 70 ? 'Good Standing' : score >= 50 ? 'Fair Standing' : 'Needs Improvement';
@@ -146,6 +156,13 @@ function TrustScore() {
         { label: 'CASHFLOW STABILITY', score: 16, max: 20, sub: 'STABLE', color: 'cyan' },
         { label: 'GROWTH TREND', score: 0, max: 15, sub: 'NEEDS IMPROVEMENT', color: 'red' },
       ];
+
+  const lenders = [
+    { name: 'Squad Bridge Loan', amount: '₦150,000', rate: '0%', duration: '14 days', type: 'Bridge', badge: '⚡ Instant' },
+    { name: 'Access Bank SME Loan', amount: '₦500,000', rate: '18% p.a.', duration: '12 months', type: 'Term Loan', badge: '🏦 Bank' },
+    { name: 'GTBank QuickCredit', amount: '₦250,000', rate: '1.5% p.m.', duration: '6 months', type: 'Revolving', badge: '🔄 Revolving' },
+    { name: 'Flutterwave Capital', amount: '₦800,000', rate: '2% p.m.', duration: '9 months', type: 'Business Loan', badge: '💼 Fintech' },
+  ];
 
   const componentDetails = {
     'REVENUE CONSISTENCY': { desc: 'Measures how stable your revenue is week-over-week. High consistency signals a reliable business to lenders.', tip: 'Maintain your Friday flash promos to keep revenue predictable.' },
@@ -237,53 +254,112 @@ function TrustScore() {
       </Modal>
 
       {/* Find Lenders Modal */}
-      <Modal isOpen={activeModal === 'lenders'} onClose={() => setActiveModal(null)} title="Available Lending Partners">
+      <Modal
+        isOpen={activeModal === 'lenders'}
+        onClose={() => { setActiveModal(null); setAppliedLender(null); }}
+        title="Available Lending Partners"
+      >
         <div className="space-y-5">
-          <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
-            <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
-            <p className="text-xs text-emerald-700 font-bold">Your TrustScore of {score}/100 qualifies you for all offers below</p>
-          </div>
-          {[
-            { name: 'Squad Bridge Loan', amount: '₦150,000', rate: '0%', duration: '14 days', type: 'Bridge', badge: '⚡ Instant' },
-            { name: 'Access Bank SME Loan', amount: '₦500,000', rate: '18% p.a.', duration: '12 months', type: 'Term Loan', badge: '🏦 Bank' },
-            { name: 'GTBank QuickCredit', amount: '₦250,000', rate: '1.5% p.m.', duration: '6 months', type: 'Revolving', badge: '🔄 Revolving' },
-            { name: 'Flutterwave Capital', amount: '₦800,000', rate: '2% p.m.', duration: '9 months', type: 'Business Loan', badge: '💼 Fintech' },
-          ].map((lender, i) => (
-            <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
-              <div className="flex items-start justify-between mb-3">
-                <div>
-                  <p className="text-sm font-black text-slate-900">{lender.name}</p>
-                  <span className="text-[10px] font-bold text-slate-400">{lender.badge}</span>
+          {appliedLender ? (
+            // ── SUCCESS STATE ──
+            <div className="space-y-4">
+              <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
+                <div className="w-16 h-16 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-white" />
                 </div>
-                <p className="text-xl font-black text-[#001f3f]">{lender.amount}</p>
+                <p className="text-lg font-black text-emerald-700 mb-1">Application Submitted!</p>
+                <p className="text-xs text-emerald-600 leading-relaxed">
+                  Your application to <span className="font-bold">{appliedLender.name}</span> for{' '}
+                  <span className="font-bold">{appliedLender.amount}</span> has been received.
+                </p>
               </div>
-              <div className="grid grid-cols-3 gap-2 mb-4">
-                <div className="bg-white rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-slate-400 uppercase">Rate</p>
-                  <p className="text-xs font-black text-slate-900">{lender.rate}</p>
-                </div>
-                <div className="bg-white rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-slate-400 uppercase">Duration</p>
-                  <p className="text-xs font-black text-slate-900">{lender.duration}</p>
-                </div>
-                <div className="bg-white rounded-xl p-2 text-center">
-                  <p className="text-[10px] text-slate-400 uppercase">Type</p>
-                  <p className="text-xs font-black text-slate-900">{lender.type}</p>
-                </div>
+              <div className="space-y-2">
+                {[
+                  { label: 'Application ID', value: appId, done: true },
+                  { label: 'TrustScore Check', value: `${score}/100 — Qualified`, done: true },
+                  { label: 'Lender Review', value: 'Processing...', done: false },
+                  { label: 'Expected Response', value: 'Within 24 hours', done: false },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                    <span className="text-xs font-medium text-slate-600">{step.label}</span>
+                    <div className="flex items-center gap-2">
+                      {step.done
+                        ? <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                        : <Loader2 className="w-4 h-4 text-[#00d2ff] animate-spin" />
+                      }
+                      <span className="text-xs font-bold text-slate-900">{step.value}</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  <span className="font-bold text-[#00d2ff]">What's next?</span> The lender will review your SquadMind TrustScore and transaction history. You'll receive an email confirmation shortly.
+                </p>
               </div>
               <button
-                onClick={() => { setActiveModal(null); showSuccess(`Application to ${lender.name} submitted! You'll receive a response within 24 hours.`); }}
-                className="w-full bg-[#001f3f] text-white font-bold py-2.5 rounded-xl text-xs hover:bg-[#002b55] transition-colors cursor-pointer"
+                onClick={() => {
+                  setActiveModal(null);
+                  setAppliedLender(null);
+                  showSuccess(`Application to ${appliedLender.name} submitted! Response within 24 hours.`);
+                }}
+                className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer"
               >
-                Apply Now
+                Done
               </button>
             </div>
-          ))}
-          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-            <p className="text-xs text-amber-700 leading-relaxed">
-              <span className="font-bold">Note:</span> This is a demo feature. In production, applications connect directly to lender APIs using your verified TrustScore.
-            </p>
-          </div>
+          ) : (
+            // ── LENDERS LIST ──
+            <>
+              <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
+                <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
+                <p className="text-xs text-emerald-700 font-bold">Your TrustScore of {score}/100 qualifies you for all offers below</p>
+              </div>
+              {lenders.map((lender, i) => (
+                <div key={i} className="p-5 bg-slate-50 rounded-2xl border border-slate-100">
+                  <div className="flex items-start justify-between mb-3">
+                    <div>
+                      <p className="text-sm font-black text-slate-900">{lender.name}</p>
+                      <span className="text-[10px] font-bold text-slate-400">{lender.badge}</span>
+                    </div>
+                    <p className="text-xl font-black text-[#001f3f]">{lender.amount}</p>
+                  </div>
+                  <div className="grid grid-cols-3 gap-2 mb-4">
+                    <div className="bg-white rounded-xl p-2 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Rate</p>
+                      <p className="text-xs font-black text-slate-900">{lender.rate}</p>
+                    </div>
+                    <div className="bg-white rounded-xl p-2 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Duration</p>
+                      <p className="text-xs font-black text-slate-900">{lender.duration}</p>
+                    </div>
+                    <div className="bg-white rounded-xl p-2 text-center">
+                      <p className="text-[10px] text-slate-400 uppercase">Type</p>
+                      <p className="text-xs font-black text-slate-900">{lender.type}</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => handleApplyLender(lender)}
+                    disabled={!!applyingLender}
+                    className="w-full bg-[#001f3f] text-white font-bold py-2.5 rounded-xl text-xs hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-60 flex items-center justify-center gap-2"
+                  >
+                    {applyingLender === lender.name ? (
+                      <><Loader2 className="w-3.5 h-3.5 animate-spin" /> Processing...</>
+                    ) : applyingLender ? (
+                      'Apply Now'
+                    ) : (
+                      <><Zap className="w-3.5 h-3.5" /> Apply Now</>
+                    )}
+                  </button>
+                </div>
+              ))}
+              <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  <span className="font-bold">Note:</span> This is a demo feature. In production, applications connect directly to lender APIs using your verified TrustScore.
+                </p>
+              </div>
+            </>
+          )}
         </div>
       </Modal>
 
@@ -474,15 +550,11 @@ function TrustScore() {
           )}
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10">
-
             <div className="lg:col-span-3 bg-white rounded-2xl md:rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
               <div className="relative w-full max-w-[340px] aspect-[2/1] mb-8">
                 <svg className="w-full h-full" viewBox="0 0 100 50">
                   <path d="M5,50 A45,45 0 0,1 95,50" fill="none" stroke="#f1f5f9" strokeWidth="10" strokeLinecap="round" />
-                  <path
-                    d={`M5,50 A45,45 0 0,1 ${endX},${endY}`}
-                    fill="none" stroke="#001f3f" strokeWidth="10" strokeLinecap="round"
-                  />
+                  <path d={`M5,50 A45,45 0 0,1 ${endX},${endY}`} fill="none" stroke="#001f3f" strokeWidth="10" strokeLinecap="round" />
                 </svg>
                 <div className="absolute bottom-0 left-0 right-0 flex flex-col items-center">
                   <span className="text-4xl md:text-6xl font-bold text-slate-900">
@@ -490,17 +562,14 @@ function TrustScore() {
                   </span>
                 </div>
               </div>
-
               <div className="inline-flex items-center gap-2 px-4 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold tracking-wider mb-6 border border-emerald-100 uppercase">
                 <ShieldCheck className="w-3.5 h-3.5" />
                 {scoreLabel}
               </div>
-
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 text-center">
                 Score is {score >= 70 ? 'Healthy' : score >= 50 ? 'Moderate' : 'Needs Improvement'}
               </h3>
               <p className="text-slate-500 text-sm font-medium mb-10 text-center">Based on last 90 days of Squad transactions</p>
-
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <button
                   onClick={downloadReport}
@@ -557,7 +626,7 @@ function TrustScore() {
             </div>
           </div>
 
-          {/* Score Breakdown — cards clickable */}
+          {/* Score Breakdown */}
           <div className="mb-12">
             <div className="flex justify-between items-end mb-6">
               <div>
@@ -645,7 +714,7 @@ function TrustScore() {
               <div className="p-8 bg-cyan-50/30 rounded-3xl border border-cyan-100/50">
                 <p className="text-xs font-bold text-slate-500 mb-6 text-center">You are ready to apply for business credit</p>
                 <button
-                  onClick={() => setActiveModal('lenders')}
+                  onClick={() => { setAppliedLender(null); setActiveModal('lenders'); }}
                   className="w-full bg-[#00d2ff] hover:bg-[#00d2ff]/90 text-white font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#00d2ff]/20 cursor-pointer"
                 >
                   Find Lenders
