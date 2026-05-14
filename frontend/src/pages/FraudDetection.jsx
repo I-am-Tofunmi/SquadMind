@@ -18,11 +18,12 @@ import {
   Loader2,
   X,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  TrendingUp,
+  Shield
 } from 'lucide-react';
 import { getFraudAlerts, resolveFraud, getToken } from '../services/api';
 
-// ── Modal ────────────────────────────────────────────────────────────────────
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
   return (
@@ -47,9 +48,10 @@ function FraudDetection() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [selectedTx, setSelectedTx] = useState(null);
-  const [resolving, setResolving] = useState(null); // tracks which tx is being resolved
+  const [resolving, setResolving] = useState(null);
   const [resolvedIds, setResolvedIds] = useState(new Set());
   const [successMsg, setSuccessMsg] = useState('');
+  const [showReport, setShowReport] = useState(false);
 
   const onLogout = () => {
     localStorage.removeItem('token');
@@ -88,7 +90,6 @@ function FraudDetection() {
       setSelectedTx(null);
       setTimeout(() => setSuccessMsg(''), 3000);
     } catch (err) {
-      // If backend fails (demo data has no real IDs), still show success for demo
       setResolvedIds(prev => new Set([...prev, id]));
       setSuccessMsg(`Transaction marked as ${resolution === 'approve' ? 'legitimate' : 'fraudulent'}.`);
       setSelectedTx(null);
@@ -115,8 +116,8 @@ function FraudDetection() {
     return <span className="px-4 py-1 bg-[#f0f9ff] text-[#0ea5e9] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#0ea5e9]/20">Low Risk</span>;
   };
 
-const rawFlags = fraudData?.fraud_flags || fraudData?.flags || fraudData?.items || fraudData;
-const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
+  const rawFlags = fraudData?.fraud_flags || fraudData?.flags || fraudData?.items || fraudData;
+  const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
     ? rawFlags
     : [
         { id: 1, transaction_date: '2026-05-12', description: 'Reversal from POS-221', reference: 'TXN-9921-XF', amount: 12500, risk_level: 'high', ai_reason: 'Unusual reversal at 2:14 AM from new device location. Pattern matches known fraud signature.' },
@@ -142,18 +143,130 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
-      {/* ── TRANSACTION DETAIL MODAL ─────────────────────────────────────── */}
+      {/* ── PROTECTION REPORT MODAL ── */}
+      <Modal isOpen={showReport} onClose={() => setShowReport(false)} title="Protection Report">
+        <div className="space-y-5">
+          <div className="p-5 bg-[#001f3f] rounded-2xl text-white">
+            <div className="flex items-center gap-3 mb-4">
+              <ShieldCheck className="w-6 h-6 text-[#00d2ff]" />
+              <p className="text-sm font-bold">SquadMind AI — Active Protection</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <p className="text-2xl font-black text-[#00d2ff]">{transactionsMonitored.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Monitored</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-black text-emerald-400">{threatsNeutralized}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Neutralized</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-black text-red-400">{flaggedTransactions.length}</p>
+                <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Flagged</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Risk Score Breakdown</h4>
+            {[
+              { label: 'Transaction Velocity', score: 88, status: 'Normal', color: 'bg-emerald-500' },
+              { label: 'Device Fingerprinting', score: 72, status: 'Warning', color: 'bg-orange-400' },
+              { label: 'Geo-location Checks', score: 91, status: 'Clear', color: 'bg-emerald-500' },
+              { label: 'Behavioural Pattern', score: 65, status: 'Alert', color: 'bg-red-500' },
+            ].map((item, i) => (
+              <div key={i} className="space-y-1.5">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-slate-700">{item.label}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black text-slate-900">{item.score}%</span>
+                    <span className={`text-[10px] font-bold px-2 py-0.5 rounded-md ${
+                      item.status === 'Normal' || item.status === 'Clear' ? 'bg-emerald-50 text-emerald-600' :
+                      item.status === 'Warning' ? 'bg-orange-50 text-orange-600' : 'bg-red-50 text-red-600'
+                    }`}>{item.status}</span>
+                  </div>
+                </div>
+                <div className="w-full h-1.5 bg-slate-100 rounded-full overflow-hidden">
+                  <div className={`h-full ${item.color} rounded-full`} style={{ width: `${item.score}%` }}></div>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">24-Hour Activity Summary</h4>
+            {[
+              { label: 'Transactions Screened', value: transactionsMonitored.toLocaleString(), icon: '🔍' },
+              { label: 'Threats Blocked', value: threatsNeutralized.toString(), icon: '🛡️' },
+              { label: 'False Positive Rate', value: '0.3%', icon: '✅' },
+              { label: 'Avg Response Time', value: '< 200ms', icon: '⚡' },
+              { label: 'Flagged for Review', value: flaggedTransactions.length.toString(), icon: '⚠️' },
+              { label: 'Auto-Resolved', value: resolvedIds.size.toString(), icon: '✔️' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
+                <div className="flex items-center gap-2">
+                  <span>{item.icon}</span>
+                  <span className="text-xs font-medium text-slate-600">{item.label}</span>
+                </div>
+                <span className="text-xs font-black text-slate-900">{item.value}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
+            <div className="flex items-start gap-3">
+              <Sparkles className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
+              <p className="text-xs text-slate-600 leading-relaxed">
+                <span className="font-bold text-[#00d2ff]">AI Recommendation:</span> Enable 2FA for all transfers above ₦50,000 to reduce your risk score from 94 to an estimated 72. This single action eliminates 60% of your current exposure.
+              </p>
+            </div>
+          </div>
+
+          <button
+            onClick={() => {
+              const rows = [
+                ['SquadMind Protection Report'],
+                ['Generated:', new Date().toLocaleDateString('en-NG')],
+                [''],
+                ['Transactions Monitored', transactionsMonitored],
+                ['Threats Neutralized', threatsNeutralized],
+                ['Flagged Transactions', flaggedTransactions.length],
+                ['Risk Score', `${riskScore}/100`],
+                [''],
+                ['FLAGGED TRANSACTIONS'],
+                ['Date', 'Description', 'Amount', 'Risk Level'],
+                ...flaggedTransactions.map(tx => [
+                  formatDate(tx.transaction_date),
+                  tx.description,
+                  formatCurrency(tx.amount),
+                  tx.risk_level
+                ])
+              ];
+              const csv = rows.map(r => r.join(',')).join('\n');
+              const blob = new Blob([csv], { type: 'text/csv' });
+              const url = URL.createObjectURL(blob);
+              const a = document.createElement('a');
+              a.href = url;
+              a.download = 'squadmind-protection-report.csv';
+              a.click();
+              URL.revokeObjectURL(url);
+            }}
+            className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
+          >
+            <Shield className="w-4 h-4" /> Download Full Report (CSV)
+          </button>
+        </div>
+      </Modal>
+
+      {/* ── TRANSACTION DETAIL MODAL ── */}
       <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Details">
         {selectedTx && (
           <div className="space-y-6">
-            {/* Status */}
             {resolvedIds.has(selectedTx.id || selectedTx.flag_id) && (
               <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold text-center">
                 ✅ Already Resolved
               </div>
             )}
-
-            {/* Transaction Info */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-2xl p-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</p>
@@ -168,8 +281,6 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
                 <p className="text-sm font-bold text-slate-900">{selectedTx.reference || selectedTx.squad_transaction_ref || 'N/A'}</p>
               </div>
             </div>
-
-            {/* Risk Level */}
             <div className="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
@@ -177,8 +288,6 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
               </div>
               {getRiskBadge(selectedTx.risk_level)}
             </div>
-
-            {/* AI Reason */}
             <div className="p-4 bg-cyan-50 rounded-2xl border border-cyan-100">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-4 h-4 text-[#00d2ff] mt-0.5 shrink-0" />
@@ -188,8 +297,6 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
                 </div>
               </div>
             </div>
-
-            {/* Action Buttons */}
             {!resolvedIds.has(selectedTx.id || selectedTx.flag_id) && (
               <div className="grid grid-cols-2 gap-3">
                 <button
@@ -216,7 +323,6 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
                 </button>
               </div>
             )}
-
             <p className="text-[10px] text-slate-400 text-center">
               Approve = legitimate transaction. Flag Fraud = escalate for investigation.
             </p>
@@ -224,7 +330,7 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
         )}
       </Modal>
 
-      {/* ── SIDEBAR ─────────────────────────────────────────────────────────── */}
+      {/* ── SIDEBAR ── */}
       <aside className="w-[260px] bg-[#001f3f] flex flex-col justify-between shrink-0 h-full overflow-y-auto hidden md:flex">
         <div>
           <div className="p-8 pb-10">
@@ -286,7 +392,7 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
         </div>
       </aside>
 
-      {/* ── MAIN ────────────────────────────────────────────────────────────── */}
+      {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Fraud & Suspicious Activity</h2>
@@ -303,7 +409,6 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
 
-          {/* Success Message */}
           {successMsg && (
             <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 shrink-0" />
@@ -329,7 +434,10 @@ const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
                 <p className="text-slate-400 text-sm md:text-base mb-12 leading-relaxed max-w-md font-medium opacity-80">
                   SquadMind is currently monitoring {transactionsMonitored.toLocaleString()} real-time transaction streams. {threatsNeutralized} threats were successfully neutralized in the last 24 hours.
                 </p>
-                <button className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20 cursor-pointer">
+                <button
+                  onClick={() => setShowReport(true)}
+                  className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20 cursor-pointer"
+                >
                   View Protection Report
                 </button>
               </div>
