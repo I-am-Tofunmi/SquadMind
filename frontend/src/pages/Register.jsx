@@ -22,27 +22,18 @@ function Register() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     if (formData.password !== formData.confirmPassword) {
       setError('Passwords do not match');
       return;
     }
-
     if (formData.password.length < 8) {
       setError('Password must be at least 8 characters');
       return;
     }
-
     setLoading(true);
     setError('');
-
     try {
-      await register(
-        formData.businessName,
-        formData.email,
-        formData.password
-      );
-      // Login immediately after register to ensure token is saved
+      await register(formData.businessName, formData.email, formData.password);
       await login(formData.email, formData.password);
       navigate('/connect');
     } catch (err) {
@@ -55,27 +46,27 @@ function Register() {
   return (
     <div className="min-h-screen bg-[#f8fafc] flex flex-col font-outfit relative overflow-hidden">
       <div className="absolute top-0 left-0 w-full h-full pointer-events-none -z-10 overflow-hidden">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-blue-100/30 rounded-full blur-[100px]"></div>
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-cyan-100/30 rounded-full blur-[100px]"></div>
+        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-[#001f3f]/5 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-[#E8762E]/5 rounded-full blur-[100px]"></div>
       </div>
 
       <header className="w-full flex justify-between items-center py-6 px-10 relative z-10">
         <button
           onClick={() => navigate('/')}
-          className="flex items-center gap-2 text-[#001f3f] font-bold hover:opacity-70 transition-all cursor-pointer group"
+          className="flex items-center gap-2 text-[#001f3f] font-bold hover:opacity-70 transition-all cursor-pointer"
         >
           <span className="text-xl tracking-tight">SquadMind</span>
         </button>
         <div className="hidden md:flex items-center gap-2 bg-white px-4 py-1.5 rounded-full border border-slate-100 shadow-sm">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by</span>
-          <span className="text-[10px] font-bold text-[#00d2ff] uppercase tracking-widest">Squad</span>
+          <span className="text-[10px] font-bold text-[#E8762E] uppercase tracking-widest">Squad</span>
         </div>
       </header>
 
       <main className="flex-1 flex items-center justify-center p-4 md:p-6 relative z-10">
-        <div className="w-full max-w-[520px] bg-white rounded-[32px] md:rounded-[40px] shadow-2xl shadow-[#001f3f]/5 border border-slate-50 p-8 md:p-12 flex flex-col">
+        <div className="w-full max-w-[520px] bg-white rounded-[32px] md:rounded-[40px] shadow-2xl shadow-[#001f3f]/5 border border-slate-100 p-8 md:p-12 flex flex-col">
 
-          <div className="w-16 h-16 bg-[#f8fafc] rounded-3xl flex items-center justify-center mb-8 shadow-inner self-center">
+          <div className="w-16 h-16 bg-[#001f3f]/5 rounded-3xl flex items-center justify-center mb-8 shadow-inner self-center">
             <UserPlus className="w-8 h-8 text-[#001f3f]" strokeWidth={2.5} />
           </div>
 
@@ -108,7 +99,7 @@ function Register() {
                   placeholder="Acme Corp"
                   value={formData.businessName}
                   onChange={handleChange}
-                  className="w-full border-none bg-slate-50 rounded-2xl pl-12 pr-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#00d2ff]/30 outline-none placeholder:text-slate-300 transition-all font-medium"
+                  className="w-full border border-slate-100 bg-slate-50 rounded-2xl pl-12 pr-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#E8762E]/20 outline-none placeholder:text-slate-300 transition-all font-medium"
                 />
               </div>
             </div>
@@ -128,7 +119,7 @@ function Register() {
                   placeholder="name@business.com"
                   value={formData.email}
                   onChange={handleChange}
-                  className="w-full border-none bg-slate-50 rounded-2xl pl-12 pr-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#00d2ff]/30 outline-none placeholder:text-slate-300 transition-all font-medium"
+                  className="w-full border border-slate-100 bg-slate-50 rounded-2xl pl-12 pr-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#E8762E]/20 outline-none placeholder:text-slate-300 transition-all font-medium"
                 />
               </div>
             </div>
@@ -149,7 +140,7 @@ function Register() {
                     placeholder="••••••••"
                     value={formData.password}
                     onChange={handleChange}
-                    className="w-full border-none bg-slate-50 rounded-2xl pl-12 pr-12 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#00d2ff]/30 outline-none placeholder:text-slate-300 transition-all font-medium"
+                    className="w-full border border-slate-100 bg-slate-50 rounded-2xl pl-12 pr-12 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#E8762E]/20 outline-none placeholder:text-slate-300 transition-all font-medium"
                   />
                   <button
                     type="button"
@@ -172,7 +163,7 @@ function Register() {
                   placeholder="••••••••"
                   value={formData.confirmPassword}
                   onChange={handleChange}
-                  className="w-full border-none bg-slate-50 rounded-2xl px-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#00d2ff]/30 outline-none placeholder:text-slate-300 transition-all font-medium"
+                  className="w-full border border-slate-100 bg-slate-50 rounded-2xl px-5 py-4 text-sm text-slate-900 focus:ring-2 focus:ring-[#E8762E]/20 outline-none placeholder:text-slate-300 transition-all font-medium"
                 />
               </div>
             </div>
@@ -187,7 +178,7 @@ function Register() {
               ) : (
                 <>
                   <span>Create Account</span>
-                  <ArrowRight className="w-4 h-4 text-[#00d2ff]" />
+                  <ArrowRight className="w-4 h-4 text-[#E8762E]" />
                 </>
               )}
             </button>
@@ -196,7 +187,7 @@ function Register() {
           <div className="mt-8 pt-8 border-t border-slate-50 text-center">
             <p className="text-slate-400 text-sm font-medium">
               Already have an account?{' '}
-              <Link to="/login" className="text-[#00d2ff] hover:text-[#001f3f] font-bold transition-colors">
+              <Link to="/login" className="text-[#E8762E] hover:opacity-70 font-bold transition-colors">
                 Login
               </Link>
             </p>
@@ -207,9 +198,9 @@ function Register() {
       <footer className="w-full py-10 px-10 flex flex-col md:flex-row justify-between items-center text-[11px] font-bold text-slate-300 relative z-10 border-t border-slate-50 gap-4 uppercase tracking-[0.2em]">
         <div className="text-[#001f3f]">SquadMind</div>
         <div className="flex gap-8">
-          <a href="#" className="hover:text-slate-500 transition-colors">Privacy</a>
-          <a href="#" className="hover:text-slate-500 transition-colors">Terms</a>
-          <a href="#" className="hover:text-slate-500 transition-colors">Support</a>
+          <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy</a>
+          <a href="#" className="hover:text-[#E8762E] transition-colors">Terms</a>
+          <a href="#" className="hover:text-[#E8762E] transition-colors">Support</a>
         </div>
         <div>© 2026 SQUADMIND v2.4.1</div>
       </footer>
