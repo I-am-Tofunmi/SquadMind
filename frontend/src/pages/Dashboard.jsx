@@ -170,25 +170,25 @@ function Dashboard() {
   }
 
   if (chartPeriod === 30) {
-    // 30D — steady upward trend with mid dip
-    return Array.from({ length: 30 }, (_, i) => ({
-      date: `Day ${i + 1}`,
-      revenue: 140000 + Math.sin(i * 0.4) * 40000 + i * 1000,
-      transactions: 40 + i,
-    }));
+   // 30D — clean upward slope
+  return Array.from({ length: 30 }, (_, i) => ({
+  date: `Day ${i + 1}`,
+  revenue: 80000 + (i * 8000),
+  transactions: 40 + i,
+  }));
   }
 
-  // 90D — slow growth with two big peaks
-  return Array.from({ length: 90 }, (_, i) => ({
-    date: `Day ${i + 1}`,
-    revenue: 100000
-      + (i * 1200)
-      + (i > 25 && i < 35 ? 80000 : 0)
-      + (i > 65 && i < 75 ? 120000 : 0)
-      + Math.sin(i * 0.2) * 15000,
-    transactions: 30 + Math.floor(i * 0.5),
-  }));
-};
+ // 90D — aggressive zigzag pattern
+return Array.from({ length: 90 }, (_, i) => ({
+  date: `Day ${i + 1}`,
+  revenue: i % 6 === 0 ? 350000
+    : i % 6 === 1 ? 120000
+    : i % 6 === 2 ? 300000
+    : i % 6 === 3 ? 80000
+    : i % 6 === 4 ? 280000
+    : 100000,
+  transactions: 30 + Math.floor(i * 0.5),
+}));
 
   const renderChart = () => {
   const filtered = getChartData();
