@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldAlert, Bell, Settings as SettingsIcon, LogOut, User,
@@ -34,20 +34,102 @@ function Settings() {
   const [copied, setCopied] = useState(false);
   const [showKey, setShowKey] = useState(false);
   const [successMsg, setSuccessMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState('');
   const [activeModal, setActiveModal] = useState(null);
   const [savingProfile, setSavingProfile] = useState(false);
   const [deactivateText, setDeactivateText] = useState('');
   const [regenerating, setRegenerating] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(true);
 
   const [profile, setProfile] = useState({
-    businessName: 'Lekan Stores', industry: 'Retail / Trading',
-    location: 'Lagos, Nigeria', email: 'user1@example.com', phone: '+234 801 234 5678',
+    businessName: '',
+    industry: '',
+    location: '',
+    email: '',
+    phone: '',
   });
 
   const apiKey = 'sk_prod_592837485928374859283748592837484j92';
   const maskedKey = 'sk_prod_••••••••••••••••••••4j92';
 
-  const showSuccess = (msg) => { setSuccessMsg(msg); setTimeout(() => setSuccessMsg(''), 3000); };
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  const showSuccess = (msg) => {
+    setSuccessMsg(msg);
+    setErrorMsg('');
+    setTimeout(() => setSuccessMsg(''), 3000);
+  };
+
+  const showError = (msg) => {
+    setErrorMsg(msg);
+    setSuccessMsg('');
+    setTimeout(() => setErrorMsg(''), 4000);
+  };
+
+  // ── Load real profile on mount ──
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) { navigate('/login'); return; }
+
+        const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+
+        if (res.status === 401) { navigate('/login'); return; }
+        if (!res.ok) throw new Error('Failed to load profile');
+
+        const json = await res.json();
+        const user = json?.data || json;
+
+        setProfile({
+          businessName: user.business_name || '',
+          industry: user.industry || '',
+          location: user.location || '',
+          email: user.email || '',
+          phone: user.phone || '',
+        });
+      } catch (err) {
+        // Keep empty defaults, not a critical failure
+      } finally {
+        setLoadingProfile(false);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  // ── Save profile to backend ──
+  const saveProfile = async () => {
+    setSavingProfile(true);
+    try {
+      const token = localStorage.getItem('token');
+      const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          business_name: profile.businessName,
+          industry: profile.industry,
+          location: profile.location,
+          email: profile.email,
+          phone: profile.phone,
+        })
+      });
+
+      if (res.status === 401) { navigate('/login'); return; }
+      if (!res.ok) throw new Error('Save failed');
+
+      showSuccess('Business profile saved successfully!');
+    } catch (err) {
+      showError('Failed to save profile. Please try again.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
 
   const toggleAlert = (type) => {
     setAlerts(prev => ({ ...prev, [type]: !prev[type] }));
@@ -59,13 +141,6 @@ function Settings() {
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
     showSuccess('API key copied to clipboard!');
-  };
-
-  const saveProfile = async () => {
-    setSavingProfile(true);
-    await new Promise(r => setTimeout(r, 1200));
-    setSavingProfile(false);
-    showSuccess('Business profile saved successfully!');
   };
 
   const regenerateKey = async () => {
@@ -169,7 +244,7 @@ function Settings() {
             </div>
           ))}
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">Tip:</span> Enable WhatsApp alerts for the fastest fraud notifications — delivered within 200ms of detection.</p>
+            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">Tip:</span> Enable WhatsApp alerts for the fastest fraud notifications.</p>
           </div>
           <button onClick={() => { setActiveModal(null); showSuccess('Notification preferences saved!'); }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer">Save Preferences</button>
@@ -210,7 +285,7 @@ function Settings() {
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{profile.businessName}</p>
+              <p className="text-sm font-bold text-white truncate">{profile.businessName || 'SquadMind User'}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -234,9 +309,16 @@ function Settings() {
         </header>
 
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
+
           {successMsg && (
             <div className="mb-6 p-4 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold flex items-center gap-3">
               <CheckCircle2 className="w-5 h-5 shrink-0" />{successMsg}
+            </div>
+          )}
+
+          {errorMsg && (
+            <div className="mb-6 p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-sm font-bold flex items-center gap-3">
+              <AlertTriangle className="w-5 h-5 shrink-0" />{errorMsg}
             </div>
           )}
 
@@ -254,36 +336,46 @@ function Settings() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+
             {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
 
               {/* Business Profile */}
               <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
                 <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-8">Business Profile</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                  {[
-                    { label: 'BUSINESS NAME', key: 'businessName', type: 'text' },
-                    { label: 'INDUSTRY', key: 'industry', type: 'text' },
-                    { label: 'EMAIL', key: 'email', type: 'email' },
-                    { label: 'PHONE', key: 'phone', type: 'text' },
-                  ].map((field) => (
-                    <div key={field.key} className="space-y-2">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{field.label}</label>
-                      <input type={field.type} value={profile[field.key]} onChange={e => setProfile(p => ({ ...p, [field.key]: e.target.value }))}
+
+                {loadingProfile ? (
+                  <div className="flex items-center justify-center py-12">
+                    <Loader2 className="w-8 h-8 text-[#E8762E] animate-spin" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                      {[
+                        { label: 'BUSINESS NAME', key: 'businessName', type: 'text' },
+                        { label: 'INDUSTRY', key: 'industry', type: 'text' },
+                        { label: 'EMAIL', key: 'email', type: 'email' },
+                        { label: 'PHONE', key: 'phone', type: 'text' },
+                      ].map((field) => (
+                        <div key={field.key} className="space-y-2">
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{field.label}</label>
+                          <input type={field.type} value={profile[field.key]} onChange={e => setProfile(p => ({ ...p, [field.key]: e.target.value }))}
+                            className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all" />
+                        </div>
+                      ))}
+                    </div>
+                    <div className="space-y-2 mb-8">
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION</label>
+                      <input type="text" value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
                         className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all" />
                     </div>
-                  ))}
-                </div>
-                <div className="space-y-2 mb-8">
-                  <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION</label>
-                  <input type="text" value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
-                    className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all" />
-                </div>
-                <button onClick={saveProfile} disabled={savingProfile}
-                  className="flex items-center gap-2 px-8 py-3.5 bg-[#001f3f] text-white font-bold rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-70 shadow-lg">
-                  {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
-                  {savingProfile ? 'Saving...' : 'Save Changes'}
-                </button>
+                    <button onClick={saveProfile} disabled={savingProfile}
+                      className="flex items-center gap-2 px-8 py-3.5 bg-[#001f3f] text-white font-bold rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-70 shadow-lg">
+                      {savingProfile ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4" />}
+                      {savingProfile ? 'Saving...' : 'Save Changes'}
+                    </button>
+                  </>
+                )}
               </div>
 
               {/* API Key */}
@@ -351,7 +443,6 @@ function Settings() {
 
             {/* Right Column */}
             <div className="space-y-8">
-              {/* Alerts */}
               <div className="bg-white rounded-2xl md:rounded-3xl p-8 md:p-10 shadow-sm border border-slate-100">
                 <div className="flex items-center justify-between mb-10">
                   <div className="flex items-center gap-3">
@@ -382,7 +473,6 @@ function Settings() {
                 </div>
               </div>
 
-              {/* Node Latency */}
               <div className="bg-white rounded-2xl md:rounded-3xl p-8 shadow-sm border border-slate-100">
                 <div className="flex justify-between items-center mb-8">
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">NODE LATENCY</p>
@@ -403,7 +493,6 @@ function Settings() {
                 </div>
               </div>
 
-              {/* Quick Actions */}
               <div className="bg-white rounded-2xl md:rounded-3xl p-8 shadow-sm border border-slate-100">
                 <h3 className="text-sm font-bold text-slate-900 mb-6">Quick Actions</h3>
                 <div className="space-y-3">
@@ -424,7 +513,6 @@ function Settings() {
             </div>
           </div>
 
-          {/* Deactivate */}
           <div className="mt-12 bg-red-50/50 rounded-3xl p-8 md:p-12 border border-red-100 flex flex-col md:flex-row items-center justify-between gap-8">
             <div className="space-y-2 text-center md:text-left">
               <h3 className="text-lg font-bold text-red-600">Deactivate Account</h3>
