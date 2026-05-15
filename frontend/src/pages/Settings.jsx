@@ -49,7 +49,6 @@ function Settings() {
     phone: '+234 801 234 5678',
   });
 
-  // displayed name in sidebar — syncs with profile
   const [displayName, setDisplayName] = useState(
     localStorage.getItem('businessName') || 'Lekan Adeyemi'
   );
@@ -61,7 +60,6 @@ function Settings() {
   const showSuccess = (msg) => { setSuccessMsg(msg); setErrorMsg(''); setTimeout(() => setSuccessMsg(''), 3000); };
   const showError = (msg) => { setErrorMsg(msg); setSuccessMsg(''); setTimeout(() => setErrorMsg(''), 4000); };
 
-  // ── Load real profile on mount ──
   useEffect(() => {
     const fetchProfile = async () => {
       try {
@@ -76,7 +74,6 @@ function Settings() {
         if (!res.ok) throw new Error('Failed');
 
         const json = await res.json();
-        // backend wraps in { data: {...} } or returns directly
         const user = json?.data || json;
 
         const loaded = {
@@ -90,18 +87,15 @@ function Settings() {
         setProfile(loaded);
         setDisplayName(loaded.businessName);
         localStorage.setItem('businessName', loaded.businessName);
-
       } catch (err) {
-        // keep defaults — don't block UI
+        // keep defaults
       } finally {
         setLoadingProfile(false);
       }
     };
-
     fetchProfile();
   }, []);
 
-  // ── Save profile to backend ──
   const saveProfile = async () => {
     setSavingProfile(true);
     try {
@@ -115,20 +109,15 @@ function Settings() {
         body: JSON.stringify({
           business_name: profile.businessName,
           industry: profile.industry,
-          location: profile.location,
-          email: profile.email,
           phone: profile.phone,
         })
       });
 
       if (res.status === 401) { navigate('/login'); return; }
-
       if (!res.ok) throw new Error('Save failed');
 
-      // ── Update localStorage so other pages reflect new name ──
       localStorage.setItem('businessName', profile.businessName);
       setDisplayName(profile.businessName);
-
       showSuccess('Business profile saved successfully!');
     } catch (err) {
       showError('Failed to save. Please try again.');
@@ -291,7 +280,6 @@ function Settings() {
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              {/* ── This now updates instantly when Save is clicked ── */}
               <p className="text-sm font-bold text-white truncate">{displayName}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
@@ -356,31 +344,38 @@ function Settings() {
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       {[
-                        { label: 'BUSINESS NAME', key: 'businessName', type: 'text', placeholder: 'Lekan Adeyemi' },
-                        { label: 'INDUSTRY', key: 'industry', type: 'text', placeholder: 'Retail / Trading' },
-                        { label: 'EMAIL', key: 'email', type: 'email', placeholder: 'user@example.com' },
-                        { label: 'PHONE', key: 'phone', type: 'text', placeholder: '+234 801 234 5678' },
+                        { label: 'BUSINESS NAME', key: 'businessName', type: 'text', placeholder: 'Lekan Adeyemi', readOnly: false },
+                        { label: 'INDUSTRY', key: 'industry', type: 'text', placeholder: 'Retail / Trading', readOnly: false },
+                        { label: 'EMAIL', key: 'email', type: 'email', placeholder: 'user@example.com', readOnly: true },
+                        { label: 'PHONE', key: 'phone', type: 'text', placeholder: '+234 801 234 5678', readOnly: false },
                       ].map((field) => (
                         <div key={field.key} className="space-y-2">
-                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{field.label}</label>
+                          <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                            {field.label}{field.readOnly && <span className="ml-2 text-slate-300 normal-case font-medium">(cannot be changed)</span>}
+                          </label>
                           <input
                             type={field.type}
                             value={profile[field.key]}
                             placeholder={field.placeholder}
-                            onChange={e => setProfile(p => ({ ...p, [field.key]: e.target.value }))}
-                            className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all"
+                            readOnly={field.readOnly}
+                            onChange={e => !field.readOnly && setProfile(p => ({ ...p, [field.key]: e.target.value }))}
+                            className={`w-full px-5 py-3.5 border rounded-xl text-sm outline-none transition-all ${
+                              field.readOnly
+                                ? 'bg-slate-100 border-slate-100 text-slate-400 cursor-not-allowed'
+                                : 'bg-[#f8fafc] border-slate-100 focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30'
+                            }`}
                           />
                         </div>
                       ))}
                     </div>
                     <div className="space-y-2 mb-8">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION</label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION <span className="ml-2 text-slate-300 normal-case font-medium">(cannot be changed)</span></label>
                       <input
                         type="text"
                         value={profile.location}
                         placeholder="Lagos, Nigeria"
-                        onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all"
+                        readOnly
+                        className="w-full px-5 py-3.5 bg-slate-100 border border-slate-100 rounded-xl text-sm text-slate-400 cursor-not-allowed"
                       />
                     </div>
                     <button onClick={saveProfile} disabled={savingProfile}
