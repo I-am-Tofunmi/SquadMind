@@ -26,7 +26,7 @@ function Modal({ isOpen, onClose, title, children }) {
 
 function Settings() {
   const navigate = useNavigate();
-  const onLogout = () => navigate('/');
+  const onLogout = () => { localStorage.removeItem('token'); localStorage.removeItem('businessName'); navigate('/'); };
   const onNavigate = (path) => navigate(`/${path}`);
 
   const [language, setLanguage] = useState('english');
@@ -42,29 +42,24 @@ function Settings() {
   const [loadingProfile, setLoadingProfile] = useState(true);
 
   const [profile, setProfile] = useState({
-    businessName: '',
-    industry: '',
-    location: '',
-    email: '',
-    phone: '',
+    businessName: 'Lekan Adeyemi',
+    industry: 'Retail / Trading',
+    location: 'Lagos, Nigeria',
+    email: 'user1@example.com',
+    phone: '+234 801 234 5678',
   });
+
+  // displayed name in sidebar — syncs with profile
+  const [displayName, setDisplayName] = useState(
+    localStorage.getItem('businessName') || 'Lekan Adeyemi'
+  );
 
   const apiKey = 'sk_prod_592837485928374859283748592837484j92';
   const maskedKey = 'sk_prod_••••••••••••••••••••4j92';
-
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  const showSuccess = (msg) => {
-    setSuccessMsg(msg);
-    setErrorMsg('');
-    setTimeout(() => setSuccessMsg(''), 3000);
-  };
-
-  const showError = (msg) => {
-    setErrorMsg(msg);
-    setSuccessMsg('');
-    setTimeout(() => setErrorMsg(''), 4000);
-  };
+  const showSuccess = (msg) => { setSuccessMsg(msg); setErrorMsg(''); setTimeout(() => setSuccessMsg(''), 3000); };
+  const showError = (msg) => { setErrorMsg(msg); setSuccessMsg(''); setTimeout(() => setErrorMsg(''), 4000); };
 
   // ── Load real profile on mount ──
   useEffect(() => {
@@ -78,20 +73,26 @@ function Settings() {
         });
 
         if (res.status === 401) { navigate('/login'); return; }
-        if (!res.ok) throw new Error('Failed to load profile');
+        if (!res.ok) throw new Error('Failed');
 
         const json = await res.json();
+        // backend wraps in { data: {...} } or returns directly
         const user = json?.data || json;
 
-        setProfile({
-          businessName: user.business_name || '',
-          industry: user.industry || '',
-          location: user.location || '',
+        const loaded = {
+          businessName: user.business_name || user.businessName || 'Lekan Adeyemi',
+          industry: user.industry || 'Retail / Trading',
+          location: user.location || 'Lagos, Nigeria',
           email: user.email || '',
-          phone: user.phone || '',
-        });
+          phone: user.phone || '+234 801 234 5678',
+        };
+
+        setProfile(loaded);
+        setDisplayName(loaded.businessName);
+        localStorage.setItem('businessName', loaded.businessName);
+
       } catch (err) {
-        // Keep empty defaults, not a critical failure
+        // keep defaults — don't block UI
       } finally {
         setLoadingProfile(false);
       }
@@ -121,11 +122,16 @@ function Settings() {
       });
 
       if (res.status === 401) { navigate('/login'); return; }
+
       if (!res.ok) throw new Error('Save failed');
+
+      // ── Update localStorage so other pages reflect new name ──
+      localStorage.setItem('businessName', profile.businessName);
+      setDisplayName(profile.businessName);
 
       showSuccess('Business profile saved successfully!');
     } catch (err) {
-      showError('Failed to save profile. Please try again.');
+      showError('Failed to save. Please try again.');
     } finally {
       setSavingProfile(false);
     }
@@ -285,7 +291,8 @@ function Settings() {
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{profile.businessName || 'SquadMind User'}</p>
+              {/* ── This now updates instantly when Save is clicked ── */}
+              <p className="text-sm font-bold text-white truncate">{displayName}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -315,7 +322,6 @@ function Settings() {
               <CheckCircle2 className="w-5 h-5 shrink-0" />{successMsg}
             </div>
           )}
-
           {errorMsg && (
             <div className="mb-6 p-4 bg-red-50 rounded-2xl border border-red-100 text-red-600 text-sm font-bold flex items-center gap-3">
               <AlertTriangle className="w-5 h-5 shrink-0" />{errorMsg}
@@ -336,38 +342,46 @@ function Settings() {
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-
-            {/* Left Column */}
             <div className="lg:col-span-2 space-y-8">
 
               {/* Business Profile */}
               <div className="bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100">
                 <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-8">Business Profile</h3>
-
                 {loadingProfile ? (
-                  <div className="flex items-center justify-center py-12">
-                    <Loader2 className="w-8 h-8 text-[#E8762E] animate-spin" />
+                  <div className="flex items-center justify-center py-12 gap-3">
+                    <Loader2 className="w-6 h-6 text-[#E8762E] animate-spin" />
+                    <p className="text-sm text-slate-400 font-medium">Loading your profile...</p>
                   </div>
                 ) : (
                   <>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                       {[
-                        { label: 'BUSINESS NAME', key: 'businessName', type: 'text' },
-                        { label: 'INDUSTRY', key: 'industry', type: 'text' },
-                        { label: 'EMAIL', key: 'email', type: 'email' },
-                        { label: 'PHONE', key: 'phone', type: 'text' },
+                        { label: 'BUSINESS NAME', key: 'businessName', type: 'text', placeholder: 'Lekan Adeyemi' },
+                        { label: 'INDUSTRY', key: 'industry', type: 'text', placeholder: 'Retail / Trading' },
+                        { label: 'EMAIL', key: 'email', type: 'email', placeholder: 'user@example.com' },
+                        { label: 'PHONE', key: 'phone', type: 'text', placeholder: '+234 801 234 5678' },
                       ].map((field) => (
                         <div key={field.key} className="space-y-2">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{field.label}</label>
-                          <input type={field.type} value={profile[field.key]} onChange={e => setProfile(p => ({ ...p, [field.key]: e.target.value }))}
-                            className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all" />
+                          <input
+                            type={field.type}
+                            value={profile[field.key]}
+                            placeholder={field.placeholder}
+                            onChange={e => setProfile(p => ({ ...p, [field.key]: e.target.value }))}
+                            className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all"
+                          />
                         </div>
                       ))}
                     </div>
                     <div className="space-y-2 mb-8">
                       <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION</label>
-                      <input type="text" value={profile.location} onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
-                        className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all" />
+                      <input
+                        type="text"
+                        value={profile.location}
+                        placeholder="Lagos, Nigeria"
+                        onChange={e => setProfile(p => ({ ...p, location: e.target.value }))}
+                        className="w-full px-5 py-3.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-sm outline-none focus:ring-2 focus:ring-[#E8762E]/20 focus:border-[#E8762E]/30 transition-all"
+                      />
                     </div>
                     <button onClick={saveProfile} disabled={savingProfile}
                       className="flex items-center gap-2 px-8 py-3.5 bg-[#001f3f] text-white font-bold rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-70 shadow-lg">
