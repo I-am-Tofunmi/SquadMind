@@ -157,7 +157,6 @@ function TrustScore() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
-      {/* Share Modal */}
       <Modal isOpen={activeModal === 'share'} onClose={() => setActiveModal(null)} title="Share with Lender">
         <div className="space-y-5">
           <div className="p-6 bg-gradient-to-br from-[#001f3f] to-[#E8762E] rounded-2xl text-white text-center">
@@ -192,7 +191,6 @@ function TrustScore() {
         </div>
       </Modal>
 
-      {/* Find Lenders Modal */}
       <Modal isOpen={activeModal === 'lenders'} onClose={() => { setActiveModal(null); setAppliedLender(null); }} title="Available Lending Partners">
         <div className="space-y-5">
           {appliedLender ? (
@@ -260,7 +258,6 @@ function TrustScore() {
         </div>
       </Modal>
 
-      {/* History Modal */}
       <Modal isOpen={activeModal === 'history'} onClose={() => setActiveModal(null)} title="Historical TrustScore Data">
         <div className="space-y-5">
           <p className="text-xs text-slate-400">Your TrustScore trend over the last 6 months</p>
@@ -294,7 +291,6 @@ function TrustScore() {
         </div>
       </Modal>
 
-      {/* Component Detail Modal */}
       <Modal isOpen={activeModal === 'component'} onClose={() => setActiveModal(null)} title="Score Component Details">
         {selectedComponent && (
           <div className="space-y-5">
@@ -362,12 +358,13 @@ function TrustScore() {
               <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
+          {/* ── FIXED: name reads from localStorage ── */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold">
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
+              <p className="text-sm font-bold text-white truncate">{localStorage.getItem('businessName') || 'Lekan Adeyemi'}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -454,7 +451,6 @@ function TrustScore() {
             </div>
           </div>
 
-          {/* Score Breakdown */}
           <div className="mb-12">
             <div className="flex justify-between items-end mb-6">
               <div>
