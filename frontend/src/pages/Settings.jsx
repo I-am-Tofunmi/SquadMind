@@ -5,6 +5,7 @@ import {
   Banknote, Award, Mail, Copy, Globe, Languages, CheckCircle2, X, Save,
   RefreshCw, Eye, EyeOff, AlertTriangle, Loader2, Shield, Zap
 } from 'lucide-react';
+import { getMe, authFetch } from '../services/api';
 
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
@@ -55,29 +56,22 @@ function Settings() {
 
   const apiKey = 'sk_prod_592837485928374859283748592837484j92';
   const maskedKey = 'sk_prod_••••••••••••••••••••4j92';
-  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   const showSuccess = (msg) => { setSuccessMsg(msg); setErrorMsg(''); setTimeout(() => setSuccessMsg(''), 3000); };
   const showError = (msg) => { setErrorMsg(msg); setSuccessMsg(''); setTimeout(() => setErrorMsg(''), 4000); };
 
+  // ── Load real profile on mount ──
   useEffect(() => {
     const fetchProfile = async () => {
       try {
         const token = localStorage.getItem('token');
         if (!token) { navigate('/login'); return; }
 
-        const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
-          headers: { 'Authorization': `Bearer ${token}` }
-        });
-
-        if (res.status === 401) { navigate('/login'); return; }
-        if (!res.ok) throw new Error('Failed');
-
-        const json = await res.json();
+        const json = await getMe();
         const user = json?.data || json;
 
         const loaded = {
-          businessName: user.business_name || user.businessName || 'Lekan Adeyemi',
+          businessName: user.business_name || 'Lekan Adeyemi',
           industry: user.industry || 'Retail / Trading',
           location: user.location || 'Lagos, Nigeria',
           email: user.email || '',
@@ -96,16 +90,12 @@ function Settings() {
     fetchProfile();
   }, []);
 
+  // ── Save profile to backend ──
   const saveProfile = async () => {
     setSavingProfile(true);
     try {
-      const token = localStorage.getItem('token');
-      const res = await fetch(`${BASE_URL}/api/v1/auth/me`, {
+      await authFetch('/auth/me', {
         method: 'PATCH',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
         body: JSON.stringify({
           business_name: profile.businessName,
           industry: profile.industry,
@@ -113,14 +103,11 @@ function Settings() {
         })
       });
 
-      if (res.status === 401) { navigate('/login'); return; }
-      if (!res.ok) throw new Error('Save failed');
-
       localStorage.setItem('businessName', profile.businessName);
       setDisplayName(profile.businessName);
       showSuccess('Business profile saved successfully!');
     } catch (err) {
-      showError('Failed to save. Please try again.');
+      showError(err.message || 'Failed to save. Please try again.');
     } finally {
       setSavingProfile(false);
     }
@@ -351,7 +338,7 @@ function Settings() {
                       ].map((field) => (
                         <div key={field.key} className="space-y-2">
                           <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                            {field.label}{field.readOnly && <span className="ml-2 text-slate-300 normal-case font-medium">(cannot be changed)</span>}
+                            {field.label}{field.readOnly && <span className="ml-2 text-slate-300 normal-case font-medium tracking-normal">(cannot be changed)</span>}
                           </label>
                           <input
                             type={field.type}
@@ -369,7 +356,9 @@ function Settings() {
                       ))}
                     </div>
                     <div className="space-y-2 mb-8">
-                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">LOCATION <span className="ml-2 text-slate-300 normal-case font-medium">(cannot be changed)</span></label>
+                      <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+                        LOCATION <span className="ml-2 text-slate-300 normal-case font-medium tracking-normal">(cannot be changed)</span>
+                      </label>
                       <input
                         type="text"
                         value={profile.location}
