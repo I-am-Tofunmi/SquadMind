@@ -210,7 +210,6 @@ function CashFlow() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
-      {/* ── MODALS ── */}
       <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
         <div className="space-y-5">
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
@@ -435,7 +434,6 @@ function CashFlow() {
               </div>
             ))}
           </div>
-
           {applied ? (
             <div className="space-y-4">
               <div className="p-6 bg-emerald-50 rounded-2xl border border-emerald-100 text-center">
@@ -473,8 +471,7 @@ function CashFlow() {
               <button
                 onClick={async () => { setApplying(true); await new Promise(r => setTimeout(r, 2000)); setApplying(false); setApplied(true); }}
                 disabled={applying}
-                className="w-full bg-[#E8762E] text-white font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#E8762E]/90 transition-colors cursor-pointer shadow-lg shadow-[#E8762E]/20 disabled:opacity-70"
-              >
+                className="w-full bg-[#E8762E] text-white font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#E8762E]/90 transition-colors cursor-pointer shadow-lg shadow-[#E8762E]/20 disabled:opacity-70">
                 {applying ? <><Loader2 className="w-4 h-4 animate-spin" /> Processing Application...</> : <><Zap className="w-4 h-4" /> Apply Now — Instant Approval</>}
               </button>
             </>
@@ -525,12 +522,13 @@ function CashFlow() {
               <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
+          {/* ── FIXED: name now reads from localStorage ── */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
-              <img src="https://ui-avatars.com/api/?name=Lekan+Adeyemi&background=E8762E&color=ffffff" alt="Lekan Adeyemi" />
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(localStorage.getItem('businessName') || 'Lekan Adeyemi')}&background=E8762E&color=ffffff`} alt="user" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
+              <p className="text-sm font-bold text-white truncate">{localStorage.getItem('businessName') || 'Lekan Adeyemi'}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -641,7 +639,6 @@ function CashFlow() {
             </div>
           </div>
 
-          {/* Forecast Table */}
           <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
@@ -692,7 +689,6 @@ function CashFlow() {
             </div>
           </div>
 
-          {/* Promo Section */}
           <div className="bg-[#001f3f] rounded-[48px] p-10 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden group">
             <div className="relative z-10 max-w-2xl text-center md:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#E8762E] text-white rounded-lg text-[9px] font-black tracking-widest mb-8 uppercase shadow-lg shadow-[#E8762E]/20">
