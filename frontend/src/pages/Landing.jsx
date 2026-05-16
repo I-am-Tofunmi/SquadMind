@@ -83,7 +83,7 @@ function Landing() {
         </h1>
 
         <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mb-12 font-medium leading-relaxed">
-          Connect your Squad account. Understand your money in seconds. Gain deep insights into your revenue, forecast cash flow, and secure your transactions with AI.
+          Activate your Business intelligence. Understand your money in seconds. Gain deep insights into your revenue, forecast cash flow, and secure your transactions with AI.
         </p>
 
         <div className="flex flex-col sm:flex-row items-center gap-4 mb-16 md:mb-24 w-full sm:w-auto">
