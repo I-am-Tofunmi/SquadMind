@@ -27,7 +27,6 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
-// ── Inventory data ──
 const inventoryItems = [
   { id: 1, name: 'Indomie Noodles (Carton)', sku: 'INV-001', stock: 12, minStock: 20, unit: 'cartons', price: 4800, sold: 145, trend: 'fast', restockAmount: 50, vendor: 'Dufil Prima Foods', lastRestocked: '3 days ago' },
   { id: 2, name: 'Groundnut Oil (5L)', sku: 'INV-002', stock: 3, minStock: 15, unit: 'kegs', price: 12500, sold: 89, trend: 'fast', restockAmount: 30, vendor: 'Grand Cereals', lastRestocked: '1 week ago' },
@@ -37,7 +36,6 @@ const inventoryItems = [
   { id: 6, name: 'Tomato Paste (Carton)', sku: 'INV-006', stock: 0, minStock: 15, unit: 'cartons', price: 9600, sold: 98, trend: 'fast', restockAmount: 25, vendor: 'Chi Limited', lastRestocked: '2 weeks ago' },
 ];
 
-// ── Multi-bank transactions ──
 const multiBankTransactions = [
   { id: 'SQ-2026-44821', bank: 'GTBank', type: 'Credit', amount: 85000, from: 'Chinedu Stores', time: '10:24 AM', status: 'success', channel: 'Transfer', flagged: false },
   { id: 'SQ-2026-44820', bank: 'Access Bank', type: 'Debit', amount: 47500, from: 'Honeywell Flour', time: '09:15 AM', status: 'success', channel: 'POS', flagged: false },
@@ -47,7 +45,6 @@ const multiBankTransactions = [
   { id: 'SQ-2026-44816', bank: 'Squad VA', type: 'Credit', amount: 28500, from: 'Adebayo Stores', time: 'Yesterday', status: 'success', channel: 'Virtual Account', flagged: false },
 ];
 
-// ── Vendor data ──
 const vendors = [
   { id: 1, name: 'Dufil Prima Foods', category: 'Noodles & Pasta', rating: 4.8, deliveryDays: 2, minOrder: '₦50,000', status: 'connected', badge: '⭐ Top Supplier', discount: '5% off orders > ₦200k', items: 12 },
   { id: 2, name: 'Honeywell Flour Mills', category: 'Flour & Semovita', rating: 4.6, deliveryDays: 3, minOrder: '₦80,000', status: 'connected', badge: '✅ Verified', discount: 'Net 30 payment terms', items: 8 },
@@ -105,18 +102,20 @@ function Dashboard() {
     await fetchDashboard();
   };
 
-  // ── THE KILLER MOMENT: restock triggers TrustScore update ──
+  // ── FIXED: guard prevents double-click ──
   const handleRestock = async (item) => {
+    if (restockingId) return;
     setRestockingId(item.id);
     await new Promise(r => setTimeout(r, 2000));
     setRestockingId(null);
     setRestockedIds(prev => new Set([...prev, item.id]));
-    // Show TrustScore impact notification
     setTrustScoreImpact({ item: item.name, points: '+2' });
-    setTimeout(() => setTrustScoreImpact(null), 4000);
+    setTimeout(() => setTrustScoreImpact(null), 5000);
   };
 
+  // ── FIXED: guard prevents double-click ──
   const handleConnectVendor = async (vendor) => {
+    if (connectingVendor) return;
     setConnectingVendor(vendor.name);
     await new Promise(r => setTimeout(r, 1800));
     setConnectingVendor(null);
@@ -186,6 +185,7 @@ function Dashboard() {
   const lowStockItems = inventoryItems.filter(i => i.stock <= i.minStock);
   const outOfStockItems = inventoryItems.filter(i => i.stock === 0);
 
+  // ── FIXED: correctly filters by selectedBank ──
   const filteredTransactions = selectedBank === 'All'
     ? multiBankTransactions
     : multiBankTransactions.filter(t => t.bank === selectedBank);
@@ -225,7 +225,6 @@ function Dashboard() {
     const areaPoints = `0,280 ${points} 1000,280`;
     const labels = chartPeriod === 7 ? ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
       : chartPeriod === 30 ? ['W1', 'W2', 'W3', 'W4'] : ['Jan', 'Feb', 'Mar'];
-
     return (
       <div className="relative h-[240px] w-full">
         {hoveredPoint && (
@@ -340,6 +339,26 @@ function Dashboard() {
             <div className="bg-emerald-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider mb-1">Success</p><p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.9)}</p></div>
             <div className="bg-red-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Failed</p><p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.1)}</p></div>
           </div>
+          <div className="space-y-3">
+            <h4 className="text-sm font-bold text-slate-700">Payment Channels</h4>
+            {[
+              { channel: 'Bank Transfer', count: Math.round(totalTransactions * 0.35), color: 'bg-blue-500' },
+              { channel: 'POS Terminal', count: Math.round(totalTransactions * 0.28), color: 'bg-emerald-500' },
+              { channel: 'Squad Virtual Account', count: Math.round(totalTransactions * 0.22), color: 'bg-[#E8762E]' },
+              { channel: 'USSD', count: Math.round(totalTransactions * 0.15), color: 'bg-purple-500' },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3">
+                <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
+                <span className="text-sm text-slate-600 flex-1">{item.channel}</span>
+                <span className="text-sm font-bold text-slate-900">{item.count} txns</span>
+                <span className="text-xs text-slate-400">{Math.round((item.count / totalTransactions) * 100)}%</span>
+              </div>
+            ))}
+          </div>
+          <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
+            <p className="text-xs font-bold text-amber-700">72% of daily target reached</p>
+            <p className="text-xs text-amber-600 mt-1">You need {Math.round(totalTransactions * 0.38)} more transactions to hit today's goal</p>
+          </div>
           <button onClick={() => { setActiveModal(null); onNavigate('frauddetection'); }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Fraud Analysis <ArrowRight className="w-4 h-4" />
@@ -409,7 +428,7 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Inventory Detail Modal */}
+      {/* ── INVENTORY MODAL ── */}
       <Modal isOpen={activeModal === 'inventory'} onClose={() => setActiveModal(null)} title="Inventory Intelligence">
         <div className="space-y-5">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
@@ -429,7 +448,8 @@ function Dashboard() {
               const isLow = item.stock <= item.minStock;
               const isOut = item.stock === 0;
               const isRestocked = restockedIds.has(item.id);
-              const pct = Math.min((item.stock / item.minStock) * 100, 100);
+              const isCurrentlyRestocking = restockingId === item.id;
+              const pct = Math.min((item.stock / (item.minStock || 1)) * 100, 100);
               return (
                 <div key={item.id} className={`p-4 rounded-2xl border ${isOut ? 'bg-red-50 border-red-100' : isLow ? 'bg-orange-50 border-orange-100' : 'bg-slate-50 border-slate-100'}`}>
                   <div className="flex items-start justify-between mb-2">
@@ -448,13 +468,20 @@ function Dashboard() {
                   <div className="w-full h-1.5 bg-white rounded-full overflow-hidden mb-3">
                     <div className={`h-full rounded-full ${isOut ? 'bg-red-500' : isLow ? 'bg-orange-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }}></div>
                   </div>
-                  {(isLow || isOut) && !isRestocked && (
-                    <button onClick={() => handleRestock(item)} disabled={restockingId === item.id}
+                  {isRestocked ? (
+                    <div className="w-full bg-emerald-50 text-emerald-600 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 border border-emerald-100">
+                      <CheckCircle2 className="w-3 h-3" />Restock Order Sent to {item.vendor}
+                    </div>
+                  ) : (isLow || isOut) ? (
+                    <button
+                      onClick={() => handleRestock(item)}
+                      disabled={isCurrentlyRestocking}
                       className="w-full bg-[#001f3f] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-60">
-                      {restockingId === item.id ? <><Loader2 className="w-3 h-3 animate-spin" />Sending Restock Order...</> : <><RotateCcw className="w-3 h-3" />Restock {item.restockAmount} {item.unit}</>}
+                      {isCurrentlyRestocking
+                        ? <><Loader2 className="w-3 h-3 animate-spin" />Sending Restock Order...</>
+                        : <><RotateCcw className="w-3 h-3" />Restock {item.restockAmount} {item.unit}</>}
                     </button>
-                  )}
-                  {isRestocked && <div className="w-full bg-emerald-50 text-emerald-600 font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 border border-emerald-100"><CheckCircle2 className="w-3 h-3" />Restock Order Sent to {item.vendor}</div>}
+                  ) : null}
                 </div>
               );
             })}
@@ -462,7 +489,7 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* Vendor Modal */}
+      {/* ── VENDOR MODAL ── */}
       <Modal isOpen={activeModal === 'vendors'} onClose={() => setActiveModal(null)} title="Vendor Marketplace">
         <div className="space-y-5">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
@@ -498,8 +525,10 @@ function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <button onClick={() => !isConnected && handleConnectVendor(vendor)} disabled={isConnecting || isConnected}
-                  className={`w-full font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors cursor-pointer ${isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-[#001f3f] text-white hover:bg-[#002b55]'}`}>
+                <button
+                  onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }}
+                  disabled={isConnecting || isConnected}
+                  className={`w-full font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors ${isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' : isConnecting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#001f3f] text-white hover:bg-[#002b55] cursor-pointer'}`}>
                   {isConnecting ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Connecting...</> :
                    isConnected ? <><CheckCircle2 className="w-3.5 h-3.5" />Connected</> :
                    <><Zap className="w-3.5 h-3.5" />Connect Vendor</>}
@@ -593,18 +622,21 @@ function Dashboard() {
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
-          {/* ── TRUSTSCORE IMPACT TOAST (THE KILLER MOMENT) ── */}
+          {/* ── FIXED: TrustScore toast with X button + z-[100] ── */}
           {trustScoreImpact && (
-            <div className="fixed top-6 right-6 z-50 bg-[#001f3f] text-white rounded-2xl shadow-2xl p-5 flex items-start gap-4 max-w-sm animate-pulse">
+            <div className="fixed top-6 right-6 z-[100] bg-[#001f3f] text-white rounded-2xl shadow-2xl p-5 flex items-start gap-4 max-w-sm border border-emerald-500/30">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
-              <div>
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">TrustScore Updated</p>
-                <p className="text-sm font-bold text-white">Restock of {trustScoreImpact.item} detected</p>
-                <p className="text-xs text-slate-400 mt-1">Inventory consistency score improved → TrustScore <span className="text-emerald-400 font-black">{trustScoreImpact.points} points</span></p>
-                <p className="text-[10px] text-[#E8762E] font-bold mt-2">Lending readiness: IMPROVING ↑</p>
+              <div className="flex-1">
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">🎯 TrustScore Updated</p>
+                <p className="text-sm font-bold text-white">Restock of {trustScoreImpact.item} recorded</p>
+                <p className="text-xs text-slate-400 mt-1">Inventory consistency improved → TrustScore <span className="text-emerald-400 font-black">{trustScoreImpact.points} points</span></p>
+                <p className="text-[10px] text-[#E8762E] font-bold mt-1.5">Lending readiness: IMPROVING ↑</p>
               </div>
+              <button onClick={() => setTrustScoreImpact(null)} className="text-slate-400 hover:text-white cursor-pointer shrink-0">
+                <X className="w-4 h-4" />
+              </button>
             </div>
           )}
 
@@ -738,9 +770,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ══════════════════════════════════════════════════ */}
-          {/* ── NEW: INVENTORY INTELLIGENCE SECTION ── */}
-          {/* ══════════════════════════════════════════════════ */}
+          {/* ── INVENTORY INTELLIGENCE ── */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -786,7 +816,8 @@ function Dashboard() {
                     const isLow = item.stock <= item.minStock;
                     const isOut = item.stock === 0;
                     const isRestocked = restockedIds.has(item.id);
-                    const pct = Math.min((item.stock / item.minStock) * 100, 100);
+                    const isCurrentlyRestocking = restockingId === item.id;
+                    const pct = Math.min((item.stock / (item.minStock || 1)) * 100, 100);
                     return (
                       <tr key={item.id} className="hover:bg-[#f8fafc] transition-colors">
                         <td className="p-5">
@@ -799,32 +830,34 @@ function Dashboard() {
                               <div className={`h-full rounded-full ${isOut ? 'bg-red-500' : isLow ? 'bg-orange-500' : 'bg-emerald-500'}`} style={{ width: `${pct}%` }}></div>
                             </div>
                             <span className={`text-xs font-bold ${isOut ? 'text-red-500' : isLow ? 'text-orange-500' : 'text-emerald-600'}`}>
-                              {item.stock} / {item.minStock} {item.unit}
+                              {item.stock}/{item.minStock} {item.unit}
                             </span>
                           </div>
                         </td>
                         <td className="p-5">
                           <div className="flex items-center gap-2">
-                            {item.trend === 'fast' ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : item.trend === 'slow' ? <TrendingDown className="w-4 h-4 text-slate-400" /> : <span className="w-4 h-4 text-slate-400">→</span>}
+                            {item.trend === 'fast' ? <TrendingUp className="w-4 h-4 text-emerald-500" /> : item.trend === 'slow' ? <TrendingDown className="w-4 h-4 text-slate-400" /> : <span className="text-slate-400 text-sm">→</span>}
                             <span className="text-sm font-bold text-slate-900">{item.sold} units</span>
                           </div>
                         </td>
                         <td className="p-5">
-                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${
-                            isOut ? 'bg-red-100 text-red-600' :
-                            isLow ? 'bg-orange-100 text-orange-600' :
-                            'bg-emerald-100 text-emerald-600'
-                          }`}>
+                          <span className={`px-3 py-1 rounded-full text-[9px] font-black uppercase tracking-widest ${isOut ? 'bg-red-100 text-red-600' : isLow ? 'bg-orange-100 text-orange-600' : 'bg-emerald-100 text-emerald-600'}`}>
                             {isOut ? '⚠ Restock Now' : isLow ? '↑ Running Low' : '✓ Sufficient'}
                           </span>
                         </td>
                         <td className="p-5">
                           {isRestocked ? (
-                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1"><CheckCircle2 className="w-3 h-3" />Order Sent</span>
+                            <span className="text-[10px] font-bold text-emerald-600 flex items-center gap-1">
+                              <CheckCircle2 className="w-3 h-3" />Order Sent ✓
+                            </span>
                           ) : (isLow || isOut) ? (
-                            <button onClick={() => handleRestock(item)} disabled={restockingId === item.id}
+                            <button
+                              onClick={() => handleRestock(item)}
+                              disabled={isCurrentlyRestocking}
                               className="px-4 py-1.5 bg-[#001f3f] text-white rounded-lg text-[10px] font-black hover:bg-[#002b55] transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
-                              {restockingId === item.id ? <><Loader2 className="w-3 h-3 animate-spin" />Ordering...</> : <><RotateCcw className="w-3 h-3" />Restock {item.restockAmount}</>}
+                              {isCurrentlyRestocking
+                                ? <><Loader2 className="w-3 h-3 animate-spin" />Ordering...</>
+                                : <><RotateCcw className="w-3 h-3" />Restock {item.restockAmount}</>}
                             </button>
                           ) : (
                             <span className="text-[10px] text-slate-300 font-medium">No action needed</span>
@@ -836,8 +869,6 @@ function Dashboard() {
                 </tbody>
               </table>
             </div>
-
-            {/* Inventory footer with TrustScore link */}
             <div className="px-6 py-4 bg-orange-50/50 border-t border-orange-100/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#E8762E]" />
@@ -849,9 +880,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ══════════════════════════════════════════════════ */}
-          {/* ── NEW: MULTI-BANK TRANSACTIONS ── */}
-          {/* ══════════════════════════════════════════════════ */}
+          {/* ── MULTI-BANK TRANSACTIONS ── */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -866,9 +895,12 @@ function Dashboard() {
                   </div>
                 </div>
               </div>
+              {/* ── FIXED: bank filter buttons ── */}
               <div className="flex items-center gap-2 flex-wrap">
                 {['All', 'GTBank', 'Access Bank', 'OPay', 'Moniepoint', 'Squad VA'].map(bank => (
-                  <button key={bank} onClick={() => setSelectedBank(bank)}
+                  <button
+                    key={bank}
+                    onClick={() => setSelectedBank(bank)}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${selectedBank === bank ? 'bg-[#001f3f] text-white' : 'bg-slate-50 border border-slate-100 text-slate-500 hover:text-slate-900'}`}>
                     {bank}
                   </button>
@@ -876,7 +908,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Bank summary cards */}
             <div className="p-6 border-b border-slate-50">
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                 {[
@@ -885,7 +916,9 @@ function Dashboard() {
                   { bank: 'OPay', balance: '₦87,200', txns: 12, color: 'bg-emerald-500', abbr: 'OP' },
                   { bank: 'Moniepoint', balance: '₦156,800', txns: 20, color: 'bg-blue-500', abbr: 'MP' },
                 ].map((b, i) => (
-                  <div key={i} className="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+                  <div key={i}
+                    onClick={() => setSelectedBank(b.bank)}
+                    className={`rounded-2xl p-4 border cursor-pointer transition-all ${selectedBank === b.bank ? 'border-[#E8762E] bg-orange-50/30' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}>
                     <div className="flex items-center gap-2 mb-3">
                       <div className={`w-8 h-8 rounded-lg ${b.color} flex items-center justify-center text-white text-[10px] font-black`}>{b.abbr}</div>
                       <p className="text-xs font-bold text-slate-700">{b.bank}</p>
@@ -908,15 +941,11 @@ function Dashboard() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-50">
-                  {filteredTransactions.map((tx, i) => (
+                  {filteredTransactions.length > 0 ? filteredTransactions.map((tx, i) => (
                     <tr key={i} className="hover:bg-[#f8fafc] transition-colors">
                       <td className="p-5 text-[10px] font-bold text-slate-400 font-mono">{tx.id}</td>
-                      <td className="p-5">
-                        <span className="text-xs font-black text-[#001f3f] px-2 py-1 bg-slate-100 rounded-lg">{tx.bank}</span>
-                      </td>
-                      <td className="p-5">
-                        <span className={`text-[10px] font-black px-2 py-1 rounded-lg ${tx.type === 'Credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{tx.type}</span>
-                      </td>
+                      <td className="p-5"><span className="text-xs font-black text-[#001f3f] px-2 py-1 bg-slate-100 rounded-lg">{tx.bank}</span></td>
+                      <td className="p-5"><span className={`text-[10px] font-black px-2 py-1 rounded-lg ${tx.type === 'Credit' ? 'bg-emerald-50 text-emerald-600' : 'bg-red-50 text-red-500'}`}>{tx.type}</span></td>
                       <td className="p-5 text-sm font-bold text-slate-700">{tx.from}</td>
                       <td className={`p-5 text-sm font-black ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-red-500'}`}>
                         {tx.type === 'Credit' ? '+' : '-'}₦{tx.amount.toLocaleString()}
@@ -934,19 +963,23 @@ function Dashboard() {
                         )}
                       </td>
                     </tr>
-                  ))}
+                  )) : (
+                    <tr>
+                      <td colSpan={7} className="p-8 text-center text-sm text-slate-400 font-medium">No transactions found for {selectedBank}</td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-              <p className="text-[10px] text-slate-400 font-medium">All transactions aggregated via Squad-compatible financial data infrastructure</p>
+              <p className="text-[10px] text-slate-400 font-medium">
+                Showing {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} {selectedBank !== 'All' ? `for ${selectedBank}` : 'across all banks'}
+              </p>
               <button onClick={() => onNavigate('frauddetection')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer">View Fraud Analysis →</button>
             </div>
           </div>
 
-          {/* ══════════════════════════════════════════════════ */}
-          {/* ── NEW: VENDOR MARKETPLACE ── */}
-          {/* ══════════════════════════════════════════════════ */}
+          {/* ── VENDOR MARKETPLACE ── */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -979,7 +1012,11 @@ function Dashboard() {
                       <div className="w-10 h-10 rounded-xl bg-[#001f3f]/5 flex items-center justify-center">
                         <Truck className="w-5 h-5 text-[#001f3f]" />
                       </div>
-                      {isConnected && <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center"><CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" /></div>}
+                      {isConnected && (
+                        <div className="w-6 h-6 rounded-full bg-emerald-100 flex items-center justify-center">
+                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500" />
+                        </div>
+                      )}
                     </div>
                     <p className="text-sm font-black text-slate-900 mb-0.5">{vendor.name}</p>
                     <p className="text-[10px] text-slate-400 mb-1">{vendor.category}</p>
@@ -991,10 +1028,15 @@ function Dashboard() {
                     <div className="p-2 bg-orange-50 rounded-xl mb-3">
                       <p className="text-[9px] font-bold text-[#E8762E]">{vendor.discount}</p>
                     </div>
+                    {/* ── FIXED: proper onClick guard ── */}
                     <button
-                      onClick={() => !isConnected && handleConnectVendor(vendor)}
+                      onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }}
                       disabled={isConnecting || isConnected}
-                      className={`w-full py-2 rounded-xl text-[10px] font-black transition-all cursor-pointer flex items-center justify-center gap-1.5 ${isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100' : 'bg-[#001f3f] text-white hover:bg-[#002b55]'}`}>
+                      className={`w-full py-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 ${
+                        isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' :
+                        isConnecting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
+                        'bg-[#001f3f] text-white hover:bg-[#002b55] cursor-pointer'
+                      }`}>
                       {isConnecting ? <><Loader2 className="w-3 h-3 animate-spin" />Connecting...</> :
                        isConnected ? <><CheckCircle2 className="w-3 h-3" />Connected</> :
                        <><Zap className="w-3 h-3" />Connect</>}
@@ -1040,7 +1082,6 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* Squad AI Intelligence panel */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
