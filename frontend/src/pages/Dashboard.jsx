@@ -1,13 +1,44 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
   Sparkles, Award, AlertTriangle, ArrowRight, Search, User, Banknote,
-  FileText, Users, Calendar, Loader2, X, TrendingUp, CheckCircle2, 
+  FileText, Users, Calendar, Loader2, X, TrendingUp, CheckCircle2,
   Info, Download, RefreshCw, Zap, Link, Shield, Package, Store,
-  TrendingDown, Building2, Truck, RotateCcw, Star, ChevronRight, Mail, Smartphone
+  TrendingDown, Building2, Truck, RotateCcw, Star, ChevronRight, Mail, Smartphone,
+  MessageCircle
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
+
+// ── FIX 5: Proper SVG arc ConfidenceRing — replaces broken CSS border trick ──
+function ConfidenceRing({ score }) {
+  const radius = 42;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="flex items-center justify-center">
+      <div className="relative w-32 h-32">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r={radius} fill="none" stroke="#fff7ed" strokeWidth="10" />
+          <circle
+            cx="50" cy="50" r={radius}
+            fill="none"
+            stroke="#E8762E"
+            strokeWidth="10"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-3xl font-bold text-slate-900">{score}</span>
+          <span className="text-xs text-slate-400 font-bold">/100</span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function Modal({ isOpen, onClose, title, children }) {
   if (!isOpen) return null;
@@ -69,6 +100,11 @@ function Dashboard() {
   const [connectedVendors, setConnectedVendors] = useState(new Set(['Dufil Prima Foods', 'Honeywell Flour Mills']));
   const [selectedBank, setSelectedBank] = useState('All');
   const [trustScoreImpact, setTrustScoreImpact] = useState(null);
+
+  // FIX 4: businessName read once in state, not inline in JSX
+  const [businessName] = useState(() =>
+    localStorage.getItem('businessName') || 'Lekan Stores'
+  );
 
   const navigate = useNavigate();
   const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
@@ -157,7 +193,6 @@ function Dashboard() {
   const healthLabel = safeString(dashboardData?.health_score?.label, 'Stable');
   const healthBreakdown = dashboardData?.health_score?.breakdown || { revenue_growth: 82, fraud_safety: 91, transaction_volume: 65 };
   const healthAiSummary = safeString(dashboardData?.health_score?.ai_summary, 'Your business scores 78/100 — Good financial health.');
-  const businessName = localStorage.getItem('businessName') || safeString(dashboardData?.business_name, 'Lekan Stores');
   const aiInsightEnglish = safeString(dashboardData?.ai_insight, 'Your business is performing well with consistent revenue growth.');
   const aiInsightPidgin = safeString(dashboardData?.ai_insight_pidgin, 'Your business dey do well! Revenue don go up 🚀');
   const fraudFlagged = Number(dashboardData?.fraud_summary?.flagged_count || 0);
@@ -261,7 +296,6 @@ function Dashboard() {
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
-          {/* ── CHANGED: loading message ── */}
           <p className="text-slate-500 font-medium">Analysing your SMS, email & PDF data...</p>
         </div>
       </div>
@@ -274,7 +308,6 @@ function Dashboard() {
       {/* ── MODALS ── */}
       <Modal isOpen={showHourly} onClose={() => setShowHourly(false)} title="Hourly Sales Breakdown">
         <div className="space-y-4">
-          {/* ── CHANGED ── */}
           <p className="text-xs text-slate-400 font-medium">Average transactions by hour — extracted from SMS alerts & email receipts</p>
           <div className="flex items-end gap-1 h-32 pt-4">
             {[2,1,1,0,0,1,3,8,12,15,18,14,10,13,16,19,22,18,14,10,7,5,4,3].map((val, i) => (
@@ -304,12 +337,11 @@ function Dashboard() {
         <div className="space-y-6">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center">
-              {/* ── CHANGED: icon + text ── */}
               <Smartphone className="w-4 h-4 text-[#E8762E]" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Source</p>
-              <p className="text-xs font-bold text-white">SMS + Email + PDF — {(1247).toLocaleString()} transactions extracted</p>
+              <p className="text-xs font-bold text-white">SMS + Email + PDF — {(1247).toLocaleString()} transactions extracted · NLP accuracy &gt;95%</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -332,8 +364,7 @@ function Dashboard() {
         <div className="space-y-6">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center"><Zap className="w-4 h-4 text-[#E8762E]" /></div>
-            {/* ── CHANGED ── */}
-            <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by SquadMind NLP Engine</p><p className="text-xs font-bold text-white">Extracting transactions from SMS, email & PDF in real-time</p></div>
+            <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">SquadMind NLP Engine · &gt;95% Accuracy</p><p className="text-xs font-bold text-white">Extracting transactions from SMS, email & PDF in real-time</p></div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-blue-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Total</p><p className="text-2xl font-bold text-slate-900">{totalTransactions}</p></div>
@@ -341,7 +372,6 @@ function Dashboard() {
             <div className="bg-red-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Failed</p><p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.1)}</p></div>
           </div>
           <div className="space-y-3">
-            {/* ── CHANGED: data sources ── */}
             <h4 className="text-sm font-bold text-slate-700">Data Sources Parsed</h4>
             {[
               { channel: 'Bank SMS Alerts', count: Math.round(totalTransactions * 0.45), color: 'bg-blue-500' },
@@ -368,17 +398,12 @@ function Dashboard() {
         </div>
       </Modal>
 
+      {/* FIX 5: Health modal now uses ConfidenceRing SVG arc */}
       <Modal isOpen={activeModal === 'health'} onClose={() => setActiveModal(null)} title="Health Score Breakdown">
         <div className="space-y-6">
-          <div className="flex items-center justify-center">
-            <div className="w-32 h-32 rounded-full border-8 border-orange-100 flex items-center justify-center relative">
-              <div className="absolute inset-0 border-8 border-[#E8762E] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
-              <div className="text-center z-10"><span className="text-3xl font-bold text-slate-900">{healthScore}</span><span className="text-sm text-slate-400">/100</span></div>
-            </div>
-          </div>
+          <ConfidenceRing score={healthScore} />
           <p className="text-sm text-slate-500 text-center font-medium">{healthAiSummary}</p>
           <div className="space-y-4">
-            {/* ── CHANGED ── */}
             <h4 className="text-sm font-bold text-slate-700">Score Components — SquadMind AI Signals</h4>
             {[
               { label: 'Revenue Growth', score: healthBreakdown.revenue_growth, color: 'bg-emerald-500', icon: <TrendingUp className="w-4 h-4 text-emerald-500" />, source: 'SMS & email transaction history' },
@@ -417,7 +442,6 @@ function Dashboard() {
                   <div className="w-8 h-8 rounded-full bg-[#001f3f] flex items-center justify-center text-white font-bold text-xs">{i + 1}</div>
                   <div>
                     <p className="text-sm font-bold text-slate-900">{customer.name}</p>
-                    {/* ── CHANGED ── */}
                     <p className="text-[10px] text-slate-400">{customer.transactions} transactions extracted</p>
                     <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                   </div>
@@ -432,14 +456,106 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* ── INVENTORY MODAL ── */}
+      {/* FIX 1: WhatsApp onboarding modal */}
+      <Modal isOpen={activeModal === 'whatsapp'} onClose={() => setActiveModal(null)} title="Connect via WhatsApp">
+        <div className="space-y-5">
+          <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
+            <div className="w-16 h-16 bg-emerald-500/20 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <MessageCircle className="w-8 h-8 text-emerald-400" />
+            </div>
+            <p className="text-xl font-black text-white mb-1">WhatsApp Onboarding</p>
+            <p className="text-xs text-slate-400">Connect in 2 minutes — no bank API required</p>
+          </div>
+
+          {/* FIX 2: 5-step onboarding flow from deck slide 6 */}
+          <div className="space-y-3">
+            <p className="text-xs font-black text-slate-500 uppercase tracking-widest">Your Journey to Lender-Ready</p>
+            {[
+              { step: 1, icon: '📲', label: 'Download App', sub: 'iOS & Android', done: true },
+              { step: 2, icon: '🔗', label: 'Connect SMS & Email', sub: '2 minutes — grant permission', done: true },
+              { step: 3, icon: '🤖', label: 'AI Extracts Transactions', sub: '>95% NLP accuracy — historical auto-populated', done: true },
+              { step: 4, icon: '📊', label: 'Forecast & TrustScore™', sub: 'Live on dashboard — 7/14/30 day forecasts', done: true },
+              { step: 5, icon: '💰', label: 'Apply for Loan', sub: 'Partner lenders — pre-qualified up to ₦500k', done: false },
+            ].map((item) => (
+              <div key={item.step} className={`flex items-center gap-4 p-3 rounded-2xl border ${item.done ? 'bg-emerald-50 border-emerald-100' : 'bg-orange-50 border-orange-100'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-black shrink-0 ${item.done ? 'bg-emerald-500 text-white' : 'bg-[#E8762E] text-white'}`}>
+                  {item.done ? '✓' : item.step}
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-bold text-slate-900">{item.label}</p>
+                  <p className="text-[10px] text-slate-500">{item.sub}</p>
+                </div>
+                <span className="text-lg">{item.icon}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
+            <p className="text-xs text-slate-500 leading-relaxed text-center">
+              <span className="font-bold text-slate-700">Every step adds data → data powers AI → AI builds TrustScore™ → TrustScore™ unlocks financing</span>
+            </p>
+          </div>
+
+          <button
+            onClick={() => {
+              window.open('https://wa.me/2349000000000?text=Hi%20SquadMind%2C%20I%20want%20to%20connect%20my%20SMS%20and%20email%20transactions', '_blank');
+              setActiveModal(null);
+            }}
+            className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-lg shadow-emerald-500/20">
+            <MessageCircle className="w-5 h-5" /> Connect on WhatsApp — 2 Minutes
+          </button>
+          <p className="text-[10px] text-slate-400 text-center">Works with any Nigerian bank. No bank API required.</p>
+        </div>
+      </Modal>
+
+      {/* FIX 7: AI Intelligence modal — wired to FAB */}
+      <Modal isOpen={activeModal === 'ai_intelligence'} onClose={() => setActiveModal(null)} title="Run New AI Analysis">
+        <div className="space-y-5">
+          <div className="p-5 bg-[#001f3f] rounded-2xl text-white">
+            <div className="flex items-center gap-3 mb-4">
+              <Sparkles className="w-6 h-6 text-[#E8762E]" />
+              <p className="text-sm font-bold">SquadMind Intelligence Engine</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3 text-center">
+              <div><p className="text-xl font-black text-[#E8762E]">1,247</p><p className="text-[10px] text-slate-400 mt-1">Transactions</p></div>
+              <div><p className="text-xl font-black text-emerald-400">&gt;95%</p><p className="text-[10px] text-slate-400 mt-1">NLP Accuracy</p></div>
+              <div><p className="text-xl font-black text-blue-400">85%</p><p className="text-[10px] text-slate-400 mt-1">7-Day Forecast</p></div>
+            </div>
+          </div>
+          <div className="space-y-3">
+            {[
+              { label: 'NLP Transaction Extraction', detail: 'Re-parse all SMS alerts, email receipts & PDFs', icon: <Smartphone className="w-4 h-4 text-[#E8762E]" /> },
+              { label: 'Cash Flow Forecast Update', detail: 'Refresh 7/14/30-day predictions with latest data', icon: <TrendingUp className="w-4 h-4 text-emerald-500" /> },
+              { label: 'TrustScore™ Recalculation', detail: 'Update alternative credit profile from new signals', icon: <Award className="w-4 h-4 text-purple-500" /> },
+              { label: 'Fraud Pattern Scan', detail: 'Re-run anomaly detection on recent transactions', icon: <ShieldAlert className="w-4 h-4 text-red-500" /> },
+            ].map((item, i) => (
+              <div key={i} className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl">
+                <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center shadow-sm shrink-0">{item.icon}</div>
+                <div>
+                  <p className="text-xs font-bold text-slate-900">{item.label}</p>
+                  <p className="text-[10px] text-slate-400">{item.detail}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+          <button
+            onClick={async () => {
+              setActiveModal(null);
+              await handleSync();
+            }}
+            className="w-full bg-[#E8762E] text-white font-black py-4 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#E8762E]/90 transition-colors cursor-pointer shadow-lg shadow-[#E8762E]/20">
+            <Zap className="w-4 h-4" /> Run Full Analysis Now
+          </button>
+          <p className="text-[10px] text-slate-400 text-center">Analyzes SMS, email & PDF data — no bank API required</p>
+        </div>
+      </Modal>
+
       <Modal isOpen={activeModal === 'inventory'} onClose={() => setActiveModal(null)} title="Inventory Intelligence">
         <div className="space-y-5">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center"><Package className="w-4 h-4 text-[#E8762E]" /></div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI-Powered Inventory Engine</p>
-              {/* ── CHANGED ── */}
               <p className="text-xs font-bold text-white">Restock recommendations based on sales velocity extracted from SMS & email</p>
             </div>
           </div>
@@ -492,7 +608,6 @@ function Dashboard() {
         </div>
       </Modal>
 
-      {/* ── VENDOR MODAL ── */}
       <Modal isOpen={activeModal === 'vendors'} onClose={() => setActiveModal(null)} title="Vendor Marketplace">
         <div className="space-y-5">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
@@ -545,7 +660,6 @@ function Dashboard() {
         <div>
           <div className="p-8 pb-10">
             <h1 className="text-2xl font-bold tracking-tight text-white mb-0">SquadMind AI</h1>
-            {/* ── CHANGED ── */}
             <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">THE SME OPERATING SYSTEM</p>
           </div>
           <nav className="px-4 space-y-1">
@@ -582,6 +696,7 @@ function Dashboard() {
               <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
+          {/* FIX 4: businessName from state, not inline localStorage */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
               <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt={businessName} />
@@ -614,8 +729,8 @@ function Dashboard() {
                 <p className="text-sm font-bold text-slate-900 leading-none">{businessName}</p>
                 <p className="text-[10px] text-slate-500 mt-1 uppercase font-medium">Merchant Admin</p>
               </div>
-              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-                <User className="w-4 h-4 text-slate-400" />
+              <div className="w-9 h-9 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200 overflow-hidden">
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=f1f5f9&color=334155`} alt={businessName} className="w-full h-full" />
               </div>
             </div>
           </div>
@@ -624,7 +739,7 @@ function Dashboard() {
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
-          {/* ── TrustScore Impact Toast ── */}
+          {/* TrustScore Impact Toast */}
           {trustScoreImpact && (
             <div className="fixed top-6 right-6 z-[100] bg-[#001f3f] text-white rounded-2xl shadow-2xl p-5 flex items-start gap-4 max-w-sm border border-emerald-500/30">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -642,7 +757,7 @@ function Dashboard() {
             </div>
           )}
 
-          {/* ── CHANGED: Intelligence Engine Banner (was Squad API Banner) ── */}
+          {/* Intelligence Engine Banner */}
           <div className="bg-[#001f3f] rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
@@ -661,7 +776,7 @@ function Dashboard() {
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>SMS Extraction Active</span>
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Email Parsing Active</span>
                 <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>PDF Processing Active</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>NLP Engine Active</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>NLP &gt;95% Accuracy</span>
               </div>
               <button onClick={handleSync} disabled={syncing}
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-60">
@@ -671,7 +786,24 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── CHANGED: page title + badge ── */}
+          {/* FIX 1 + FIX 2: WhatsApp onboarding CTA banner */}
+          <div className="bg-gradient-to-r from-emerald-600 to-emerald-500 rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shrink-0">
+                <MessageCircle className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <p className="text-sm font-black text-white">Connect more accounts via WhatsApp — 2 minutes</p>
+                <p className="text-[10px] text-emerald-100 font-medium">Works with any Nigerian bank · No bank API required · Zero CAC friction</p>
+              </div>
+            </div>
+            <button
+              onClick={() => setActiveModal('whatsapp')}
+              className="shrink-0 bg-white text-emerald-600 font-black py-2.5 px-6 rounded-xl text-xs flex items-center gap-2 hover:bg-emerald-50 transition-all cursor-pointer shadow-lg whitespace-nowrap">
+              <MessageCircle className="w-4 h-4" /> Connect on WhatsApp
+            </button>
+          </div>
+
           <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 mb-1">Business Overview</h2>
@@ -683,7 +815,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── KPI CARDS ── */}
+          {/* KPI CARDS */}
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <div onClick={() => setActiveModal('revenue')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-4">
@@ -693,7 +825,6 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">TOTAL REVENUE</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{formatCurrency(totalRevenue)}</h3>
               <p className="text-xs text-slate-400 mt-1">vs last month</p>
-              {/* ── CHANGED ── */}
               <div className="mt-3 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Via NLP Extraction</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
@@ -707,7 +838,6 @@ function Dashboard() {
               <h3 className="text-3xl font-bold text-slate-900 mb-3">{totalTransactions}</h3>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div className="bg-[#E8762E] h-full w-[72%] rounded-full"></div></div>
               <p className="text-[10px] text-slate-400 font-medium mt-1.5">72% of target reached</p>
-              {/* ── CHANGED ── */}
               <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SMS + Email Parsed</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
@@ -719,7 +849,6 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">BEST SALES DAY</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{bestSalesDay}</h3>
               <p className="text-xs text-slate-400 mt-1">₦47,000 avg. volume</p>
-              {/* ── CHANGED ── */}
               <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SMS Alert Data</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for hourly breakdown →</p>
             </div>
@@ -727,9 +856,18 @@ function Dashboard() {
             <div onClick={() => setActiveModal('health')} className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 flex flex-col hover:shadow-md hover:border-[#E8762E]/30 transition-all cursor-pointer group">
               <div className="flex justify-between items-start mb-4">
                 <div><p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">HEALTH SCORE</p><h3 className="text-3xl font-bold text-slate-900">{healthScore}/100</h3><p className="text-[10px] text-emerald-600 font-bold mt-1 uppercase tracking-wide">Status: {healthLabel}</p></div>
-                <div className="w-16 h-16 rounded-xl border-4 border-orange-100 flex items-center justify-center relative">
-                  <div className="absolute inset-0 border-4 border-[#E8762E] border-t-transparent border-r-transparent rounded-xl rotate-45"></div>
-                  <span className="text-sm font-bold text-[#E8762E]">{healthScore}%</span>
+                {/* FIX 5: Inline mini ring uses the same correct formula */}
+                <div className="w-16 h-16 relative shrink-0">
+                  <svg className="w-full h-full -rotate-90" viewBox="0 0 64 64">
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="#fff7ed" strokeWidth="8" />
+                    <circle cx="32" cy="32" r="26" fill="none" stroke="#E8762E" strokeWidth="8"
+                      strokeDasharray={2 * Math.PI * 26}
+                      strokeDashoffset={2 * Math.PI * 26 * (1 - healthScore / 100)}
+                      strokeLinecap="round" />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className="text-xs font-bold text-[#E8762E]">{healthScore}%</span>
+                  </div>
                 </div>
               </div>
               <div className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">AI-Generated Signal</span></div>
@@ -737,13 +875,12 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── CHARTS ── */}
+          {/* CHARTS */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
             <div className="lg:col-span-2 bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Revenue Trend</h3>
-                  {/* ── CHANGED ── */}
                   <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Extracted from SMS alerts & email receipts · Hover to inspect</p></div>
                 </div>
                 <div className="flex gap-2">
@@ -763,7 +900,6 @@ function Dashboard() {
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col">
               <h3 className="text-lg font-bold text-slate-900 mb-1">Busiest Periods</h3>
-              {/* ── CHANGED ── */}
               <div className="flex items-center gap-1 mb-6"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Weekly — extracted from SMS & email data</p></div>
               <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-6">
                 {[{ d: 'M', h: '40%' }, { d: 'T', h: '60%' }, { d: 'W', h: '35%' }, { d: 'T', h: '50%' }, { d: 'F', h: '100%', active: true }, { d: 'S', h: '65%' }, { d: 'S', h: '45%' }].map((item, i) => (
@@ -778,7 +914,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── INVENTORY INTELLIGENCE ── */}
+          {/* INVENTORY INTELLIGENCE */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -786,10 +922,13 @@ function Dashboard() {
                   <Package className="w-5 h-5 text-[#E8762E]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Inventory Intelligence</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900">Inventory Intelligence</h3>
+                    {/* FIX 6: Pro Feature label for non-deck features */}
+                    <span className="text-[9px] font-black px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full border border-purple-100 uppercase tracking-widest">Pro Feature</span>
+                  </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    {/* ── CHANGED ── */}
                     <p className="text-xs text-slate-400">AI restock recommendations based on sales velocity from SMS & email transaction patterns</p>
                   </div>
                 </div>
@@ -887,7 +1026,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── MULTI-BANK TRANSACTIONS ── */}
+          {/* MULTI-BANK TRANSACTIONS */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -898,7 +1037,6 @@ function Dashboard() {
                   <h3 className="text-lg font-bold text-slate-900">Multi-Bank Transaction View</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    {/* ── CHANGED ── */}
                     <p className="text-xs text-slate-400">All bank accounts in one view — aggregated from SMS alerts, email receipts and PDF statements</p>
                   </div>
                 </div>
@@ -954,7 +1092,6 @@ function Dashboard() {
                       <td className={`p-5 text-sm font-black ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-red-500'}`}>
                         {tx.type === 'Credit' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                       </td>
-                      {/* ── CHANGED: channel → source ── */}
                       <td className="p-5">
                         <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
                           {tx.channel === 'SMS Alert' ? <Smartphone className="w-3 h-3" /> : tx.channel === 'Email Receipt' ? <Mail className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
@@ -982,7 +1119,6 @@ function Dashboard() {
               </table>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
-              {/* ── CHANGED ── */}
               <p className="text-[10px] text-slate-400 font-medium">
                 Showing {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} {selectedBank !== 'All' ? `for ${selectedBank}` : 'across all banks'} — extracted from SMS, email & PDF
               </p>
@@ -990,7 +1126,7 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── VENDOR MARKETPLACE ── */}
+          {/* VENDOR MARKETPLACE */}
           <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div className="flex items-center gap-4">
@@ -998,7 +1134,11 @@ function Dashboard() {
                   <Store className="w-5 h-5 text-[#E8762E]" />
                 </div>
                 <div>
-                  <h3 className="text-lg font-bold text-slate-900">Vendor Marketplace</h3>
+                  <div className="flex items-center gap-2">
+                    <h3 className="text-lg font-bold text-slate-900">Vendor Marketplace</h3>
+                    {/* FIX 6: Pro Feature label */}
+                    <span className="text-[9px] font-black px-2 py-0.5 bg-purple-50 text-purple-600 rounded-full border border-purple-100 uppercase tracking-widest">Pro Feature</span>
+                  </div>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
                     <p className="text-xs text-slate-400">AI-matched suppliers based on your SMS & email purchase history</p>
@@ -1059,13 +1199,12 @@ function Dashboard() {
             </div>
           </div>
 
-          {/* ── TOP CUSTOMERS + AI INTELLIGENCE ── */}
+          {/* TOP CUSTOMERS + AI INTELLIGENCE */}
           <div className="grid grid-cols-1 gap-8 mb-12">
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100">
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Top Revenue Drivers</h3>
-                  {/* ── CHANGED ── */}
                   <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Ranked by spend extracted from SMS & email receipts</p></div>
                 </div>
                 <button onClick={() => setActiveModal('customers')} className="text-sm font-bold text-[#E8762E] hover:underline cursor-pointer">View All</button>
@@ -1077,7 +1216,6 @@ function Dashboard() {
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">{customer.id}</div>
                       <div>
                         <span className="font-bold text-slate-700">{customer.name}</span>
-                        {/* ── CHANGED ── */}
                         <p className="text-xs text-slate-400">{customer.transactions} transactions extracted</p>
                         <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                       </div>
@@ -1088,7 +1226,7 @@ function Dashboard() {
               </div>
             </div>
 
-            {/* ── CHANGED: AI Intelligence Panel ── */}
+            {/* FIX 3: NLP accuracy figure added to AI Intelligence panel */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -1096,11 +1234,10 @@ function Dashboard() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    {/* ── CHANGED ── */}
                     <h3 className="text-lg font-bold text-slate-900">SquadMind AI Intelligence</h3>
                     <div className="flex items-center gap-1 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                      <p className="text-xs text-slate-400">NLP analysis from SMS alerts, email receipts & PDF statements — updated every 5 mins</p>
+                      <p className="text-xs text-slate-400">NLP &gt;95% accuracy · Cash Flow 85% at 7-day horizon · Updated every 5 mins</p>
                     </div>
                   </div>
                 </div>
@@ -1119,8 +1256,7 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0"><Sparkles className="w-5 h-5 text-[#E8762E]" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">AI INSIGHT</h4>
-                      {/* ── CHANGED ── */}
-                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">SMS + Email · 90-day NLP analysis</p>
+                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">SMS + Email · 90-day NLP analysis · &gt;95% accuracy</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">{isEnglish ? aiInsightEnglish : aiInsightPidgin}</p>
                     </div>
                   </div>
@@ -1130,7 +1266,6 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-slate-600" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CUSTOMER INSIGHTS</h4>
-                      {/* ── CHANGED ── */}
                       <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">NLP Transaction Patterns</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
                         {isEnglish
@@ -1146,7 +1281,6 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm"><AlertTriangle className="w-5 h-5 text-red-500" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-red-500 uppercase tracking-wider mb-1">SECURITY ALERT</h4>
-                      {/* ── CHANGED ── */}
                       <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">SquadMind Fraud Engine · Real-time</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed mb-4">
                         {fraudFlagged > 0
@@ -1162,7 +1296,6 @@ function Dashboard() {
                 </div>
               </div>
 
-              {/* ── CHANGED: footer indicators ── */}
               <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex-wrap">
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>NLP Extraction Engine</span>
@@ -1171,13 +1304,11 @@ function Dashboard() {
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Inventory AI</span>
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>TrustScore™</span>
                 </div>
-                {/* ── CHANGED ── */}
                 <p className="text-[10px] text-slate-400 font-medium">All intelligence extracted from SMS, email & PDF — no bank API required</p>
               </div>
             </div>
           </div>
 
-          {/* ── CHANGED: footer ── */}
           <footer className="pt-8 pb-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-100">
             <p className="text-sm text-slate-400 flex items-center gap-2">
               <span className="font-bold text-slate-900">SquadMind</span>
@@ -1205,7 +1336,11 @@ function Dashboard() {
         <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400"><Settings className="w-5 h-5" /><span className="text-[10px] font-bold">More</span></button>
       </nav>
 
-      <button className="fixed bottom-24 right-6 w-12 h-12 bg-[#E8762E] text-white rounded-xl shadow-2xl shadow-[#E8762E]/30 flex items-center justify-center md:bottom-8 md:right-8 md:w-14 md:h-14 transition-all z-40 cursor-pointer">
+      {/* FIX 7: FAB now wired to AI Intelligence modal */}
+      <button
+        onClick={() => setActiveModal('ai_intelligence')}
+        className="fixed bottom-24 right-6 w-12 h-12 bg-[#E8762E] text-white rounded-xl shadow-2xl shadow-[#E8762E]/30 flex items-center justify-center md:bottom-8 md:right-8 md:w-14 md:h-14 transition-all hover:scale-110 z-40 cursor-pointer"
+        title="Run AI Analysis">
         <Sparkles className="w-6 h-6" />
       </button>
     </div>
