@@ -79,7 +79,7 @@ function Landing() {
         </div>
 
         <h1 className="text-4xl sm:text-5xl md:text-7xl font-black text-[#001f3f] tracking-tight mb-8 leading-[1.1] max-w-4xl">
-          Your AI CFO.<br />Built for Your Business.
+          The AI CFO.<br />Your Business Needs.
         </h1>
 
         <p className="text-slate-400 text-sm sm:text-base md:text-lg max-w-2xl mb-12 font-medium leading-relaxed">
