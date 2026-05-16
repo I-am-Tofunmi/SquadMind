@@ -4,7 +4,7 @@ import {
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut,
   ShieldCheck, Banknote, Award, CheckCircle2, AlertTriangle, Sparkles,
   Grid, History, Loader2, X, ThumbsUp, ThumbsDown, TrendingUp, Shield, Activity,
-  HelpCircle, Download, ChevronRight
+  HelpCircle, Download, ChevronRight, Smartphone, Mail, FileText, Zap
 } from 'lucide-react';
 import { getFraudAlerts, resolveFraud, getToken } from '../services/api';
 
@@ -84,10 +84,10 @@ function FraudDetection() {
   const [successMsg, setSuccessMsg] = useState('');
   const [showReport, setShowReport] = useState(false);
 
-  // FIX 1: businessName read once in state, not inline in JSX
+  // businessName read once in state
   const [businessName] = useState(() => localStorage.getItem('businessName') || 'Lekan Adeyemi');
 
-  // FIX 3: resolvedIds persisted to sessionStorage so refresh doesn't reset UI
+  // resolvedIds persisted to sessionStorage
   const [resolvedIds, setResolvedIds] = useState(() => {
     try {
       const saved = sessionStorage.getItem('sm_resolved_fraud');
@@ -167,7 +167,7 @@ function FraudDetection() {
 
   const unresolvedCount = flaggedTransactions.filter(tx => !resolvedIds.has(tx.id || tx.flag_id)).length;
 
-  // FIX 4: Risk score reacts to resolutions — drops ~8pts per resolved high-risk tx, ~4 per medium
+  // Risk score reacts to resolutions
   const baseRiskScore = fraudData?.risk_score || 94;
   const derivedRiskScore = Math.max(0, flaggedTransactions.reduce((score, tx) => {
     const id = tx.id || tx.flag_id;
@@ -179,7 +179,8 @@ function FraudDetection() {
   }, baseRiskScore));
 
   const threatsNeutralized = (fraudData?.threats_neutralized || 3) + resolvedIds.size;
-  const transactionsMonitored = fraudData?.transactions_monitored || 1240;
+  // FIX 7: aligned to 1,247 used across all pages
+  const transactionsMonitored = fraudData?.transactions_monitored || 1247;
 
   const getSeverityColor = (severity) => {
     if (severity === 'high') return 'bg-red-50 border-red-100 text-red-600';
@@ -193,12 +194,13 @@ function FraudDetection() {
     return 'bg-slate-300';
   };
 
-  // FIX 2: Shared CSV export logic used by both the table button and Protection Report
+  // Shared CSV export
   const exportFraudCSV = () => {
     const rows = [
       ['SquadMind Fraud Detection Report'],
       ['Generated:', new Date().toLocaleDateString('en-NG')],
       ['Risk Score:', `${derivedRiskScore}/100`],
+      ['Data Sources:', 'SMS Alerts, Email Receipts, PDF Statements — No Bank API Required'],
       ['Transactions Monitored:', transactionsMonitored],
       ['Threats Neutralized:', threatsNeutralized],
       [''],
@@ -227,7 +229,8 @@ function FraudDetection() {
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
-          <p className="text-slate-500 font-medium">Loading fraud detection...</p>
+          {/* FIX 6: loading message references data sources */}
+          <p className="text-slate-500 font-medium">Analysing your SMS, email & PDF data...</p>
         </div>
       </div>
     );
@@ -258,6 +261,16 @@ function FraudDetection() {
                 <p className="text-[10px] text-slate-400 uppercase tracking-wider mt-1">Pending</p>
               </div>
             </div>
+          </div>
+
+          {/* FIX 2: data sources in report modal */}
+          <div className="flex items-center gap-3 p-3 bg-slate-50 rounded-2xl border border-slate-100">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-3.5 h-3.5 text-[#E8762E]" />
+              <Mail className="w-3.5 h-3.5 text-[#E8762E]" />
+              <FileText className="w-3.5 h-3.5 text-[#E8762E]" />
+            </div>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">SMS · Email · PDF · Any Nigerian Bank · No Bank API Required</p>
           </div>
 
           <div className="space-y-3">
@@ -315,7 +328,6 @@ function FraudDetection() {
             </div>
           </div>
 
-          {/* FIX 2: wired to shared exportFraudCSV */}
           <button
             onClick={exportFraudCSV}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer"
@@ -375,7 +387,8 @@ function FraudDetection() {
                     selectedTx.anomaly_score >= 50 ? 'bg-orange-400' : 'bg-emerald-500'
                   }`} style={{ width: `${selectedTx.anomaly_score}%` }}></div>
                 </div>
-                <p className="text-[10px] text-slate-400 mt-2">Scored against 90-day merchant behavioral baseline via Squad transaction history</p>
+                {/* FIX 2: data source in anomaly score */}
+                <p className="text-[10px] text-slate-400 mt-2">Scored against 90-day merchant behavioral baseline — extracted from SMS alerts, email receipts & PDF statements · Any Nigerian bank</p>
               </div>
             )}
 
@@ -439,7 +452,8 @@ function FraudDetection() {
         <div>
           <div className="p-8 pb-10">
             <h1 className="text-2xl font-bold tracking-tight text-white mb-0">SquadMind AI</h1>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
+            {/* FIX 3: Consistent subtitle matching Dashboard and deck tagline */}
+            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">THE SME OPERATING SYSTEM</p>
           </div>
           <nav className="px-4 space-y-1">
             {[
@@ -477,7 +491,7 @@ function FraudDetection() {
               <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
-          {/* FIX 1: businessName from state + ui-avatars image consistent with CashFlow */}
+          {/* businessName from state + ui-avatars consistent with other pages */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
               <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt="user" />
@@ -492,7 +506,6 @@ function FraudDetection() {
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
-        {/* FIX 6: Header now consistent with CashFlow — breadcrumb + bell + help */}
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
           <div className="flex flex-col">
             <div className="hidden sm:flex items-center gap-1 text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">
@@ -526,18 +539,56 @@ function FraudDetection() {
           )}
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
+          {/* FIX 1 + FIX 2 + FIX 7: Data source banner with No Bank API badge */}
+          <div className="bg-[#001f3f] rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-red-500/20 flex items-center justify-center shrink-0">
+                <ShieldCheck className="w-5 h-5 text-red-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">SquadMind Fraud Engine — Active · NLP Anomaly Detection</span>
+                </div>
+                {/* FIX 2: data sources referenced */}
+                <p className="text-sm font-bold text-white">
+                  Monitoring {transactionsMonitored.toLocaleString()} transactions from SMS alerts · Email receipts · PDF statements ·{' '}
+                  <span className="text-slate-400 font-medium">Any Nigerian bank</span>
+                </p>
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-400" />SMS</span>
+              <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-emerald-400" />Email</span>
+              <span className="flex items-center gap-1"><FileText className="w-3 h-3 text-emerald-400" />PDF</span>
+              {/* FIX 1: No Bank API badge */}
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8762E]/20 text-[#E8762E] rounded-full border border-[#E8762E]/30 font-black">
+                <Zap className="w-3 h-3" />No Bank API Required
+              </span>
+            </div>
+          </div>
+
           {/* Active Protection Row */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 md:gap-8 mb-10">
             <div className="lg:col-span-2 bg-white rounded-2xl md:rounded-3xl shadow-sm border border-slate-100 overflow-hidden flex flex-col md:flex-row">
               <div className="p-6 md:p-10 flex-1">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#E8762E] rounded-lg text-[9px] font-bold tracking-widest mb-10 border border-[#E8762E]/20 uppercase">
+                <div className="inline-flex items-center gap-2 px-3 py-1 bg-orange-50 text-[#E8762E] rounded-lg text-[9px] font-bold tracking-widest mb-6 border border-[#E8762E]/20 uppercase">
                   <Sparkles className="w-3 h-3" />AI Insight
                 </div>
                 <h3 className="text-2xl md:text-4xl font-bold text-[#001f3f] mb-4 leading-tight">Active Protection Enabled</h3>
-                <p className="text-slate-400 text-sm md:text-base mb-12 leading-relaxed max-w-md font-medium opacity-80">
+                <p className="text-slate-400 text-sm md:text-base mb-4 leading-relaxed max-w-md font-medium opacity-80">
                   SquadMind is monitoring {transactionsMonitored.toLocaleString()} real-time transaction streams. {threatsNeutralized} threats neutralized in the last 24 hours.
                   {unresolvedCount > 0 && <span className="text-red-500 font-bold"> {unresolvedCount} transactions still pending review.</span>}
                 </p>
+                {/* FIX 2: data source note under the description */}
+                <div className="flex items-center gap-2 mb-8 p-3 bg-slate-50 rounded-xl border border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <Smartphone className="w-3.5 h-3.5 text-[#E8762E]" />
+                    <Mail className="w-3.5 h-3.5 text-[#E8762E]" />
+                    <FileText className="w-3.5 h-3.5 text-[#E8762E]" />
+                  </div>
+                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Monitoring SMS, email & PDF — works with any Nigerian bank</p>
+                </div>
                 <button onClick={() => setShowReport(true)}
                   className="w-full md:w-auto bg-[#001f3f] hover:bg-[#002b55] text-white font-bold py-4 px-10 rounded-xl text-sm transition-all shadow-xl shadow-[#001f3f]/20 cursor-pointer">
                   View Protection Report
@@ -549,7 +600,7 @@ function FraudDetection() {
               </div>
             </div>
 
-            {/* FIX 4: Risk score card reacts to resolutions */}
+            {/* Risk score card reacts to resolutions */}
             <div className={`bg-white rounded-2xl md:rounded-3xl p-6 md:p-10 shadow-sm border border-slate-100 border-l-4 transition-all duration-700 ${
               derivedRiskScore >= 80 ? 'border-l-red-500' : derivedRiskScore >= 50 ? 'border-l-orange-400' : 'border-l-emerald-500'
             }`}>
@@ -588,10 +639,13 @@ function FraudDetection() {
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Flagged Transactions</h3>
-                <p className="text-xs md:text-sm text-slate-400 font-medium">Click any row to view AI analysis and behavioral signals</p>
+                {/* FIX 2: data source note */}
+                <div className="flex items-center gap-1.5">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                  <p className="text-xs text-slate-400 font-medium">Detected from SMS alerts, email receipts & PDF statements — click any row to view AI analysis</p>
+                </div>
               </div>
               <div className="flex items-center gap-3">
-                {/* FIX 2: Export CSV button now wired to exportFraudCSV */}
                 <button
                   onClick={exportFraudCSV}
                   className="px-6 py-2.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-[10px] font-black text-slate-500 hover:text-[#001f3f] transition-all uppercase tracking-widest cursor-pointer flex items-center gap-2">
@@ -611,7 +665,6 @@ function FraudDetection() {
               </div>
             </div>
 
-            {/* FIX 5: Empty state */}
             {flaggedTransactions.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
@@ -631,7 +684,7 @@ function FraudDetection() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-50">
-                    {/* FIX 7: Resolved rows move to bottom and fade */}
+                    {/* Resolved rows move to bottom and fade */}
                     {[
                       ...flaggedTransactions.filter(tx => !resolvedIds.has(tx.id || tx.flag_id)),
                       ...flaggedTransactions.filter(tx => resolvedIds.has(tx.id || tx.flag_id)),
@@ -683,6 +736,17 @@ function FraudDetection() {
                 </table>
               </div>
             )}
+
+            {/* FIX 5: TrustScore™ flywheel note — matches Dashboard and CashFlow pattern */}
+            <div className="px-6 py-4 bg-orange-50/50 border-t border-orange-100/50 flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-4 h-4 text-[#E8762E]" />
+                <p className="text-xs text-slate-600">
+                  <span className="font-bold text-[#E8762E]">AI Insight:</span> Resolving fraud flags improves your Fraud Safety score → strengthens TrustScore™ → unlocks better lending terms
+                </p>
+              </div>
+              <button onClick={() => onNavigate('trustscore')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap">View TrustScore™ →</button>
+            </div>
           </div>
 
           {/* Bottom Grid */}
@@ -744,14 +808,17 @@ function FraudDetection() {
             </div>
           </div>
 
+          {/* FIX 4 + FIX 7: Consistent footer branding */}
           <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-              <span className="text-slate-400 font-black">SQUADMIND AI</span>
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SQUADMIND AI · THE SME OPERATING SYSTEM</p>
+              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">© 2026 SQUADMIND. NO BANK APIS REQUIRED.</p>
+            </div>
+            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
               <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Terms of Service</a>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Contact Support</a>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND. POWERED BY SQUAD.</p>
           </footer>
         </div>
       </main>
