@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
   Download, Play, CheckCircle2, Lightbulb, AlertTriangle, ChevronRight,
-  Sparkles, TrendingUp, Banknote, Award, Loader2, X, Zap
+  Sparkles, TrendingUp, Banknote, Award, Loader2, X, Zap,
+  Smartphone, Mail, FileText, RefreshCw, MessageCircle
 } from 'lucide-react';
 import { getLatestForecast, generateForecast, getToken } from '../services/api';
 
@@ -25,7 +26,7 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
-// FIX 4: Proper SVG arc-based confidence ring
+// Proper SVG arc-based confidence ring
 function ConfidenceRing({ score }) {
   const radius = 54;
   const circumference = 2 * Math.PI * radius;
@@ -64,20 +65,18 @@ function CashFlow() {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedPeak, setSelectedPeak] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
-
-  // FIX: 7D / 14D / 30D windows instead of calendar dates
   const [selectedWindow, setSelectedWindow] = useState('7d');
-
-  // Liquidity peaks weekly/monthly toggle — now wired up
   const [peaksView, setPeaksView] = useState('weekly');
-
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
 
-  // FIX 5: businessName read once, not inline in JSX
+  // FIX 2: last updated timestamp
+  const [lastUpdated] = useState('Today, 8:42 AM');
+
+  // businessName read once in state
   const [businessName] = useState(() => localStorage.getItem('businessName') || 'Lekan Adeyemi');
 
-  // FIX 7: appId stable via useRef — won't change on re-render
+  // appId stable via useRef
   const appId = useRef('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000)).current;
 
   const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
@@ -125,8 +124,10 @@ function CashFlow() {
   const minRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 340000) * 0.9 || 340000;
   const maxRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 380000) * 1.1 || 380000;
   const confidenceScore = Number(forecastData?.data?.confidence_score || forecastData?.confidence_score || 92) || 92;
-  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';
-  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
+
+  // FIX 3: AI narrative now includes restock framing from the deck
+  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of SMS alerts and email receipts, SquadMind predicts a 15% increase in month-end sales due to seasonal trends. You can afford to restock Semovita and Groundnut Oil this week — cash position supports it.';
+  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. You fit restock your shop this week — the money dey there. Keep the hustle!';
 
   const liquidityPeaksWeekly = forecastData?.liquidity_peaks || [
     { time: 'Oct 24 — Oct 31', source: 'Payroll Cycle Spike', flow: 85900, risk: 'LOW', status: 'Stable' },
@@ -142,12 +143,13 @@ function CashFlow() {
 
   const liquidityPeaks = peaksView === 'weekly' ? liquidityPeaksWeekly : liquidityPeaksMonthly;
 
-  // FIX 7: export uses || fallbacks to handle both API shapes
   const exportReport = () => {
     const rows = [
       ['SquadMind Cash Flow Report'],
       ['Generated:', new Date().toLocaleDateString('en-NG')],
       ['Forecast Window:', selectedWindow.toUpperCase()],
+      ['Data Sources:', 'SMS Alerts, Email Receipts (Paystack/Flutterwave), PDF Statements'],
+      ['Note:', 'No bank API required — works with any Nigerian bank'],
       [''],
       ['FORECAST SUMMARY'],
       ['Expected Min Revenue', formatCurrency(minRevenue)],
@@ -189,27 +191,25 @@ function CashFlow() {
     return 'bg-emerald-500';
   };
 
-  // FIX 1 + 2: Chart driven by selectedWindow (7D/14D/30D) with data-mapped points
-  // Each window defines % progress points that map to SVG Y coords (300 = bottom, 0 = top)
+  // Chart driven by selectedWindow (7D/14D/30D) — descriptions use restock framing from deck
   const windowConfig = {
     '7d': {
       label: '7-Day Forecast',
-      description: 'Steady upward trend — payroll cycle incoming.',
-      // [x%, y-value 0-100 where 100=high revenue]
+      description: 'Steady upward trend — payroll cycle incoming. You can afford to restock this week.',
       points: [0, 28, 42, 55, 63, 71, 78],
       xLabels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
       accuracy: '85%',
     },
     '14d': {
       label: '14-Day Forecast',
-      description: 'Dip expected Nov 1–7, recovery from Nov 8.',
+      description: 'Dip expected Nov 1–7 — delay large purchases. Recovery confirmed from Nov 8.',
       points: [0, 22, 38, 55, 65, 60, 48, 35, 30, 38, 52, 65, 72, 78],
       xLabels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13', 'D14'],
       accuracy: '80%',
     },
     '30d': {
       label: '30-Day Forecast',
-      description: 'Q4 seasonal uplift with festive peak in December.',
+      description: 'Q4 seasonal uplift — festive peak in December. Plan your stock now.',
       points: [0, 10, 18, 25, 35, 42, 38, 30, 28, 36, 45, 52, 60, 65, 62, 58, 55, 60, 68, 72, 75, 78, 80, 82, 85, 86, 87, 88, 90, 92],
       xLabels: ['W1', '', '', '', '', '', '', 'W2', '', '', '', '', '', '', 'W3', '', '', '', '', '', '', 'W4', '', '', '', '', '', '', '', 'D30'],
       accuracy: '72%',
@@ -233,10 +233,6 @@ function CashFlow() {
     const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
     const areaPath = `${linePath} L${pts[pts.length - 1].x},${H - 40} L${PAD},${H - 40} Z`;
 
-    // Show every other label to avoid clutter
-    const visibleLabels = cfg.xLabels.filter((_, i) =>
-      cfg.points.length <= 8 ? true : i % Math.ceil(cfg.points.length / 8) === 0 || i === cfg.points.length - 1
-    );
     const labelIndices = cfg.xLabels.reduce((acc, lbl, i) => {
       if (cfg.points.length <= 8 || i % Math.ceil(cfg.points.length / 8) === 0 || i === cfg.points.length - 1) {
         acc.push(i);
@@ -250,25 +246,16 @@ function CashFlow() {
           <div className="w-1.5 h-1.5 bg-[#E8762E] rounded-full animate-pulse"></div>
           <span className="text-[10px] font-black text-[#E8762E] uppercase tracking-widest">{cfg.accuracy} accuracy</span>
         </div>
-        <p className="text-[11px] text-slate-400 font-medium mb-3">{cfg.description}</p>
+        <p className="text-[11px] text-slate-400 font-medium mb-3 pr-32">{cfg.description}</p>
         <svg className="w-full" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ height: 200 }}>
-          {/* Grid lines */}
           {[0, 25, 50, 75, 100].map((pct, i) => {
             const y = PAD + (1 - pct / 100) * chartH;
-            return (
-              <g key={i}>
-                <line x1={PAD} y1={y} x2={W - PAD} y2={y} stroke="#f1f5f9" strokeWidth="1" />
-              </g>
-            );
+            return <line key={i} x1={PAD} y1={y} x2={W - PAD} y2={y} stroke="#f1f5f9" strokeWidth="1" />;
           })}
-          {/* Y-axis labels */}
           {[{ pct: 100, label: '₦500k' }, { pct: 50, label: '₦350k' }, { pct: 0, label: '₦200k' }].map((item, i) => {
             const y = PAD + (1 - item.pct / 100) * chartH;
-            return (
-              <text key={i} x={PAD - 4} y={y + 4} textAnchor="end" fontSize="10" fill="#cbd5e1" fontWeight="700">{item.label}</text>
-            );
+            return <text key={i} x={PAD - 4} y={y + 4} textAnchor="end" fontSize="10" fill="#cbd5e1" fontWeight="700">{item.label}</text>;
           })}
-          {/* Area fill */}
           <defs>
             <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
               <stop offset="0%" stopColor="#E8762E" stopOpacity="0.15" />
@@ -276,13 +263,10 @@ function CashFlow() {
             </linearGradient>
           </defs>
           <path d={areaPath} fill="url(#areaGrad)" />
-          {/* Line */}
           <path d={linePath} fill="none" stroke="#E8762E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-          {/* Data points */}
           {pts.map((p, i) => (
             <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="white" stroke="#E8762E" strokeWidth="2" />
           ))}
-          {/* Peak dot highlight */}
           {(() => {
             const maxIdx = cfg.points.indexOf(Math.max(...cfg.points));
             const p = pts[maxIdx];
@@ -294,8 +278,6 @@ function CashFlow() {
             );
           })()}
         </svg>
-
-        {/* X-axis labels */}
         <div className="flex justify-between px-5 mt-1 border-t border-slate-50 pt-2">
           {labelIndices.map((idx) => (
             <span key={idx} className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
@@ -312,7 +294,8 @@ function CashFlow() {
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
-          <p className="text-slate-500 font-medium">Loading cash flow forecast...</p>
+          {/* FIX 4: loading message references data sources */}
+          <p className="text-slate-500 font-medium">Analysing your SMS, email & PDF data...</p>
         </div>
       </div>
     );
@@ -324,11 +307,20 @@ function CashFlow() {
       {/* ── MODALS ── */}
       <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
         <div className="space-y-5">
+          {/* FIX 4 + FIX 5: data source indicator in modal */}
+          <div className="flex items-center gap-3 p-3 bg-[#001f3f] rounded-2xl">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-3.5 h-3.5 text-[#E8762E]" />
+              <Mail className="w-3.5 h-3.5 text-[#E8762E]" />
+              <FileText className="w-3.5 h-3.5 text-[#E8762E]" />
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Forecast powered by SMS · Email · PDF — No bank API required</p>
+          </div>
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <div className="flex items-start gap-3">
               <Lightbulb className="w-5 h-5 text-[#E8762E] mt-0.5 shrink-0" />
               <div>
-                <p className="text-xs font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Narrative</p>
+                <p className="text-xs font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Narrative — 90-day NLP Analysis</p>
                 <p className="text-sm text-slate-600 leading-relaxed">{aiNarrative}</p>
               </div>
             </div>
@@ -340,6 +332,8 @@ function CashFlow() {
               { label: 'Peak Sales Window', value: 'Oct 24 – Oct 31', color: 'text-blue-600', bg: 'bg-blue-50' },
               { label: 'Risk Period', value: 'Nov 01 – Nov 07', color: 'text-orange-600', bg: 'bg-orange-50' },
               { label: 'Recovery Expected', value: 'Nov 08 onwards', color: 'text-emerald-600', bg: 'bg-emerald-50' },
+              // FIX 3: Restock framing — "know if you can afford restock next Tuesday"
+              { label: 'Restock Window', value: 'This week — cash sufficient', color: 'text-emerald-600', bg: 'bg-emerald-50' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                 <span className="text-xs font-medium text-slate-600">{item.label}</span>
@@ -353,7 +347,7 @@ function CashFlow() {
           </div>
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white">
             <p className="text-xs font-bold mb-1">💡 Recommended Action</p>
-            <p className="text-xs text-slate-300 leading-relaxed">Run promotions before Oct 24 to capitalize on the payroll cycle spike. Consider delaying large expenditures until after Nov 7.</p>
+            <p className="text-xs text-slate-300 leading-relaxed">Run promotions before Oct 24 to capitalize on the payroll cycle spike. Restock fast-moving items now — your cash position supports it. Delay large expenditures until after Nov 7.</p>
           </div>
         </div>
       </Modal>
@@ -365,7 +359,7 @@ function CashFlow() {
               <AlertTriangle className="w-5 h-5 text-orange-500 mt-0.5 shrink-0" />
               <div>
                 <p className="text-xs font-bold text-orange-600 uppercase tracking-wider mb-2">Risk Window: Nov 1–7</p>
-                <p className="text-sm text-slate-600 leading-relaxed">A cash flow dip of approximately ₦23,450 is predicted during this period based on post-month-end payment cycles and reduced inflow patterns.</p>
+                <p className="text-sm text-slate-600 leading-relaxed">A cash flow dip of approximately ₦23,450 is predicted during this period based on post-month-end payment cycles and reduced inflow patterns — detected from your SMS alert history.</p>
               </div>
             </div>
           </div>
@@ -407,15 +401,14 @@ function CashFlow() {
         </div>
       </Modal>
 
-      {/* FIX 4: Replaced broken border-trick ring with proper SVG arc ConfidenceRing component */}
       <Modal isOpen={activeModal === 'confidence'} onClose={() => setActiveModal(null)} title="Confidence Score Explained">
         <div className="space-y-5">
           <ConfidenceRing score={confidenceScore} />
-          <p className="text-sm text-slate-500 text-center">A score of {confidenceScore}% means our AI model is highly confident in this forecast based on your transaction history.</p>
+          <p className="text-sm text-slate-500 text-center">A score of {confidenceScore}% means our Time Series ML model is highly confident in this forecast based on your SMS, email and PDF transaction history.</p>
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Score Components</h4>
             {[
-              { label: 'Transaction History Depth', score: 94, desc: '90+ days of Squad transaction data' },
+              { label: 'Transaction History Depth', score: 94, desc: '90+ days of SMS alerts & email receipts' },
               { label: 'Pattern Consistency', score: 88, desc: 'Stable weekly revenue patterns detected' },
               { label: 'Seasonal Adjustment', score: 91, desc: 'Q4 seasonal factors applied' },
               { label: 'Anomaly Detection', score: 96, desc: 'No major anomalies in recent data' },
@@ -436,7 +429,7 @@ function CashFlow() {
           </div>
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
             <p className="text-xs text-slate-600 leading-relaxed">
-              <span className="font-bold text-[#E8762E]">+2.4% from last run</span> — Your confidence score improved because more transaction data was added since the last forecast cycle.
+              <span className="font-bold text-[#E8762E]">+2.4% from last run</span> — Score improved because more SMS and email transaction data was added since the last forecast cycle.
             </p>
           </div>
         </div>
@@ -491,7 +484,7 @@ function CashFlow() {
                 <>
                   <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-xl">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
-                    <p className="text-xs text-slate-600">Good period to schedule supplier payments and clear outstanding bills.</p>
+                    <p className="text-xs text-slate-600">Good period to restock inventory and schedule supplier payments.</p>
                   </div>
                   <div className="flex items-start gap-2 p-3 bg-emerald-50 rounded-xl">
                     <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 shrink-0" />
@@ -509,13 +502,13 @@ function CashFlow() {
           <div className="p-6 bg-[#001f3f] rounded-2xl text-white text-center">
             <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2">You Qualify For</p>
             <p className="text-4xl font-black text-[#E8762E] mb-1">₦150,000</p>
-            <p className="text-xs text-slate-400">Bridge Loan — 0% Interest</p>
+            <p className="text-xs text-slate-400">Bridge Loan — 0% Interest · Powered by TrustScore™</p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             {[
               { label: 'Interest Rate', value: '0%', sub: 'if repaid in 14 days', color: 'text-emerald-600', bg: 'bg-emerald-50' },
               { label: 'Repayment', value: '14 Days', sub: 'flexible extension available', color: 'text-blue-600', bg: 'bg-blue-50' },
-              { label: 'Approval Time', value: 'Instant', sub: 'powered by TrustScore', color: 'text-purple-600', bg: 'bg-purple-50' },
+              { label: 'Approval Time', value: 'Instant', sub: 'powered by TrustScore™', color: 'text-purple-600', bg: 'bg-purple-50' },
               { label: 'Disbursement', value: '24hrs', sub: 'to your Squad account', color: 'text-[#E8762E]', bg: 'bg-orange-50' },
             ].map((item, i) => (
               <div key={i} className={`${item.bg} rounded-2xl p-4 text-center`}>
@@ -529,7 +522,7 @@ function CashFlow() {
             <p className="text-xs font-bold text-slate-700">Why You Qualify</p>
             {[
               'TrustScore of 74/100 meets minimum threshold',
-              'Squad account active with consistent transaction history',
+              'Consistent SMS & email transaction history verified',
               'Predicted cash flow dip of ₦23,450 during Nov 1-7',
               'Revenue recovery confirmed after Nov 8',
             ].map((reason, i) => (
@@ -575,7 +568,7 @@ function CashFlow() {
           ) : (
             <>
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <p className="text-xs text-amber-700 leading-relaxed"><span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply would connect to Squad's Transfer API.</p>
+                <p className="text-xs text-amber-700 leading-relaxed"><span className="font-bold">Note:</span> This is a demo feature. In production, clicking Apply connects to Squad's Transfer & Payout API.</p>
               </div>
               <button
                 onClick={async () => { setApplying(true); await new Promise(r => setTimeout(r, 2000)); setApplying(false); setApplied(true); }}
@@ -593,7 +586,8 @@ function CashFlow() {
         <div>
           <div className="p-8 pb-10">
             <h1 className="text-2xl font-bold tracking-tight text-white mb-0">SquadMind AI</h1>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
+            {/* FIX 7: Consistent subtitle matching Dashboard and deck tagline */}
+            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">THE SME OPERATING SYSTEM</p>
           </div>
           <nav className="px-4 space-y-1">
             {[
@@ -631,7 +625,6 @@ function CashFlow() {
               <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
-          {/* FIX 5: businessName from state, not inline localStorage call */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
               <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt="user" />
@@ -685,18 +678,61 @@ function CashFlow() {
           )}
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
+          {/* FIX 1 + FIX 4 + FIX 5: Data source banner with "No Bank API" badge */}
+          <div className="bg-[#001f3f] rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Time Series ML · NLP Extraction &gt;95% Accuracy</span>
+                </div>
+                {/* FIX 2: "Updated daily" timestamp */}
+                <p className="text-sm font-bold text-white">
+                  Forecast from SMS alerts · Email receipts · PDF statements ·{' '}
+                  <span className="text-slate-400 font-medium">Updated daily — {lastUpdated}</span>
+                </p>
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-400" />SMS</span>
+              <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-emerald-400" />Email</span>
+              <span className="flex items-center gap-1"><FileText className="w-3 h-3 text-emerald-400" />PDF</span>
+              {/* FIX 1: No Bank API badge */}
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8762E]/20 text-[#E8762E] rounded-full border border-[#E8762E]/30 font-black">
+                <Zap className="w-3 h-3" />No Bank API Required
+              </span>
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
             <div className="lg:col-span-3 bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
-              <div className="flex items-center gap-2 mb-6">
-                <div className="w-2 h-2 bg-[#E8762E] rounded-full animate-pulse"></div>
-                <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AIDA PREDICTION MODEL V2.4</span>
+              <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 bg-[#E8762E] rounded-full animate-pulse"></div>
+                  <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AIDA PREDICTION MODEL V2.4 — TIME SERIES ML</span>
+                </div>
+                {/* FIX 2: last updated timestamp on chart card */}
+                <div className="hidden sm:flex items-center gap-1.5 text-[10px] font-medium text-slate-400">
+                  <RefreshCw className="w-3 h-3" />
+                  <span>Updated daily · {lastUpdated}</span>
+                </div>
               </div>
+
               <p className="text-xs md:text-sm font-bold text-slate-400 mb-2">Expected Revenue Next Month</p>
-              <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-6 tracking-tight">
+              <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-2 tracking-tight">
                 {formatCurrency(minRevenue)} – {formatCurrency(maxRevenue)}
               </h3>
 
-              {/* FIX 2: 7D / 14D / 30D window selector matching one-pager spec */}
+              {/* FIX 4 + FIX 5: data source line under revenue range */}
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                <span className="text-[10px] font-bold text-slate-400">Extracted from SMS, email & PDF · Any Nigerian bank · No bank API required</span>
+              </div>
+
+              {/* 7D / 14D / 30D window selector */}
               <div className="flex items-center gap-2 mb-6">
                 <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Forecast Window:</span>
                 {[
@@ -717,7 +753,6 @@ function CashFlow() {
                 ))}
               </div>
 
-              {/* FIX 1: Data-driven chart — points map to SVG coords based on selectedWindow */}
               {renderForecastChart()}
             </div>
 
@@ -732,7 +767,10 @@ function CashFlow() {
                       <h4 className="text-base font-black text-[#001f3f]">Smart Insights</h4>
                       <ChevronRight className="w-4 h-4 text-slate-300 group-hover:text-[#E8762E] transition-colors" />
                     </div>
-                    <p className="text-[12px] text-slate-400 leading-relaxed font-medium line-clamp-3">{aiNarrative}</p>
+                    {/* FIX 3: Restock framing from deck */}
+                    <p className="text-[12px] text-slate-400 leading-relaxed font-medium">
+                      Know if you can afford to restock next Tuesday — and whether to delay large purchases until after Nov 7.
+                    </p>
                   </div>
                 </div>
               </div>
@@ -748,7 +786,7 @@ function CashFlow() {
                       <ChevronRight className="w-4 h-4 text-orange-300 group-hover:text-orange-500 transition-colors" />
                     </div>
                     <p className="text-[10px] font-black text-[#ea580c] uppercase tracking-widest mb-3">NOV 1-7 FORECAST</p>
-                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">Plan your client invoicing strategically to maintain liquid balance during the dip.</p>
+                    <p className="text-[12px] text-slate-500 leading-relaxed font-medium">Cash shortfall detected in SMS patterns. Plan invoicing to stay liquid during the dip.</p>
                   </div>
                 </div>
               </div>
@@ -771,10 +809,17 @@ function CashFlow() {
             </div>
           </div>
 
-          {/* FIX 3: Weekly/Monthly toggle now wired to peaksView state */}
-          <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
+          {/* Liquidity Peaks Table */}
+          <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-8">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between">
-              <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
+              <div>
+                <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
+                {/* FIX 4: data source note */}
+                <div className="flex items-center gap-1.5 mt-1">
+                  <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                  <p className="text-[10px] text-slate-400 font-medium">Predicted from SMS, email & PDF transaction patterns — works with any Nigerian bank</p>
+                </div>
+              </div>
               <div className="flex items-center bg-[#f8fafc] p-1.5 rounded-xl border border-slate-100">
                 <button
                   onClick={() => setPeaksView('weekly')}
@@ -789,7 +834,6 @@ function CashFlow() {
               </div>
             </div>
 
-            {/* FIX 6: Empty state for no peaks */}
             {liquidityPeaks.length === 0 ? (
               <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
                 <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
@@ -842,15 +886,21 @@ function CashFlow() {
             )}
           </div>
 
+          {/* Bridge Loan CTA */}
           <div className="bg-[#001f3f] rounded-[48px] p-10 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden group">
             <div className="relative z-10 max-w-2xl text-center md:text-left">
               <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#E8762E] text-white rounded-lg text-[9px] font-black tracking-widest mb-8 uppercase shadow-lg shadow-[#E8762E]/20">
-                <Sparkles className="w-3.5 h-3.5" />PRO FEATURE
+                <Sparkles className="w-3.5 h-3.5" />LENDING REFERRAL · 2-3% REFERRAL FEE
               </div>
               <h2 className="text-3xl md:text-5xl font-black mb-6 leading-tight tracking-tight">Optimize your liquidity with Squad Loans</h2>
-              <p className="text-slate-400 text-sm md:text-lg mb-10 leading-relaxed font-medium opacity-90">
-                Based on your predictions Nov 1-7 dip, you qualify for a <span className="text-[#E8762E] font-black italic underline decoration-[#E8762E]/30">₦150,000 bridge loan</span> with 0% interest if repaid within 14 days.
+              <p className="text-slate-400 text-sm md:text-lg mb-6 leading-relaxed font-medium opacity-90">
+                Based on your Nov 1-7 dip, you qualify for a <span className="text-[#E8762E] font-black italic underline decoration-[#E8762E]/30">₦150,000 bridge loan</span> with 0% interest if repaid within 14 days.
               </p>
+              {/* FIX 6: WhatsApp touchpoint */}
+              <div className="flex items-center gap-2 mb-8 p-3 bg-white/5 rounded-xl border border-white/10 w-fit mx-auto md:mx-0">
+                <MessageCircle className="w-4 h-4 text-emerald-400" />
+                <p className="text-[11px] text-slate-400 font-medium">Approved via WhatsApp in 2 minutes · No bank API required</p>
+              </div>
               <button onClick={() => setActiveModal('bridge')}
                 className="w-full md:w-auto bg-[#E8762E] text-white font-black py-5 px-12 rounded-[20px] text-[13px] transition-all hover:scale-105 shadow-2xl shadow-[#E8762E]/20 uppercase tracking-widest cursor-pointer">
                 Get Bridge Offer
@@ -867,12 +917,18 @@ function CashFlow() {
             </div>
           </div>
 
+          {/* FIX 6 + FIX 7: WhatsApp CTA in footer + consistent branding */}
           <footer className="py-12 border-t border-slate-100 mt-16 flex flex-col md:flex-row justify-between items-center gap-8 text-center md:text-left">
             <div className="flex flex-col gap-2">
-              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SQUADMIND AI</p>
-              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">© 2026 SQUADMIND. POWERED BY SQUAD INTELLIGENCE</p>
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SQUADMIND AI · THE SME OPERATING SYSTEM</p>
+              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">© 2026 SQUADMIND. NO BANK APIS REQUIRED.</p>
             </div>
             <div className="flex items-center gap-8 text-[11px] font-bold text-slate-400 uppercase tracking-widest">
+              <button
+                onClick={() => window.open('https://wa.me/2349000000000?text=Hi%20SquadMind', '_blank')}
+                className="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer">
+                <MessageCircle className="w-4 h-4" />WhatsApp
+              </button>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Terms of Service</a>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Contact Support</a>
