@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
-  LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle, User,
+import {
+  LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
   ChevronRight, Banknote, Award, Sparkles, TrendingUp, AlertCircle,
   CheckCircle2, Share2, Activity, ShieldCheck, FileText, Clock, History,
-  Eye, X, TrendingDown, Gift, ArrowRight, Loader2
+  Eye, X, TrendingDown, Gift, ArrowRight, Loader2, Smartphone, Mail, Zap, MessageCircle
 } from 'lucide-react';
 
 function Modal({ isOpen, onClose, title, children }) {
@@ -25,6 +25,33 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
+// FIX: Proper SVG arc health ring — replaces broken strokeDashoffset hardcode
+function HealthRing({ score }) {
+  const radius = 16;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="relative w-20 h-20">
+      <svg className="w-full h-full -rotate-90" viewBox="0 0 40 40">
+        <circle cx="20" cy="20" r={radius} fill="none" stroke="#f1f5f9" strokeWidth="4" />
+        <circle
+          cx="20" cy="20" r={radius}
+          fill="none"
+          stroke="#E8762E"
+          strokeWidth="4"
+          strokeDasharray={circumference}
+          strokeDashoffset={offset}
+          strokeLinecap="round"
+          style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+        />
+      </svg>
+      <div className="absolute inset-0 flex items-center justify-center">
+        <span className="text-xl font-black text-[#001f3f]">{score}</span>
+      </div>
+    </div>
+  );
+}
+
 function Alerts() {
   const navigate = useNavigate();
   const [activeModal, setActiveModal] = useState(null);
@@ -32,7 +59,11 @@ function Alerts() {
   const [successMsg, setSuccessMsg] = useState('');
   const [showAuditLogs, setShowAuditLogs] = useState(false);
 
-  const onLogout = () => navigate('/');
+  // FIX 4: businessName from localStorage, not hardcoded
+  const [businessName] = useState(() => localStorage.getItem('businessName') || 'Lekan Adeyemi');
+
+  // FIX: logout navigates to /login not / — consistent with other pages
+  const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const onNavigate = (path) => navigate(`/${path}`);
 
   const showSuccess = (msg) => {
@@ -41,10 +72,10 @@ function Alerts() {
   };
 
   const alerts = [
-    { id: 0, type: 'CRITICAL DROP', color: '#dc2626', title: 'Sales Drop Detected', text: 'Your sales dropped 40% this week compared to last week. Friday usually peaks — check your stock or pricing.', time: '2h ago', buttons: ['Analyze Now', 'Dismiss'], modal: 'analyze' },
-    { id: 1, type: 'FRAUD RISK', color: '#dc2626', title: 'Suspicious Reversal Flagged', text: 'A ₦12,500 reversal was flagged from POS-221 at 2:14 AM — unusual timing and location detected.', time: '5h ago', buttons: ['Review Reversal'], modal: 'reversal' },
-    { id: 2, type: 'PERFORMANCE PEAK', color: '#E8762E', title: 'Your Best Month Yet 🥳', text: 'You are up 23% from last month. Your Friday flash promos are working. Well done o!', time: '1d ago', buttons: ['Share Stats'], modal: 'share' },
-    { id: 3, type: 'VIP CUSTOMER', color: '#f59e0b', title: 'New VIP Recognised ⭐', text: 'Chinedu Stores just completed their 10th purchase this month — your most loyal customer.', time: '2d ago', buttons: ['Send Reward'], modal: 'reward' },
+    { id: 0, type: 'CRITICAL DROP', color: '#dc2626', title: 'Sales Drop Detected', text: 'Your sales dropped 40% this week compared to last week. Friday usually peaks — check your stock or pricing. Detected from your SMS alert patterns.', time: '2h ago', buttons: ['Analyze Now', 'Dismiss'], modal: 'analyze' },
+    { id: 1, type: 'FRAUD RISK', color: '#dc2626', title: 'Suspicious Reversal Flagged', text: 'A ₦12,500 reversal was flagged from POS-221 at 2:14 AM — unusual timing and location detected from your SMS transaction history.', time: '5h ago', buttons: ['Review Reversal'], modal: 'reversal' },
+    { id: 2, type: 'PERFORMANCE PEAK', color: '#E8762E', title: 'Your Best Month Yet 🥳', text: 'You are up 23% from last month. Your Friday flash promos are working — extracted from 1,247 SMS alerts and email receipts. Well done o!', time: '1d ago', buttons: ['Share Stats'], modal: 'share' },
+    { id: 3, type: 'VIP CUSTOMER', color: '#f59e0b', title: 'New VIP Recognised ⭐', text: 'Chinedu Stores just completed their 10th purchase this month — your most loyal customer, identified from email receipt patterns.', time: '2d ago', buttons: ['Send Reward'], modal: 'reward' },
   ];
 
   const visibleAlerts = alerts.filter(a => !dismissedIds.has(a.id));
@@ -52,8 +83,18 @@ function Alerts() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
+      {/* ── MODALS ── */}
       <Modal isOpen={activeModal === 'analyze'} onClose={() => setActiveModal(null)} title="Sales Drop Analysis">
         <div className="space-y-5">
+          {/* FIX 2: data source in modal */}
+          <div className="flex items-center gap-3 p-3 bg-[#001f3f] rounded-2xl">
+            <div className="flex items-center gap-2">
+              <Smartphone className="w-3.5 h-3.5 text-[#E8762E]" />
+              <Mail className="w-3.5 h-3.5 text-[#E8762E]" />
+              <FileText className="w-3.5 h-3.5 text-[#E8762E]" />
+            </div>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Detected from SMS · Email · PDF — No bank API required</p>
+          </div>
           <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
             <div className="flex items-start gap-3">
               <TrendingDown className="w-5 h-5 text-red-500 mt-0.5 shrink-0" />
@@ -90,6 +131,14 @@ function Alerts() {
               </div>
             ))}
           </div>
+          {/* FIX 8: TrustScore flywheel note */}
+          <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-[#E8762E]" />
+              <p className="text-xs text-slate-600"><span className="font-bold text-[#E8762E]">Tip:</span> Recovering this dip strengthens your Revenue Consistency score → boosts TrustScore™</p>
+            </div>
+            <button onClick={() => { setActiveModal(null); onNavigate('trustscore'); }} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap ml-3">View →</button>
+          </div>
           <button onClick={() => { setActiveModal(null); onNavigate('cashflow'); }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
             View Cash Flow Forecast <ArrowRight className="w-4 h-4" />
@@ -99,6 +148,11 @@ function Alerts() {
 
       <Modal isOpen={activeModal === 'reversal'} onClose={() => setActiveModal(null)} title="Suspicious Reversal — Review">
         <div className="space-y-5">
+          {/* FIX 2: data source */}
+          <div className="flex items-center gap-3 p-3 bg-[#001f3f] rounded-2xl">
+            <Smartphone className="w-3.5 h-3.5 text-[#E8762E]" />
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Flagged from SMS alert · NLP anomaly detection · Any Nigerian bank</p>
+          </div>
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-slate-50 rounded-2xl p-4"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</p><p className="text-xl font-bold text-red-600">₦12,500</p></div>
             <div className="bg-slate-50 rounded-2xl p-4"><p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Time</p><p className="text-xl font-bold text-slate-900">2:14 AM</p></div>
@@ -113,6 +167,11 @@ function Alerts() {
                 <p className="text-sm text-slate-600 leading-relaxed">This reversal occurred at an unusual time (2:14 AM) from a new device location not previously associated with POS-221. Pattern matches known fraud signatures.</p>
               </div>
             </div>
+          </div>
+          {/* FIX 8: TrustScore flywheel note */}
+          <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-100 flex items-center justify-between">
+            <p className="text-[10px] text-slate-600"><span className="font-bold text-emerald-600">Resolving this</span> improves your Fraud Safety score → strengthens TrustScore™</p>
+            <button onClick={() => { setActiveModal(null); onNavigate('trustscore'); }} className="text-[10px] font-bold text-emerald-600 hover:underline cursor-pointer ml-3 whitespace-nowrap">View →</button>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <button onClick={() => { setActiveModal(null); showSuccess('Reversal approved as legitimate.'); }}
@@ -138,13 +197,14 @@ function Alerts() {
               <div><p className="text-xl font-black">342</p><p className="text-[10px] text-white/60">Customers</p></div>
               <div><p className="text-xl font-black">78</p><p className="text-[10px] text-white/60">Trust Score</p></div>
             </div>
-            <p className="text-[10px] text-white/40 mt-4">Powered by SquadMind AI</p>
+            {/* FIX 9: Share card includes No Bank API differentiator */}
+            <p className="text-[10px] text-white/40 mt-4">Powered by SquadMind AI · No Bank APIs Required · SMS + Email + PDF</p>
           </div>
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Share via</h4>
             {[
               { platform: 'Copy Link', icon: '🔗', action: () => { navigator.clipboard?.writeText('https://squadmind-khaki.vercel.app'); showSuccess('Link copied!'); setActiveModal(null); } },
-              { platform: 'WhatsApp', icon: '💬', action: () => { showSuccess('Opening WhatsApp...'); setActiveModal(null); } },
+              { platform: 'WhatsApp', icon: '💬', action: () => { window.open('https://wa.me/?text=Check%20out%20my%20SquadMind%20business%20performance%20%2B23%25%20this%20month!', '_blank'); showSuccess('Opening WhatsApp...'); setActiveModal(null); } },
               { platform: 'Download Image', icon: '📥', action: () => { showSuccess('Stats card downloaded!'); setActiveModal(null); } },
             ].map((item, i) => (
               <button key={i} onClick={item.action} className="w-full flex items-center gap-3 p-4 bg-slate-50 hover:bg-slate-100 rounded-2xl transition-colors cursor-pointer">
@@ -193,7 +253,7 @@ function Alerts() {
 
       <Modal isOpen={showAuditLogs} onClose={() => setShowAuditLogs(false)} title="Full Audit Log">
         <div className="space-y-4">
-          <p className="text-xs text-slate-400">All system events from the last 7 days</p>
+          <p className="text-xs text-slate-400">All system events from the last 7 days — extracted from SMS, email & PDF</p>
           {[
             { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'POS Reconciliation Validated', sub: 'Cleared 144 entries, ₦1.1M total', time: '2h ago' },
             { icon: <AlertCircle className="text-orange-500" />, bg: 'bg-orange-50', title: 'New Sub-account Added', sub: 'Lagos Main Terminal Branch', time: '5h ago' },
@@ -201,8 +261,9 @@ function Alerts() {
             { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'Fraud Alert Resolved', sub: 'TXN-9921-XF marked as investigated', time: '1d ago' },
             { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'Daily Backup Complete', sub: 'All transaction records secured', time: '1d ago' },
             { icon: <AlertCircle className="text-orange-500" />, bg: 'bg-orange-50', title: 'Unusual Login Attempt', sub: 'Blocked from unrecognized device', time: '2d ago' },
-            { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'TrustScore Updated', sub: 'Score improved from 71 to 74', time: '2d ago' },
-            { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'Squad API Synced', sub: '247 new transactions imported', time: '3d ago' },
+            { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'TrustScore™ Updated', sub: 'Score improved from 71 to 74', time: '2d ago' },
+            // FIX: aligned to 1,247 transactions
+            { icon: <CheckCircle2 className="text-emerald-500" />, bg: 'bg-emerald-50', title: 'SMS & Email Sync Complete', sub: '1,247 transactions extracted — no bank API required', time: '3d ago' },
           ].map((log, i) => (
             <div key={i} className="flex items-start gap-4 p-4 bg-slate-50 rounded-2xl">
               <div className={`w-9 h-9 rounded-full ${log.bg} flex items-center justify-center shrink-0`}>
@@ -223,7 +284,8 @@ function Alerts() {
         <div>
           <div className="p-8 pb-10">
             <h1 className="text-2xl font-bold tracking-tight text-white mb-0">SquadMind AI</h1>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">POWERED BY SQUAD</p>
+            {/* FIX 3: Consistent subtitle matching Dashboard, CashFlow, FraudDetection */}
+            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">THE SME OPERATING SYSTEM</p>
           </div>
           <nav className="px-4 space-y-1">
             {[
@@ -242,17 +304,33 @@ function Alerts() {
           </nav>
         </div>
         <div className="p-6 space-y-6">
-          <div className="space-y-1">
-            <button onClick={onLogout} className="w-full flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
-              <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
+          {/* FIX 5: Upgrade Plan card consistent with other pages */}
+          <div className="bg-white/5 rounded-2xl p-6 border border-white/5 relative overflow-hidden">
+            <div className="relative z-10">
+              <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">CURRENT TIER</p>
+              <p className="text-base font-bold text-white mb-4">Pro Business</p>
+              <button className="w-full bg-[#E8762E] hover:bg-[#E8762E]/90 text-white font-bold py-2.5 rounded-xl text-sm transition-all shadow-lg shadow-[#E8762E]/20 cursor-pointer">
+                Upgrade Plan
+              </button>
+            </div>
+            <div className="absolute top-0 right-0 w-24 h-24 bg-[#E8762E]/10 rounded-full -mr-12 -mt-12 blur-2xl"></div>
+          </div>
+          {/* FIX 5: HelpCircle consistent with other pages */}
+          <div className="flex flex-col gap-3">
+            <button className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
+              <HelpCircle className="w-5 h-5" /><span className="text-[15px] font-medium">Help Center</span>
+            </button>
+            <button onClick={onLogout} className="flex items-center gap-3 px-4 py-2 text-slate-400 hover:text-white transition-colors cursor-pointer">
+              <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
+          {/* FIX 4 + FIX 6: businessName from state + ui-avatars consistent with other pages */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
-            <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold">
-              <User className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt="user" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
+              <p className="text-sm font-bold text-white truncate">{businessName}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -261,16 +339,33 @@ function Alerts() {
 
       {/* ── MAIN ── */}
       <main className="flex-1 flex flex-col h-full overflow-y-auto pb-20 md:pb-0">
+        {/* FIX 6: Header consistent with other pages — breadcrumb + action buttons */}
         <header className="h-16 md:h-20 bg-white border-b border-slate-100 flex items-center justify-between px-4 md:px-8 shrink-0">
-          <h2 className="text-xl md:text-2xl font-bold text-slate-900 leading-tight">Intelligence Alerts</h2>
+          <div className="flex flex-col">
+            <div className="hidden sm:flex items-center gap-1 text-[9px] font-black text-slate-300 uppercase tracking-widest mb-1.5">
+              <span>Intelligence</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-[#E8762E]">Alerts</span>
+            </div>
+            <h2 className="text-xl md:text-2xl font-black text-[#001f3f] leading-tight">Intelligence Alerts</h2>
+          </div>
           <div className="flex items-center gap-2 md:gap-4">
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors"><HelpCircle className="w-5 h-5" /></button>
-            <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors relative">
-              <Bell className="w-5 h-5" />
-              <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>
-            </button>
-            <div className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-slate-100 flex items-center justify-center border border-slate-200">
-              <User className="w-4 h-4 md:w-5 md:h-5 text-slate-400" />
+            <div className="hidden sm:flex items-center gap-4">
+              <button className="p-2 text-slate-400 relative">
+                <Bell className="w-5 h-5" />
+                {visibleAlerts.length > 0 && <div className="absolute top-2 right-2 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></div>}
+              </button>
+              <button className="p-2 text-slate-400"><HelpCircle className="w-5 h-5" /></button>
+            </div>
+            {/* FIX 6: consistent avatar */}
+            <div className="hidden md:flex items-center gap-3 pl-4 border-l border-slate-100">
+              <div className="text-right">
+                <p className="text-sm font-bold text-slate-900 leading-none">{businessName}</p>
+                <p className="text-[10px] text-slate-500 mt-1 uppercase font-medium">Merchant Admin</p>
+              </div>
+              <div className="w-9 h-9 rounded-full overflow-hidden border border-slate-200">
+                <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=f1f5f9&color=334155`} alt={businessName} className="w-full h-full" />
+              </div>
             </div>
           </div>
         </header>
@@ -282,6 +377,35 @@ function Alerts() {
             </div>
           )}
 
+          {/* FIX 1 + FIX 2: Data source banner with No Bank API badge */}
+          <div className="bg-[#001f3f] rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-10 h-10 rounded-xl bg-[#E8762E]/20 flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5 text-[#E8762E]" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-0.5">
+                  <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">SquadMind Intelligence Engine — Active</span>
+                </div>
+                {/* FIX 2: data sources */}
+                <p className="text-sm font-bold text-white">
+                  Monitoring SMS alerts · Email receipts · PDF statements ·{' '}
+                  <span className="text-slate-400 font-medium">Any Nigerian bank</span>
+                </p>
+              </div>
+            </div>
+            <div className="hidden lg:flex items-center gap-3 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <span className="flex items-center gap-1"><Smartphone className="w-3 h-3 text-emerald-400" />SMS</span>
+              <span className="flex items-center gap-1"><Mail className="w-3 h-3 text-emerald-400" />Email</span>
+              <span className="flex items-center gap-1"><FileText className="w-3 h-3 text-emerald-400" />PDF</span>
+              {/* FIX 1: No Bank API badge */}
+              <span className="flex items-center gap-1.5 px-3 py-1.5 bg-[#E8762E]/20 text-[#E8762E] rounded-full border border-[#E8762E]/30 font-black">
+                <Zap className="w-3 h-3" />No Bank API Required
+              </span>
+            </div>
+          </div>
+
           {/* AI Status Header */}
           <div className="bg-orange-50 rounded-2xl md:rounded-[32px] p-8 md:p-10 mb-10 flex flex-col md:flex-row items-center justify-between gap-8 relative overflow-hidden">
             <div className="relative z-10 text-center md:text-left">
@@ -289,13 +413,17 @@ function Alerts() {
                 AI Engine Active
               </div>
               <h3 className="text-3xl md:text-4xl font-bold text-[#001f3f] mb-3 leading-tight">Analyzing 4,281 real-time signals</h3>
+              {/* FIX 2: data source in the banner description */}
               <p className="text-slate-500 text-sm md:text-base font-medium opacity-80">
+                Extracted from SMS alerts, email receipts & PDF statements — works with any Nigerian bank, no bank API required.
                 We detected {visibleAlerts.filter(a => a.type.includes('CRITICAL') || a.type.includes('FRAUD')).length} high-priority events requiring intervention within the next 2 hours.
               </p>
             </div>
             <div className="bg-white rounded-2xl p-8 border border-orange-100 shadow-xl relative z-10 flex flex-col items-center min-w-[160px]">
               <span className="text-4xl font-black text-[#001f3f]">98.2</span>
               <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-2">Signal Accuracy</span>
+              {/* FIX 2: NLP accuracy reference */}
+              <span className="text-[9px] font-bold text-[#E8762E] uppercase tracking-widest mt-1">NLP &gt;95%</span>
             </div>
           </div>
 
@@ -346,6 +474,17 @@ function Alerts() {
                   </div>
                 </div>
               ))}
+
+              {/* FIX 8: TrustScore flywheel note below alerts feed */}
+              <div className="p-4 bg-orange-50/50 rounded-2xl border border-orange-100/50 flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[#E8762E]" />
+                  <p className="text-xs text-slate-600">
+                    <span className="font-bold text-[#E8762E]">AI Insight:</span> Resolving alerts improves your operational signals → strengthens TrustScore™ → unlocks better loan terms
+                  </p>
+                </div>
+                <button onClick={() => onNavigate('trustscore')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap ml-3">View TrustScore™ →</button>
+              </div>
             </div>
 
             {/* Integrity Column */}
@@ -361,8 +500,17 @@ function Alerts() {
                   <span className="text-4xl font-black block mb-2">₦442k</span>
                   <span className="text-[11px] text-slate-400 font-medium opacity-80 uppercase tracking-wider">Losses prevented by AI</span>
                 </div>
-                <div className="flex items-center gap-2 text-[#E8762E] font-bold text-xs uppercase tracking-tight">
+                <div className="flex items-center gap-2 text-[#E8762E] font-bold text-xs uppercase tracking-tight mb-6">
                   <TrendingUp className="w-4 h-4" />+14.2% Efficiency
+                </div>
+                {/* FIX 2: data source note in summary */}
+                <div className="flex items-center gap-1.5 text-[9px] text-slate-500 font-medium">
+                  <div className="flex items-center gap-1">
+                    <Smartphone className="w-3 h-3 text-[#E8762E]" />
+                    <Mail className="w-3 h-3 text-[#E8762E]" />
+                    <FileText className="w-3 h-3 text-[#E8762E]" />
+                  </div>
+                  <span className="uppercase tracking-widest">SMS · Email · PDF · No Bank API</span>
                 </div>
                 <div className="absolute top-0 right-0 w-32 h-32 bg-white/5 rounded-full -mr-16 -mt-16 blur-2xl"></div>
               </div>
@@ -402,9 +550,9 @@ function Alerts() {
             <h3 className="text-2xl font-bold text-slate-900 mb-8">Daily Smart Summary</h3>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
               {[
-                { label: 'TOTAL SCANNED', icon: <Eye />, value: '84', sub: 'Transactions today', color: 'slate' },
+                { label: 'TOTAL SCANNED', icon: <Eye />, value: '84', sub: 'Transactions today — SMS + email + PDF', color: 'slate' },
                 { label: 'ANOMALIES', icon: <FileText />, value: '02', sub: 'Flagged for manual verification', color: 'red' },
-                { label: 'HEALTH SCORE', icon: <ShieldCheck />, value: '78', sub: 'Stable - Needs attention', color: 'orange' },
+                { label: 'HEALTH SCORE', icon: <ShieldCheck />, value: 78, sub: 'Stable - Needs attention', color: 'orange' },
               ].map((kpi, i) => (
                 <div key={i}
                   onClick={() => { if (kpi.label === 'ANOMALIES') onNavigate('frauddetection'); else if (kpi.label === 'HEALTH SCORE') onNavigate('trustscore'); }}
@@ -415,19 +563,12 @@ function Alerts() {
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-6">{kpi.label}</p>
                   {kpi.label === 'HEALTH SCORE' ? (
                     <div className="flex items-center gap-6 w-full">
-                      <div className="relative w-20 h-20">
-                        <svg className="w-full h-full rotate-[-90deg]" viewBox="0 0 36 36">
-                          <circle cx="18" cy="18" r="16" fill="none" stroke="#f1f5f9" strokeWidth="3"></circle>
-                          <circle cx="18" cy="18" r="16" fill="none" stroke="#E8762E" strokeWidth="3" strokeDasharray="100" strokeDashoffset="22"></circle>
-                        </svg>
-                        <div className="absolute inset-0 flex items-center justify-center">
-                          <span className="text-xl font-black text-[#001f3f]">{kpi.value}</span>
-                        </div>
-                      </div>
+                      {/* FIX: Proper SVG arc HealthRing replaces broken strokeDashoffset */}
+                      <HealthRing score={kpi.value} />
                       <div>
                         <p className="text-sm font-bold text-slate-900">Stable</p>
                         <p className="text-[10px] text-slate-400 font-medium">Needs attention</p>
-                        <p className="text-[10px] text-[#E8762E] font-bold mt-2">Click to view TrustScore →</p>
+                        <p className="text-[10px] text-[#E8762E] font-bold mt-2">Click to view TrustScore™ →</p>
                       </div>
                     </div>
                   ) : (
@@ -447,13 +588,21 @@ function Alerts() {
             </div>
           </div>
 
+          {/* FIX 7: Footer consistent with other pages */}
           <footer className="py-12 border-t border-slate-100 mt-12 text-center md:text-left flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-300 uppercase tracking-widest">
-              <span className="text-slate-400 font-black">SQUADMIND AI</span>
+            <div className="flex flex-col gap-1">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">SQUADMIND AI · THE SME OPERATING SYSTEM</p>
+              <p className="text-[11px] font-bold text-slate-300 uppercase tracking-widest">© 2026 SQUADMIND. NO BANK APIS REQUIRED.</p>
+            </div>
+            <div className="flex items-center gap-8 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
+              <button
+                onClick={() => window.open('https://wa.me/2349000000000?text=Hi%20SquadMind', '_blank')}
+                className="flex items-center gap-1.5 text-emerald-600 hover:text-emerald-700 transition-colors cursor-pointer">
+                <MessageCircle className="w-4 h-4" />WhatsApp
+              </button>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Privacy Policy</a>
               <a href="#" className="hover:text-[#E8762E] transition-colors">Terms of Service</a>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest">© 2026 SQUADMIND v2.4.1</p>
           </footer>
         </div>
       </main>
@@ -464,7 +613,7 @@ function Alerts() {
         <button onClick={() => onNavigate('frauddetection')} className="flex flex-col items-center gap-1 text-slate-400"><ShieldAlert className="w-5 h-5" /><span className="text-[10px] font-bold">Fraud</span></button>
         <button onClick={() => onNavigate('alerts')} className="flex flex-col items-center gap-1 text-[#E8762E] relative">
           <Bell className="w-5 h-5" />
-          <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></div>
+          {visibleAlerts.length > 0 && <div className="absolute top-0 right-0 w-2 h-2 bg-red-500 rounded-full border border-white"></div>}
           <span className="text-[10px] font-bold">Alerts</span>
         </button>
         <button onClick={() => onNavigate('settings')} className="flex flex-col items-center gap-1 text-slate-400"><Settings className="w-5 h-5" /><span className="text-[10px] font-bold">More</span></button>
