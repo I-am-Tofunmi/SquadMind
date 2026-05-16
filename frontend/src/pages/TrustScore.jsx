@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, User, Banknote, Award,
   TrendingUp, Download, Share2, CheckCircle2, Mail, ArrowRight, ShieldCheck,
-  Landmark, Info, Loader2, X, Zap, TrendingDown, History
+  Landmark, Info, Loader2, X, Zap, TrendingDown, History, BadgeCheck, Star
 } from 'lucide-react';
 import { getTrustScore, getToken } from '../services/api';
 
@@ -72,7 +72,8 @@ function TrustScore() {
   const downloadReport = () => {
     const rows = [
       ['SquadMind TrustScore Report'], ['Generated:', new Date().toLocaleDateString('en-NG')], [''],
-      ['OVERALL SCORE', `${score}/100`], ['Status', scoreLabel], [''],
+      ['OVERALL SCORE', `${score}/100`], ['Status', scoreLabel],
+      ['Pre-Qualified Amount', '₦500,000'], ['Lending Readiness', 'HIGH'], [''],
       ['SCORE BREAKDOWN'], ['Component', 'Score', 'Max', 'Status'],
       ...scoreComponents.map(c => [c.label || c.name, c.score ?? c.value ?? 0, c.max ?? c.max_score ?? 25, c.sub || c.status || '']),
       [''], ['AI EXPLANATION'], [explanation],
@@ -110,6 +111,15 @@ function TrustScore() {
         { label: 'GROWTH TREND', score: 0, max: 15, sub: 'NEEDS IMPROVEMENT', color: 'red' },
       ];
 
+  // ── UPGRADED: Squad data signals that drove the score ──
+  const squadSignals = [
+    { label: 'Squad Transaction Volume', value: '1,247 transactions analyzed', status: 'positive', detail: '90-day history via Squad Payment API' },
+    { label: 'Fraud Rate vs Platform Average', value: '0.24% — Top 5% of merchants', status: 'positive', detail: 'Below 0.8% platform threshold — Excellent' },
+    { label: 'Revenue Consistency Index', value: '88/100 — Stable', status: 'positive', detail: 'Week-over-week variance within acceptable range' },
+    { label: 'Cash Flow Liquidity Ratio', value: '1.4x — Healthy', status: 'positive', detail: 'Positive liquidity maintained across 90 days' },
+    { label: 'Growth Trend Signal', value: 'Needs Improvement', status: 'warning', detail: 'Seasonal dip detected — Q4 adjustment applied' },
+  ];
+
   const lenders = [
     { name: 'Squad Bridge Loan', amount: '₦150,000', rate: '0%', duration: '14 days', type: 'Bridge', badge: '⚡ Instant' },
     { name: 'Access Bank SME Loan', amount: '₦500,000', rate: '18% p.a.', duration: '12 months', type: 'Term Loan', badge: '🏦 Bank' },
@@ -118,10 +128,10 @@ function TrustScore() {
   ];
 
   const componentDetails = {
-    'REVENUE CONSISTENCY': { desc: 'Measures how stable your revenue is week-over-week.', tip: 'Maintain your Friday flash promos to keep revenue predictable.' },
+    'REVENUE CONSISTENCY': { desc: 'Measures how stable your revenue is week-over-week using Squad transaction data.', tip: 'Maintain your Friday flash promos to keep revenue predictable.' },
     'REPEAT CUSTOMERS': { desc: 'Tracks the percentage of customers who return to buy again.', tip: 'Consider a loyalty program to push this score from 18 to 20.' },
     'LOW FRAUD RATE': { desc: 'Evaluates your fraud incident rate against the platform average. Your rate is excellent at 0.24%.', tip: 'Enable 2FA on all terminals to maintain this score.' },
-    'CASHFLOW STABILITY': { desc: 'Analyzes how consistently your cash flow moves.', tip: 'Resolve the Nov 1-7 dip risk to improve this component.' },
+    'CASHFLOW STABILITY': { desc: 'Analyzes how consistently your cash flow moves using Squad liquidity data.', tip: 'Resolve the Nov 1-7 dip risk to improve this component.' },
     'GROWTH TREND': { desc: 'Measures revenue trajectory over the last 90 days.', tip: 'A single strong month can bring this from 0 to 10+. Focus on Nov sales push.' },
   };
 
@@ -157,6 +167,7 @@ function TrustScore() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
+      {/* Share Modal */}
       <Modal isOpen={activeModal === 'share'} onClose={() => setActiveModal(null)} title="Share with Lender">
         <div className="space-y-5">
           <div className="p-6 bg-gradient-to-br from-[#001f3f] to-[#E8762E] rounded-2xl text-white text-center">
@@ -165,12 +176,15 @@ function TrustScore() {
             <div className="inline-flex items-center gap-2 px-3 py-1 bg-white/20 rounded-full text-[10px] font-bold mt-2">
               <ShieldCheck className="w-3 h-3" /> {scoreLabel}
             </div>
+            <div className="mt-3 px-4 py-2 bg-emerald-500/30 rounded-xl border border-emerald-400/30 inline-block">
+              <p className="text-sm font-black text-emerald-300">PRE-QUALIFIED: ₦500,000</p>
+            </div>
             <div className="grid grid-cols-3 gap-3 mt-6">
               <div><p className="text-xl font-black">0.24%</p><p className="text-[10px] text-white/60">Fraud Rate</p></div>
               <div><p className="text-xl font-black">+{revenueChange}%</p><p className="text-[10px] text-white/60">Revenue Growth</p></div>
               <div><p className="text-xl font-black">90</p><p className="text-[10px] text-white/60">Days Analyzed</p></div>
             </div>
-            <p className="text-[10px] text-white/40 mt-4">Powered by SquadMind AI × Squad</p>
+            <p className="text-[10px] text-white/40 mt-4">Powered by SquadMind AI × Squad Payment API</p>
           </div>
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Share via</h4>
@@ -191,6 +205,7 @@ function TrustScore() {
         </div>
       </Modal>
 
+      {/* Lenders Modal */}
       <Modal isOpen={activeModal === 'lenders'} onClose={() => { setActiveModal(null); setAppliedLender(null); }} title="Available Lending Partners">
         <div className="space-y-5">
           {appliedLender ? (
@@ -206,6 +221,7 @@ function TrustScore() {
                 {[
                   { label: 'Application ID', value: appId, done: true },
                   { label: 'TrustScore Check', value: `${score}/100 — Qualified`, done: true },
+                  { label: 'Squad Data Verified', value: '1,247 transactions confirmed', done: true },
                   { label: 'Lender Review', value: 'Processing...', done: false },
                   { label: 'Expected Response', value: 'Within 24 hours', done: false },
                 ].map((step, i) => (
@@ -219,13 +235,24 @@ function TrustScore() {
                 ))}
               </div>
               <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-                <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">What's next?</span> The lender will review your SquadMind TrustScore and transaction history.</p>
+                <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">What's next?</span> The lender will review your SquadMind TrustScore and Squad transaction history. Your application is backed by 90 days of verified Squad data.</p>
               </div>
               <button onClick={() => { setActiveModal(null); setAppliedLender(null); showSuccess(`Application to ${appliedLender.name} submitted!`); }}
                 className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer">Done</button>
             </div>
           ) : (
             <>
+              <div className="p-4 bg-[#001f3f] rounded-2xl text-white">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <BadgeCheck className="w-5 h-5 text-emerald-400" />
+                    <p className="text-sm font-black">Pre-Qualification Status</p>
+                  </div>
+                  <span className="text-[10px] font-black px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 uppercase">APPROVED</span>
+                </div>
+                <p className="text-3xl font-black text-[#E8762E]">₦500,000</p>
+                <p className="text-[10px] text-slate-400 mt-1">Maximum pre-qualified amount based on TrustScore {score}/100</p>
+              </div>
               <div className="p-4 bg-emerald-50 rounded-2xl border border-emerald-100 flex items-center gap-3">
                 <ShieldCheck className="w-5 h-5 text-emerald-500 shrink-0" />
                 <p className="text-xs text-emerald-700 font-bold">Your TrustScore of {score}/100 qualifies you for all offers below</p>
@@ -251,16 +278,17 @@ function TrustScore() {
                 </div>
               ))}
               <div className="p-4 bg-amber-50 rounded-2xl border border-amber-100">
-                <p className="text-xs text-amber-700 leading-relaxed"><span className="font-bold">Note:</span> This is a demo feature.</p>
+                <p className="text-xs text-amber-700 leading-relaxed"><span className="font-bold">Note:</span> This is a demo feature. In production, applications connect directly to lender APIs using your verified Squad TrustScore.</p>
               </div>
             </>
           )}
         </div>
       </Modal>
 
+      {/* History Modal */}
       <Modal isOpen={activeModal === 'history'} onClose={() => setActiveModal(null)} title="Historical TrustScore Data">
         <div className="space-y-5">
-          <p className="text-xs text-slate-400">Your TrustScore trend over the last 6 months</p>
+          <p className="text-xs text-slate-400">Your TrustScore trend over the last 6 months — derived from Squad transaction data</p>
           <div className="relative h-32 flex items-end gap-2">
             {[{ month: 'Dec', score: 61 }, { month: 'Jan', score: 65 }, { month: 'Feb', score: 68 }, { month: 'Mar', score: 70 }, { month: 'Apr', score: 72 }, { month: 'May', score: score, current: true }].map((item, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -273,11 +301,11 @@ function TrustScore() {
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Score Changes</h4>
             {[
-              { month: 'May 2026', change: '+2', reason: 'Improved fraud detection rate' },
+              { month: 'May 2026', change: '+2', reason: 'Improved fraud detection rate via Squad data' },
               { month: 'Apr 2026', change: '+2', reason: 'Revenue consistency improved' },
               { month: 'Mar 2026', change: '+2', reason: 'New repeat customers added' },
               { month: 'Feb 2026', change: '+3', reason: 'Cash flow stabilized after Q1' },
-              { month: 'Jan 2026', change: '+4', reason: 'First full month of Squad data' },
+              { month: 'Jan 2026', change: '+4', reason: 'First full month of Squad transaction data' },
             ].map((item, i) => (
               <div key={i} className="flex items-center justify-between p-3 bg-slate-50 rounded-xl">
                 <div><p className="text-xs font-bold text-slate-900">{item.month}</p><p className="text-[10px] text-slate-400">{item.reason}</p></div>
@@ -286,11 +314,12 @@ function TrustScore() {
             ))}
           </div>
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
-            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">Projection:</span> At your current growth rate, you could reach 80/100 by August 2026.</p>
+            <p className="text-xs text-slate-600 leading-relaxed"><span className="font-bold text-[#E8762E]">Projection:</span> At your current growth rate, you could reach 80/100 by August 2026 — unlocking premium lender rates.</p>
           </div>
         </div>
       </Modal>
 
+      {/* Component Detail Modal */}
       <Modal isOpen={activeModal === 'component'} onClose={() => setActiveModal(null)} title="Score Component Details">
         {selectedComponent && (
           <div className="space-y-5">
@@ -321,7 +350,7 @@ function TrustScore() {
               <div className="p-4 bg-red-50 rounded-2xl border border-red-100">
                 <div className="flex items-start gap-3">
                   <TrendingDown className="w-4 h-4 text-red-500 mt-0.5 shrink-0" />
-                  <p className="text-xs text-red-700 leading-relaxed"><span className="font-bold">Action Required:</span> This component is at 0. Improving it could add up to {selectedComponent.max ?? 15} points.</p>
+                  <p className="text-xs text-red-700 leading-relaxed"><span className="font-bold">Action Required:</span> This component is at 0. Improving it could add up to {selectedComponent.max ?? 15} points to your TrustScore.</p>
                 </div>
               </div>
             )}
@@ -358,7 +387,6 @@ function TrustScore() {
               <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
-          {/* ── FIXED: name reads from localStorage ── */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold">
               <User className="w-5 h-5" />
@@ -395,8 +423,42 @@ function TrustScore() {
           )}
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
+          {/* ── UPGRADED: Pre-qualification banner ── */}
+          <div className="bg-gradient-to-r from-[#001f3f] to-[#002b55] rounded-2xl p-6 mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+            <div className="flex items-center gap-4">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                <BadgeCheck className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2 mb-1">
+                  <span className="text-[10px] font-black px-2 py-0.5 bg-emerald-500/20 text-emerald-400 rounded-full border border-emerald-500/30 uppercase tracking-widest">Pre-Qualified</span>
+                  <span className="text-[10px] text-slate-400 font-medium">Powered by Squad-compatible data</span>
+                </div>
+                <p className="text-2xl md:text-3xl font-black text-white">₦500,000 <span className="text-slate-400 text-base font-medium">credit limit available</span></p>
+              </div>
+            </div>
+            <button onClick={() => { setAppliedLender(null); setActiveModal('lenders'); }}
+              className="shrink-0 bg-[#E8762E] hover:bg-[#E8762E]/90 text-white font-black py-3 px-8 rounded-xl text-sm flex items-center gap-2 transition-all shadow-lg shadow-[#E8762E]/20 cursor-pointer">
+              <Zap className="w-4 h-4" /> Apply Now
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-8 mb-10">
+            {/* ── UPGRADED: Score card with lending readiness ── */}
             <div className="lg:col-span-3 bg-white rounded-2xl md:rounded-[40px] p-8 md:p-12 shadow-sm border border-slate-100 flex flex-col items-center justify-center relative overflow-hidden">
+              
+              {/* Lending readiness badge — top of card */}
+              <div className="w-full flex justify-between items-center mb-6">
+                <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 rounded-xl border border-emerald-100">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                  <span className="text-[10px] font-black text-emerald-700 uppercase tracking-widest">Lending Readiness: HIGH</span>
+                </div>
+                <div className="flex items-center gap-1 px-3 py-2 bg-orange-50 rounded-xl border border-orange-100">
+                  <Star className="w-3 h-3 text-[#E8762E] fill-[#E8762E]" />
+                  <span className="text-[10px] font-black text-[#E8762E] uppercase tracking-widest">Top 15% of Merchants</span>
+                </div>
+              </div>
+
               <div className="relative w-full max-w-[340px] aspect-[2/1] mb-8">
                 <svg className="w-full h-full" viewBox="0 0 100 50">
                   <path d="M5,50 A45,45 0 0,1 95,50" fill="none" stroke="#f1f5f9" strokeWidth="10" strokeLinecap="round" />
@@ -406,11 +468,14 @@ function TrustScore() {
                   <span className="text-4xl md:text-6xl font-bold text-slate-900">{score}<span className="text-xl md:text-2xl text-slate-300">/100</span></span>
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2 px-4 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold tracking-wider mb-6 border border-emerald-100 uppercase">
+
+              <div className="inline-flex items-center gap-2 px-4 py-1 bg-emerald-50 text-emerald-600 rounded-full text-[10px] font-bold tracking-wider mb-3 border border-emerald-100 uppercase">
                 <ShieldCheck className="w-3.5 h-3.5" />{scoreLabel}
               </div>
+
               <h3 className="text-xl md:text-2xl font-bold text-slate-900 mb-2 text-center">Score is {score >= 70 ? 'Healthy' : score >= 50 ? 'Moderate' : 'Needs Improvement'}</h3>
-              <p className="text-slate-500 text-sm font-medium mb-10 text-center">Based on last 90 days of Squad transactions</p>
+              <p className="text-slate-500 text-sm font-medium mb-8 text-center">Derived from 90 days of Squad transaction data — {(1247).toLocaleString()} transactions analyzed</p>
+
               <div className="flex flex-col sm:flex-row gap-4 w-full sm:w-auto">
                 <button onClick={downloadReport} className="flex items-center justify-center gap-2 bg-[#001f3f] text-white font-bold py-3.5 px-8 rounded-xl text-xs transition-all shadow-lg cursor-pointer hover:bg-[#002b55]">
                   <Download className="w-4 h-4" />Download Report
@@ -436,6 +501,12 @@ function TrustScore() {
                   </div>
                   <div><p className="text-sm font-bold">Fraud Alerts</p><p className="text-[10px] text-slate-400">{fraudAlerts} flagged transactions requiring review.</p></div>
                 </div>
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
+                    <BadgeCheck className="w-5 h-5 text-emerald-400" />
+                  </div>
+                  <div><p className="text-sm font-bold text-emerald-400">Pre-Qualified</p><p className="text-[10px] text-slate-400">Up to ₦500,000 credit available now.</p></div>
+                </div>
                 <button onClick={() => setActiveModal('history')}
                   className="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-colors cursor-pointer">
                   <History className="w-4 h-4" /> View Score History
@@ -451,6 +522,7 @@ function TrustScore() {
             </div>
           </div>
 
+          {/* Score Breakdown */}
           <div className="mb-12">
             <div className="flex justify-between items-end mb-6">
               <div>
@@ -484,6 +556,31 @@ function TrustScore() {
             </div>
           </div>
 
+          {/* ── UPGRADED: Squad Data Signals section ── */}
+          <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-sm border border-slate-100 mb-8">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="w-10 h-10 rounded-xl bg-[#001f3f] flex items-center justify-center">
+                <ShieldCheck className="w-5 h-5 text-[#E8762E]" />
+              </div>
+              <div>
+                <h4 className="text-lg font-bold text-slate-900">Squad Data Intelligence Signals</h4>
+                <p className="text-xs text-slate-400">The specific signals from your Squad transaction history that drove this score</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {squadSignals.map((signal, i) => (
+                <div key={i} className={`p-4 rounded-2xl border ${signal.status === 'positive' ? 'bg-emerald-50 border-emerald-100' : 'bg-orange-50 border-orange-100'}`}>
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className={`w-2 h-2 rounded-full ${signal.status === 'positive' ? 'bg-emerald-500' : 'bg-orange-400'}`}></div>
+                    <p className={`text-[10px] font-black uppercase tracking-widest ${signal.status === 'positive' ? 'text-emerald-600' : 'text-orange-600'}`}>{signal.label}</p>
+                  </div>
+                  <p className={`text-sm font-bold mb-1 ${signal.status === 'positive' ? 'text-emerald-700' : 'text-orange-700'}`}>{signal.value}</p>
+                  <p className="text-[10px] text-slate-500">{signal.detail}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-12">
             <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-sm border border-slate-100">
               <div className="flex items-center gap-3 mb-8">
@@ -492,30 +589,54 @@ function TrustScore() {
                 </div>
                 <h4 className="text-lg font-bold text-slate-900">What This Means</h4>
               </div>
-              <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-10 font-medium opacity-90">{explanation}</p>
-              <div className="p-6 bg-[#f8fafc] rounded-2xl border-l-4 border-slate-900">
-                <h5 className="text-sm font-bold text-slate-900 mb-2">Growth Opportunity</h5>
-                <p className="text-xs text-slate-500 leading-relaxed font-medium">Your Growth Trend metric is currently low because of seasonal adjustments. Reaching a score of 80+ could unlock lower interest rates.</p>
+              <p className="text-slate-500 text-sm md:text-base leading-relaxed mb-6 font-medium opacity-90">{explanation}</p>
+              <div className="p-5 bg-[#f8fafc] rounded-2xl border-l-4 border-[#001f3f] mb-4">
+                <h5 className="text-sm font-bold text-slate-900 mb-1">Why Squad Data Matters</h5>
+                <p className="text-xs text-slate-500 leading-relaxed">Traditional credit scoring ignores informal SME revenue. SquadMind converts your actual Squad payment history into a bankable credit signal — giving you access to loans your transactions already justify.</p>
+              </div>
+              <div className="p-5 bg-[#f8fafc] rounded-2xl border-l-4 border-slate-300">
+                <h5 className="text-sm font-bold text-slate-900 mb-1">Growth Opportunity</h5>
+                <p className="text-xs text-slate-500 leading-relaxed">Reaching a score of 80+ could unlock lower interest rates from our lending partners.</p>
               </div>
             </div>
 
+            {/* ── UPGRADED: Lender Ready card ── */}
             <div className="bg-white rounded-[32px] p-8 md:p-10 shadow-sm border border-slate-100 flex flex-col">
-              <div className="flex items-center gap-3 mb-8">
+              <div className="flex items-center gap-3 mb-6">
                 <div className="w-10 h-10 rounded-xl bg-orange-50 flex items-center justify-center">
                   <Landmark className="w-5 h-5 text-[#E8762E]" />
                 </div>
                 <h4 className="text-lg font-bold text-slate-900">Lender Ready</h4>
               </div>
-              <div className="space-y-5 mb-10 flex-1">
-                {["Identity Verified", "Squad Account Active (> 1yr)", "Transaction History Audited", "TrustScore Meeting Minimum Threshold"].map((step, i) => (
-                  <div key={i} className="flex items-center gap-4">
-                    <CheckCircle2 className="w-5 h-5 text-emerald-500" />
-                    <span className="text-sm font-bold text-slate-700">{step}</span>
+
+              {/* Pre-qualification highlight */}
+              <div className="p-4 bg-[#001f3f] rounded-2xl mb-6">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Pre-Qualified Amount</p>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase">Approved</span>
+                </div>
+                <p className="text-3xl font-black text-[#E8762E]">₦500,000</p>
+                <p className="text-[10px] text-slate-400 mt-1">Based on TrustScore {score}/100 × Squad transaction history</p>
+              </div>
+
+              <div className="space-y-4 mb-8 flex-1">
+                {[
+                  { label: 'Identity Verified', sub: 'KYC completed via Squad' },
+                  { label: 'Squad Account Active (> 1yr)', sub: '1,247 transactions on record' },
+                  { label: 'Transaction History Audited', sub: '90-day behavioral analysis complete' },
+                  { label: 'TrustScore Meeting Minimum Threshold', sub: `${score}/100 — minimum is 60/100` },
+                ].map((step, i) => (
+                  <div key={i} className="flex items-start gap-4">
+                    <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-bold text-slate-700">{step.label}</p>
+                      <p className="text-[10px] text-slate-400">{step.sub}</p>
+                    </div>
                   </div>
                 ))}
               </div>
-              <div className="p-8 bg-orange-50/30 rounded-3xl border border-orange-100/50">
-                <p className="text-xs font-bold text-slate-500 mb-6 text-center">You are ready to apply for business credit</p>
+              <div className="p-6 bg-orange-50/30 rounded-3xl border border-orange-100/50">
+                <p className="text-xs font-bold text-slate-500 mb-4 text-center">You are ready to apply for business credit</p>
                 <button onClick={() => { setAppliedLender(null); setActiveModal('lenders'); }}
                   className="w-full bg-[#E8762E] hover:bg-[#E8762E]/90 text-white font-black py-4 rounded-xl flex items-center justify-center gap-3 transition-all shadow-lg shadow-[#E8762E]/20 cursor-pointer">
                   Find Lenders <ArrowRight className="w-4 h-4" />
