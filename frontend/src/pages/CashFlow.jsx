@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { 
+import {
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, HelpCircle,
   Download, Play, CheckCircle2, Lightbulb, AlertTriangle, ChevronRight,
   Sparkles, TrendingUp, Banknote, Award, Loader2, X, Zap
@@ -25,6 +25,36 @@ function Modal({ isOpen, onClose, title, children }) {
   );
 }
 
+// FIX 4: Proper SVG arc-based confidence ring
+function ConfidenceRing({ score }) {
+  const radius = 54;
+  const circumference = 2 * Math.PI * radius;
+  const offset = circumference - (score / 100) * circumference;
+  return (
+    <div className="flex items-center justify-center py-4">
+      <div className="relative w-36 h-36">
+        <svg className="w-full h-full -rotate-90" viewBox="0 0 136 136">
+          <circle cx="68" cy="68" r={radius} fill="none" stroke="#fff7ed" strokeWidth="12" />
+          <circle
+            cx="68" cy="68" r={radius}
+            fill="none"
+            stroke="#E8762E"
+            strokeWidth="12"
+            strokeDasharray={circumference}
+            strokeDashoffset={offset}
+            strokeLinecap="round"
+            style={{ transition: 'stroke-dashoffset 0.8s ease' }}
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-4xl font-black text-slate-900">{score}</span>
+          <span className="text-sm text-slate-400 font-bold">%</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function CashFlow() {
   const navigate = useNavigate();
   const [forecastData, setForecastData] = useState(null);
@@ -34,10 +64,21 @@ function CashFlow() {
   const [activeModal, setActiveModal] = useState(null);
   const [selectedPeak, setSelectedPeak] = useState(null);
   const [successMsg, setSuccessMsg] = useState('');
-  const [selectedPeriod, setSelectedPeriod] = useState('today');
+
+  // FIX: 7D / 14D / 30D windows instead of calendar dates
+  const [selectedWindow, setSelectedWindow] = useState('7d');
+
+  // Liquidity peaks weekly/monthly toggle — now wired up
+  const [peaksView, setPeaksView] = useState('weekly');
+
   const [applying, setApplying] = useState(false);
   const [applied, setApplied] = useState(false);
-  const [appId] = useState('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000));
+
+  // FIX 5: businessName read once, not inline in JSX
+  const [businessName] = useState(() => localStorage.getItem('businessName') || 'Lekan Adeyemi');
+
+  // FIX 7: appId stable via useRef — won't change on re-render
+  const appId = useRef('SQ-2026-' + Math.floor(Math.random() * 90000 + 10000)).current;
 
   const onLogout = () => { localStorage.removeItem('token'); navigate('/login'); };
   const onNavigate = (path) => navigate(`/${path}`);
@@ -76,10 +117,37 @@ function CashFlow() {
     }
   };
 
+  const formatCurrency = (amount) => {
+    if (!amount) return '₦0';
+    return `₦${Number(amount).toLocaleString('en-NG')}`;
+  };
+
+  const minRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 340000) * 0.9 || 340000;
+  const maxRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 380000) * 1.1 || 380000;
+  const confidenceScore = Number(forecastData?.data?.confidence_score || forecastData?.confidence_score || 92) || 92;
+  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';
+  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
+
+  const liquidityPeaksWeekly = forecastData?.liquidity_peaks || [
+    { time: 'Oct 24 — Oct 31', source: 'Payroll Cycle Spike', flow: 85900, risk: 'LOW', status: 'Stable' },
+    { time: 'Nov 01 — Nov 07', source: 'Post-Month End Dip', flow: -23450, risk: 'MODERATE', status: 'Watch' },
+    { time: 'Nov 08 — Nov 15', source: 'Market Recovery', flow: 114200, risk: 'LOW', status: 'Stable' },
+  ];
+
+  const liquidityPeaksMonthly = forecastData?.liquidity_peaks_monthly || [
+    { time: 'October 2026', source: 'Q4 Seasonal Uplift', flow: 312400, risk: 'LOW', status: 'Stable' },
+    { time: 'November 2026', source: 'Month-End Volatility', flow: -41200, risk: 'HIGH', status: 'Watch' },
+    { time: 'December 2026', source: 'Festive Season Peak', flow: 490000, risk: 'LOW', status: 'Stable' },
+  ];
+
+  const liquidityPeaks = peaksView === 'weekly' ? liquidityPeaksWeekly : liquidityPeaksMonthly;
+
+  // FIX 7: export uses || fallbacks to handle both API shapes
   const exportReport = () => {
     const rows = [
       ['SquadMind Cash Flow Report'],
       ['Generated:', new Date().toLocaleDateString('en-NG')],
+      ['Forecast Window:', selectedWindow.toUpperCase()],
       [''],
       ['FORECAST SUMMARY'],
       ['Expected Min Revenue', formatCurrency(minRevenue)],
@@ -89,11 +157,11 @@ function CashFlow() {
       ['LIQUIDITY PEAKS'],
       ['Timeline', 'Source', 'Predicted Flow', 'Risk Level', 'Status'],
       ...liquidityPeaks.map(p => [
-        p.time || p.timeline,
-        p.source || p.predictor,
+        p.time || p.timeline || '',
+        p.source || p.predictor || '',
         formatCurrency(Math.abs(p.flow || p.predicted_flow || 0)),
-        p.risk || p.risk_level,
-        p.status
+        p.risk || p.risk_level || '',
+        p.status || '',
       ]),
       [''],
       ['AI NARRATIVE'],
@@ -106,22 +174,6 @@ function CashFlow() {
     a.href = url; a.download = 'squadmind-cashflow-report.csv'; a.click();
     URL.revokeObjectURL(url);
   };
-
-  const formatCurrency = (amount) => {
-    if (!amount) return '₦0';
-    return `₦${Number(amount).toLocaleString('en-NG')}`;
-  };
-
-  const minRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 340000) * 0.9 || 340000;
-  const maxRevenue = Number(forecastData?.data?.projected_revenue || forecastData?.projected_revenue || 380000) * 1.1 || 380000;
-  const confidenceScore = Number(forecastData?.data?.confidence_score || forecastData?.confidence_score || 92) || 92;
-  const aiNarrative = forecastData?.data?.ai_narrative || forecastData?.ai_narrative || 'Based on your last 90 days of Squad transactions, SquadMind predicts a 15% increase in month-end sales due to seasonal trends.';
-  const pidginExplanation = forecastData?.pidgin_explanation || 'Your money dey grow! Based on how you dey sell, next month go better pass this month by 15%. Keep the hustle!';
-  const liquidityPeaks = forecastData?.liquidity_peaks || [
-    { time: 'Oct 24 — Oct 31', source: 'Payroll Cycle Spike', flow: 85900, risk: 'LOW', status: 'Stable' },
-    { time: 'Nov 01 — Nov 07', source: 'Post-Month End Dip', flow: -23450, risk: 'MODERATE', status: 'Watch' },
-    { time: 'Nov 08 — Nov 15', source: 'Market Recovery', flow: 114200, risk: 'LOW', status: 'Stable' },
-  ];
 
   const getRiskStyle = (risk) => {
     const r = (risk || '').toUpperCase();
@@ -137,59 +189,118 @@ function CashFlow() {
     return 'bg-emerald-500';
   };
 
-  const periodLabels = {
-    oct14: 'Week of Oct 14 — Early period, slow accumulation phase.',
-    oct21: 'Week of Oct 21 — Volatility detected, mid-cycle fluctuation.',
-    today: 'Current — Steady upward trend based on live data.',
-    nov07: 'Nov 07 Forecast — Peak revenue window approaching end.',
+  // FIX 1 + 2: Chart driven by selectedWindow (7D/14D/30D) with data-mapped points
+  // Each window defines % progress points that map to SVG Y coords (300 = bottom, 0 = top)
+  const windowConfig = {
+    '7d': {
+      label: '7-Day Forecast',
+      description: 'Steady upward trend — payroll cycle incoming.',
+      // [x%, y-value 0-100 where 100=high revenue]
+      points: [0, 28, 42, 55, 63, 71, 78],
+      xLabels: ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'],
+      accuracy: '85%',
+    },
+    '14d': {
+      label: '14-Day Forecast',
+      description: 'Dip expected Nov 1–7, recovery from Nov 8.',
+      points: [0, 22, 38, 55, 65, 60, 48, 35, 30, 38, 52, 65, 72, 78],
+      xLabels: ['D1', 'D2', 'D3', 'D4', 'D5', 'D6', 'D7', 'D8', 'D9', 'D10', 'D11', 'D12', 'D13', 'D14'],
+      accuracy: '80%',
+    },
+    '30d': {
+      label: '30-Day Forecast',
+      description: 'Q4 seasonal uplift with festive peak in December.',
+      points: [0, 10, 18, 25, 35, 42, 38, 30, 28, 36, 45, 52, 60, 65, 62, 58, 55, 60, 68, 72, 75, 78, 80, 82, 85, 86, 87, 88, 90, 92],
+      xLabels: ['W1', '', '', '', '', '', '', 'W2', '', '', '', '', '', '', 'W3', '', '', '', '', '', '', 'W4', '', '', '', '', '', '', '', 'D30'],
+      accuracy: '72%',
+    },
   };
 
   const renderForecastChart = () => {
-    const chartPaths = {
-      oct14: {
-        area: 'M0,280 L250,268 L500,255 L750,245 L1000,230 L1000,275 L750,282 L500,285 L250,288 L0,290 Z',
-        line: 'M0,280 L250,268 L500,255 L750,245 L1000,230',
-      },
-      oct21: {
-        area: 'M0,260 L200,230 L350,250 L500,200 L650,230 L800,170 L1000,155 L1000,220 L800,235 L650,280 L500,260 L350,290 L200,275 L0,285 Z',
-        line: 'M0,260 L200,230 L350,250 L500,200 L650,230 L800,170 L1000,155',
-      },
-      today: {
-        area: 'M0,250 L330,220 L660,190 L1000,160 L1000,210 L660,240 L330,270 L0,300 Z',
-        line: 'M0,275 L330,245 L660,215 L1000,185',
-      },
-      nov07: {
-        area: 'M0,235 L200,195 L400,140 L550,90 L700,60 L850,50 L1000,45 L1000,110 L850,120 L700,130 L550,160 L400,210 L200,255 L0,270 Z',
-        line: 'M0,235 L200,195 L400,140 L550,90 L700,60 L850,50 L1000,45',
-      },
-    };
-    const current = chartPaths[selectedPeriod];
+    const cfg = windowConfig[selectedWindow];
+    const W = 1000;
+    const H = 260;
+    const PAD = 20;
+    const chartW = W - PAD * 2;
+    const chartH = H - 60;
+
+    const pts = cfg.points.map((v, i) => {
+      const x = PAD + (i / (cfg.points.length - 1)) * chartW;
+      const y = PAD + (1 - v / 100) * chartH;
+      return { x, y };
+    });
+
+    const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ');
+    const areaPath = `${linePath} L${pts[pts.length - 1].x},${H - 40} L${PAD},${H - 40} Z`;
+
+    // Show every other label to avoid clutter
+    const visibleLabels = cfg.xLabels.filter((_, i) =>
+      cfg.points.length <= 8 ? true : i % Math.ceil(cfg.points.length / 8) === 0 || i === cfg.points.length - 1
+    );
+    const labelIndices = cfg.xLabels.reduce((acc, lbl, i) => {
+      if (cfg.points.length <= 8 || i % Math.ceil(cfg.points.length / 8) === 0 || i === cfg.points.length - 1) {
+        acc.push(i);
+      }
+      return acc;
+    }, []);
+
     return (
-      <div className="relative h-[240px] md:h-[320px] w-full flex items-end">
-        <div className="absolute top-0 left-0 text-[10px] font-bold text-slate-300">₦500k</div>
-        <div className="absolute bottom-12 left-0 text-[10px] font-bold text-slate-300">₦200k</div>
-        <div className="absolute top-0 right-0 text-[10px] font-bold text-[#E8762E] max-w-[180px] text-right leading-tight">
-          {periodLabels[selectedPeriod]}
+      <div className="relative w-full" style={{ height: 280 }}>
+        <div className="absolute top-0 right-0 flex items-center gap-2 bg-orange-50 px-3 py-1.5 rounded-lg">
+          <div className="w-1.5 h-1.5 bg-[#E8762E] rounded-full animate-pulse"></div>
+          <span className="text-[10px] font-black text-[#E8762E] uppercase tracking-widest">{cfg.accuracy} accuracy</span>
         </div>
-        <svg className="w-full h-full" viewBox="0 0 1000 300" preserveAspectRatio="none">
-          <path d={current.area} fill="#fff4ed" className="opacity-60" />
-          <path d={current.line} fill="none" stroke="#E8762E" strokeWidth="2.5" strokeDasharray="4 4" />
-          <line x1="500" y1="40" x2="500" y2="280" stroke="#E8762E" strokeWidth="1.5" strokeDasharray="2 2" />
-          <circle cx="500" cy="40" r="4" fill="#E8762E" />
+        <p className="text-[11px] text-slate-400 font-medium mb-3">{cfg.description}</p>
+        <svg className="w-full" viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" style={{ height: 200 }}>
+          {/* Grid lines */}
+          {[0, 25, 50, 75, 100].map((pct, i) => {
+            const y = PAD + (1 - pct / 100) * chartH;
+            return (
+              <g key={i}>
+                <line x1={PAD} y1={y} x2={W - PAD} y2={y} stroke="#f1f5f9" strokeWidth="1" />
+              </g>
+            );
+          })}
+          {/* Y-axis labels */}
+          {[{ pct: 100, label: '₦500k' }, { pct: 50, label: '₦350k' }, { pct: 0, label: '₦200k' }].map((item, i) => {
+            const y = PAD + (1 - item.pct / 100) * chartH;
+            return (
+              <text key={i} x={PAD - 4} y={y + 4} textAnchor="end" fontSize="10" fill="#cbd5e1" fontWeight="700">{item.label}</text>
+            );
+          })}
+          {/* Area fill */}
+          <defs>
+            <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stopColor="#E8762E" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#E8762E" stopOpacity="0.01" />
+            </linearGradient>
+          </defs>
+          <path d={areaPath} fill="url(#areaGrad)" />
+          {/* Line */}
+          <path d={linePath} fill="none" stroke="#E8762E" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          {/* Data points */}
+          {pts.map((p, i) => (
+            <circle key={i} cx={p.x} cy={p.y} r="3.5" fill="white" stroke="#E8762E" strokeWidth="2" />
+          ))}
+          {/* Peak dot highlight */}
+          {(() => {
+            const maxIdx = cfg.points.indexOf(Math.max(...cfg.points));
+            const p = pts[maxIdx];
+            return (
+              <g>
+                <circle cx={p.x} cy={p.y} r="6" fill="#E8762E" opacity="0.2" />
+                <circle cx={p.x} cy={p.y} r="4" fill="#E8762E" />
+              </g>
+            );
+          })()}
         </svg>
-        <div className="absolute bottom-0 w-full flex justify-between px-1 pt-6 border-t border-slate-50">
-          {[
-            { key: 'oct14', label: 'OCT 14' },
-            { key: 'oct21', label: 'OCT 21' },
-            { key: 'today', label: 'TODAY' },
-            { key: 'nov07', label: 'NOV 07, 2026' },
-          ].map(item => (
-            <button key={item.key} onClick={() => setSelectedPeriod(item.key)} className="flex flex-col items-center gap-1 cursor-pointer group">
-              <span className={`text-[9px] font-black uppercase tracking-widest transition-colors ${selectedPeriod === item.key ? 'text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'}`}>
-                {item.label}
-              </span>
-              <div className={`h-1 rounded-full transition-all duration-300 ${selectedPeriod === item.key ? 'w-8 bg-[#E8762E]' : 'w-0 bg-transparent'}`}></div>
-            </button>
+
+        {/* X-axis labels */}
+        <div className="flex justify-between px-5 mt-1 border-t border-slate-50 pt-2">
+          {labelIndices.map((idx) => (
+            <span key={idx} className="text-[9px] font-black text-slate-300 uppercase tracking-widest">
+              {cfg.xLabels[idx]}
+            </span>
           ))}
         </div>
       </div>
@@ -210,6 +321,7 @@ function CashFlow() {
   return (
     <div className="flex h-screen w-full bg-[#f8fafc] font-outfit text-slate-900 overflow-hidden relative">
 
+      {/* ── MODALS ── */}
       <Modal isOpen={activeModal === 'insights'} onClose={() => setActiveModal(null)} title="Smart Insights">
         <div className="space-y-5">
           <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
@@ -295,17 +407,10 @@ function CashFlow() {
         </div>
       </Modal>
 
+      {/* FIX 4: Replaced broken border-trick ring with proper SVG arc ConfidenceRing component */}
       <Modal isOpen={activeModal === 'confidence'} onClose={() => setActiveModal(null)} title="Confidence Score Explained">
         <div className="space-y-5">
-          <div className="flex items-center justify-center py-4">
-            <div className="relative w-36 h-36 rounded-full border-8 border-orange-100 flex items-center justify-center">
-              <div className="absolute inset-0 border-8 border-[#E8762E] border-b-transparent border-l-transparent rounded-full rotate-45"></div>
-              <div className="text-center z-10">
-                <span className="text-4xl font-black text-slate-900">{confidenceScore}</span>
-                <span className="text-lg text-slate-400">%</span>
-              </div>
-            </div>
-          </div>
+          <ConfidenceRing score={confidenceScore} />
           <p className="text-sm text-slate-500 text-center">A score of {confidenceScore}% means our AI model is highly confident in this forecast based on your transaction history.</p>
           <div className="space-y-3">
             <h4 className="text-sm font-bold text-slate-700">Score Components</h4>
@@ -458,7 +563,11 @@ function CashFlow() {
                   </div>
                 ))}
               </div>
-              <button onClick={() => { setActiveModal(null); setApplied(false); setSuccessMsg('Bridge loan application submitted! Disbursement within 24 hours.'); setTimeout(() => setSuccessMsg(''), 5000); }}
+              <button onClick={() => {
+                setActiveModal(null); setApplied(false);
+                setSuccessMsg('Bridge loan application submitted! Disbursement within 24 hours.');
+                setTimeout(() => setSuccessMsg(''), 5000);
+              }}
                 className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm hover:bg-[#002b55] transition-colors cursor-pointer">
                 Done
               </button>
@@ -522,13 +631,13 @@ function CashFlow() {
               <LogOut className="w-5 h-5" /><span className="text-[15px] font-medium">Logout</span>
             </button>
           </div>
-          {/* ── FIXED: name now reads from localStorage ── */}
+          {/* FIX 5: businessName from state, not inline localStorage call */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold overflow-hidden">
-              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(localStorage.getItem('businessName') || 'Lekan Adeyemi')}&background=E8762E&color=ffffff`} alt="user" />
+              <img src={`https://ui-avatars.com/api/?name=${encodeURIComponent(businessName)}&background=E8762E&color=ffffff`} alt="user" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">{localStorage.getItem('businessName') || 'Lekan Adeyemi'}</p>
+              <p className="text-sm font-bold text-white truncate">{businessName}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -578,14 +687,37 @@ function CashFlow() {
 
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 md:gap-8 mb-8">
             <div className="lg:col-span-3 bg-white rounded-[32px] p-8 md:p-12 shadow-sm border border-slate-100 relative overflow-hidden">
-              <div className="flex items-center gap-2 mb-10">
-                <div className="w-2 h-2 bg-[#E8762E] rounded-full"></div>
+              <div className="flex items-center gap-2 mb-6">
+                <div className="w-2 h-2 bg-[#E8762E] rounded-full animate-pulse"></div>
                 <span className="text-[9px] font-black text-slate-400 uppercase tracking-widest">AIDA PREDICTION MODEL V2.4</span>
               </div>
-              <p className="text-xs md:text-sm font-bold text-slate-400 mb-4">Expected Revenue Next Month</p>
-              <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-12 tracking-tight">
+              <p className="text-xs md:text-sm font-bold text-slate-400 mb-2">Expected Revenue Next Month</p>
+              <h3 className="text-3xl md:text-4xl font-black text-[#001f3f] mb-6 tracking-tight">
                 {formatCurrency(minRevenue)} – {formatCurrency(maxRevenue)}
               </h3>
+
+              {/* FIX 2: 7D / 14D / 30D window selector matching one-pager spec */}
+              <div className="flex items-center gap-2 mb-6">
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest mr-2">Forecast Window:</span>
+                {[
+                  { key: '7d', label: '7 Days' },
+                  { key: '14d', label: '14 Days' },
+                  { key: '30d', label: '30 Days' },
+                ].map(item => (
+                  <button
+                    key={item.key}
+                    onClick={() => setSelectedWindow(item.key)}
+                    className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${
+                      selectedWindow === item.key
+                        ? 'bg-[#E8762E] text-white shadow-md shadow-[#E8762E]/20'
+                        : 'bg-slate-100 text-slate-400 hover:bg-slate-200'
+                    }`}>
+                    {item.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* FIX 1: Data-driven chart — points map to SVG coords based on selectedWindow */}
               {renderForecastChart()}
             </div>
 
@@ -633,60 +765,81 @@ function CashFlow() {
                   </div>
                 </div>
                 <div className="w-full h-2 bg-[#f8fafc] rounded-full overflow-hidden">
-                  <div className="h-full bg-[#E8762E] rounded-full" style={{ width: `${confidenceScore}%` }}></div>
+                  <div className="h-full bg-[#E8762E] rounded-full transition-all duration-700" style={{ width: `${confidenceScore}%` }}></div>
                 </div>
               </div>
             </div>
           </div>
 
+          {/* FIX 3: Weekly/Monthly toggle now wired to peaksView state */}
           <div className="bg-white rounded-[32px] shadow-sm border border-slate-100 overflow-hidden mb-12">
             <div className="p-8 md:p-10 border-b border-slate-50 flex items-center justify-between">
               <h3 className="text-xl font-black text-[#001f3f]">Forecasted Liquidity Peaks</h3>
               <div className="flex items-center bg-[#f8fafc] p-1.5 rounded-xl border border-slate-100">
-                <button className="px-6 py-2 bg-white shadow-sm rounded-lg text-[10px] font-black text-[#001f3f] uppercase tracking-widest cursor-pointer">Weekly</button>
-                <button className="px-6 py-2 text-[10px] font-black text-slate-300 uppercase tracking-widest cursor-pointer">Monthly</button>
+                <button
+                  onClick={() => setPeaksView('weekly')}
+                  className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${peaksView === 'weekly' ? 'bg-white shadow-sm text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'}`}>
+                  Weekly
+                </button>
+                <button
+                  onClick={() => setPeaksView('monthly')}
+                  className={`px-6 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all cursor-pointer ${peaksView === 'monthly' ? 'bg-white shadow-sm text-[#001f3f]' : 'text-slate-300 hover:text-slate-500'}`}>
+                  Monthly
+                </button>
               </div>
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[700px]">
-                <thead>
-                  <tr className="bg-[#f8fafc]/50">
-                    {['TIMELINE', 'SOURCE / PREDICTOR', 'PREDICTED FLOW', 'RISK LEVEL', 'STATUS'].map(h => (
-                      <th key={h} className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
-                    ))}
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-slate-50">
-                  {liquidityPeaks.map((row, i) => {
-                    const style = getRiskStyle(row.risk);
-                    const isNegative = (row.flow || 0) < 0;
-                    return (
-                      <tr key={i} onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }} className="hover:bg-[#f8fafc] transition-all cursor-pointer group">
-                        <td className="p-8 font-black text-[#001f3f] text-sm">{row.time || row.timeline}</td>
-                        <td className="p-8 text-slate-400 font-bold text-xs">{row.source || row.predictor}</td>
-                        <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#E8762E]'}`}>
-                          {isNegative ? '-' : ''}{formatCurrency(Math.abs(row.flow || row.predicted_flow || 0))}
-                        </td>
-                        <td className="p-8">
-                          <span className="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100 shadow-sm" style={{ backgroundColor: style.bg, color: style.color }}>
-                            {row.risk || row.risk_level}
-                          </span>
-                        </td>
-                        <td className="p-8">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <div className={`w-2 h-2 rounded-full ${getDotColor(row.risk)}`}></div>
-                              <span className="text-[11px] font-bold text-slate-500">{row.status}</span>
+
+            {/* FIX 6: Empty state for no peaks */}
+            {liquidityPeaks.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-16 px-8 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+                  <Banknote className="w-8 h-8 text-slate-300" />
+                </div>
+                <p className="text-sm font-bold text-slate-400 mb-1">No liquidity peaks detected</p>
+                <p className="text-xs text-slate-300">Run a new analysis to generate forecast data for this period.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left min-w-[700px]">
+                  <thead>
+                    <tr className="bg-[#f8fafc]/50">
+                      {['TIMELINE', 'SOURCE / PREDICTOR', 'PREDICTED FLOW', 'RISK LEVEL', 'STATUS'].map(h => (
+                        <th key={h} className="p-8 text-[9px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-50">
+                    {liquidityPeaks.map((row, i) => {
+                      const style = getRiskStyle(row.risk || row.risk_level);
+                      const isNegative = (row.flow || row.predicted_flow || 0) < 0;
+                      return (
+                        <tr key={i} onClick={() => { setSelectedPeak(row); setActiveModal('peak'); }} className="hover:bg-[#f8fafc] transition-all cursor-pointer group">
+                          <td className="p-8 font-black text-[#001f3f] text-sm">{row.time || row.timeline}</td>
+                          <td className="p-8 text-slate-400 font-bold text-xs">{row.source || row.predictor}</td>
+                          <td className={`p-8 font-black text-sm ${isNegative ? 'text-red-500' : 'text-[#E8762E]'}`}>
+                            {isNegative ? '-' : ''}{formatCurrency(Math.abs(row.flow || row.predicted_flow || 0))}
+                          </td>
+                          <td className="p-8">
+                            <span className="px-4 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border border-slate-100 shadow-sm" style={{ backgroundColor: style.bg, color: style.color }}>
+                              {row.risk || row.risk_level}
+                            </span>
+                          </td>
+                          <td className="p-8">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <div className={`w-2 h-2 rounded-full ${getDotColor(row.risk || row.risk_level)}`}></div>
+                                <span className="text-[11px] font-bold text-slate-500">{row.status}</span>
+                              </div>
+                              <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-slate-400 transition-colors" />
                             </div>
-                            <ChevronRight className="w-4 h-4 text-slate-200 group-hover:text-slate-400 transition-colors" />
-                          </div>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
-            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </div>
 
           <div className="bg-[#001f3f] rounded-[48px] p-10 md:p-16 text-white flex flex-col md:flex-row items-center justify-between gap-12 relative overflow-hidden group">
@@ -728,6 +881,7 @@ function CashFlow() {
         </div>
       </main>
 
+      {/* ── MOBILE NAV ── */}
       <nav className="fixed bottom-0 left-0 w-full bg-white border-t border-slate-100 flex items-center justify-around py-3 md:hidden z-50">
         <button onClick={() => onNavigate('dashboard')} className="flex flex-col items-center gap-1 text-slate-400">
           <LayoutDashboard className="w-5 h-5" /><span className="text-[10px] font-bold">Home</span>
