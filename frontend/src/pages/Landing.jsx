@@ -91,7 +91,7 @@ function Landing() {
             onClick={handleGetStarted}
             className="w-full sm:w-auto bg-[#E8762E] text-white px-8 py-4 rounded-xl font-bold text-sm hover:translate-y-[-2px] hover:bg-[#E8762E]/90 transition-all cursor-pointer shadow-xl shadow-[#E8762E]/20"
           >
-            Connect My Squad Account
+            Activate Business Intelligence
           </button>
           <button className="w-full sm:w-auto bg-card border border-slate-200 text-[#001f3f] px-10 py-4 rounded-xl font-bold text-sm hover:bg-slate-50 transition-all shadow-sm cursor-pointer">
             View Demo
