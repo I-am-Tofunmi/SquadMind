@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { 
   LayoutDashboard, ShieldAlert, Bell, Settings, LogOut, User,
   ShieldCheck, Banknote, Award, CheckCircle2, AlertTriangle, Sparkles,
-  Grid, History, Loader2, X, ThumbsUp, ThumbsDown, TrendingUp, Shield
+  Grid, History, Loader2, X, ThumbsUp, ThumbsDown, TrendingUp, Shield, Activity
 } from 'lucide-react';
 import { getFraudAlerts, resolveFraud, getToken } from '../services/api';
 
@@ -96,18 +96,73 @@ function FraudDetection() {
     return <span className="px-4 py-1 bg-orange-50 text-[#E8762E] text-[9px] font-black uppercase tracking-widest rounded-full border border-[#E8762E]/20">Low Risk</span>;
   };
 
+  // ── UPGRADED: demo transactions now include anomaly scores and triggered signals ──
   const rawFlags = fraudData?.fraud_flags || fraudData?.flags || fraudData?.items || fraudData;
   const flaggedTransactions = (Array.isArray(rawFlags) && rawFlags.length > 0)
     ? rawFlags
     : [
-        { id: 1, transaction_date: '2026-05-12', description: 'Reversal from POS-221', reference: 'TXN-9921-XF', amount: 12500, risk_level: 'high', ai_reason: 'Unusual reversal at 2:14 AM from new device location. Pattern matches known fraud signature.' },
-        { id: 2, transaction_date: '2026-05-11', description: 'Duplicate Payment', reference: 'TXN-4820-MQ', amount: 5000, risk_level: 'medium', ai_reason: 'Two identical payments within 3 minutes from same customer ID. Possible double-charge attempt.' },
-        { id: 3, transaction_date: '2026-05-09', description: 'Large Transfer', reference: 'TXN-1102-ZZ', amount: 85000, risk_level: 'low', ai_reason: 'Transaction 340% above merchant average. Flagged for manual review per threshold policy.' },
+        {
+          id: 1,
+          transaction_date: '2026-05-12',
+          description: 'Reversal from POS-221',
+          reference: 'TXN-9921-XF',
+          amount: 12500,
+          risk_level: 'high',
+          anomaly_score: 92,
+          ai_reason: 'Unusual reversal at 2:14 AM from new device location. Pattern matches known fraud signature.',
+          triggered_signals: [
+            { label: 'Abnormal Transfer Time', detail: '2:14 AM — outside merchant operating hours', severity: 'high' },
+            { label: 'New Device Fingerprint', detail: 'Unrecognized device ID — first seen today', severity: 'high' },
+            { label: 'Reversal Pattern Match', detail: 'Matches 3 known fraud signatures in database', severity: 'high' },
+            { label: 'Velocity Anomaly', detail: '4 reversals within 12 minutes — 800% above baseline', severity: 'high' },
+          ],
+        },
+        {
+          id: 2,
+          transaction_date: '2026-05-11',
+          description: 'Duplicate Payment',
+          reference: 'TXN-4820-MQ',
+          amount: 5000,
+          risk_level: 'medium',
+          anomaly_score: 67,
+          ai_reason: 'Two identical payments within 3 minutes from same customer ID. Possible double-charge attempt.',
+          triggered_signals: [
+            { label: 'Duplicate Transaction', detail: '2 identical payments within 3 minutes', severity: 'medium' },
+            { label: 'Same Customer ID', detail: 'Customer TXN-4820 charged twice consecutively', severity: 'medium' },
+            { label: 'Round-Number Amount', detail: '₦5,000 exact — common in test fraud attempts', severity: 'low' },
+          ],
+        },
+        {
+          id: 3,
+          transaction_date: '2026-05-09',
+          description: 'Large Transfer',
+          reference: 'TXN-1102-ZZ',
+          amount: 85000,
+          risk_level: 'low',
+          anomaly_score: 38,
+          ai_reason: 'Transaction 340% above merchant average. Flagged for manual review per threshold policy.',
+          triggered_signals: [
+            { label: 'Amount Threshold Exceeded', detail: '₦85,000 — 340% above 90-day merchant average', severity: 'low' },
+            { label: 'First High-Value Transfer', detail: 'No prior transactions above ₦30,000 on record', severity: 'low' },
+          ],
+        },
       ];
 
   const riskScore = fraudData?.risk_score || 94;
   const threatsNeutralized = fraudData?.threats_neutralized || 3;
   const transactionsMonitored = fraudData?.transactions_monitored || 1240;
+
+  const getSeverityColor = (severity) => {
+    if (severity === 'high') return 'bg-red-50 border-red-100 text-red-600';
+    if (severity === 'medium') return 'bg-orange-50 border-orange-100 text-orange-600';
+    return 'bg-slate-50 border-slate-100 text-slate-500';
+  };
+
+  const getSeverityDot = (severity) => {
+    if (severity === 'high') return 'bg-red-500';
+    if (severity === 'medium') return 'bg-orange-400';
+    return 'bg-slate-300';
+  };
 
   if (loading) {
     return (
@@ -207,15 +262,13 @@ function FraudDetection() {
               const rows = [
                 ['SquadMind Protection Report'],
                 ['Generated:', new Date().toLocaleDateString('en-NG')],
-                [''],
-                ['Transactions Monitored', transactionsMonitored],
+                [''], ['Transactions Monitored', transactionsMonitored],
                 ['Threats Neutralized', threatsNeutralized],
                 ['Flagged Transactions', flaggedTransactions.length],
-                ['Risk Score', `${riskScore}/100`],
-                [''],
+                ['Risk Score', `${riskScore}/100`], [''],
                 ['FLAGGED TRANSACTIONS'],
-                ['Date', 'Description', 'Amount', 'Risk Level'],
-                ...flaggedTransactions.map(tx => [formatDate(tx.transaction_date), tx.description, formatCurrency(tx.amount), tx.risk_level])
+                ['Date', 'Description', 'Amount', 'Risk Level', 'Anomaly Score'],
+                ...flaggedTransactions.map(tx => [formatDate(tx.transaction_date), tx.description, formatCurrency(tx.amount), tx.risk_level, `${tx.anomaly_score || 'N/A'}/100`])
               ];
               const csv = rows.map(r => r.join(',')).join('\n');
               const blob = new Blob([csv], { type: 'text/csv' });
@@ -231,15 +284,17 @@ function FraudDetection() {
         </div>
       </Modal>
 
-      {/* ── TRANSACTION DETAIL MODAL ── */}
-      <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Details">
+      {/* ── TRANSACTION DETAIL MODAL — UPGRADED ── */}
+      <Modal isOpen={!!selectedTx} onClose={() => setSelectedTx(null)} title="Transaction Analysis">
         {selectedTx && (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {resolvedIds.has(selectedTx.id || selectedTx.flag_id) && (
               <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-100 text-emerald-600 text-sm font-bold text-center">
                 ✅ Already Resolved
               </div>
             )}
+
+            {/* Transaction basics */}
             <div className="grid grid-cols-2 gap-3">
               <div className="bg-slate-50 rounded-2xl p-4">
                 <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">Amount</p>
@@ -254,22 +309,76 @@ function FraudDetection() {
                 <p className="text-sm font-bold text-slate-900">{selectedTx.reference || selectedTx.squad_transaction_ref || 'N/A'}</p>
               </div>
             </div>
+
+            {/* ── UPGRADED: Behavioral Anomaly Score ── */}
+            {selectedTx.anomaly_score && (
+              <div className="p-5 bg-[#001f3f] rounded-2xl text-white">
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-[#E8762E]" />
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Behavioral Anomaly Score</p>
+                  </div>
+                  <span className={`text-xs font-black px-3 py-1 rounded-full ${
+                    selectedTx.anomaly_score >= 80 ? 'bg-red-500/20 text-red-400' :
+                    selectedTx.anomaly_score >= 50 ? 'bg-orange-500/20 text-orange-400' :
+                    'bg-emerald-500/20 text-emerald-400'
+                  }`}>
+                    {selectedTx.anomaly_score >= 80 ? 'CRITICAL' : selectedTx.anomaly_score >= 50 ? 'ELEVATED' : 'LOW'}
+                  </span>
+                </div>
+                <div className="flex items-baseline gap-2 mb-3">
+                  <span className="text-5xl font-black text-white">{selectedTx.anomaly_score}</span>
+                  <span className="text-xl text-slate-400">/100</span>
+                </div>
+                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                  <div className={`h-full rounded-full transition-all ${
+                    selectedTx.anomaly_score >= 80 ? 'bg-red-500' :
+                    selectedTx.anomaly_score >= 50 ? 'bg-orange-400' : 'bg-emerald-500'
+                  }`} style={{ width: `${selectedTx.anomaly_score}%` }}></div>
+                </div>
+                <p className="text-[10px] text-slate-400 mt-2">Scored against 90-day merchant behavioral baseline via Squad transaction history</p>
+              </div>
+            )}
+
+            {/* Risk level */}
             <div className="flex items-center justify-between p-4 bg-red-50 rounded-2xl border border-red-100">
               <div className="flex items-center gap-3">
                 <AlertTriangle className="w-5 h-5 text-red-500" />
-                <span className="text-sm font-bold text-slate-700">Risk Level</span>
+                <span className="text-sm font-bold text-slate-700">Risk Classification</span>
               </div>
               {getRiskBadge(selectedTx.risk_level)}
             </div>
+
+            {/* ── UPGRADED: Triggered Signals ── */}
+            {selectedTx.triggered_signals && selectedTx.triggered_signals.length > 0 && (
+              <div className="space-y-3">
+                <div className="flex items-center gap-2">
+                  <AlertTriangle className="w-4 h-4 text-[#E8762E]" />
+                  <p className="text-[10px] font-bold text-[#E8762E] uppercase tracking-widest">Triggered Detection Signals</p>
+                </div>
+                {selectedTx.triggered_signals.map((signal, i) => (
+                  <div key={i} className={`p-3 rounded-xl border flex items-start gap-3 ${getSeverityColor(signal.severity)}`}>
+                    <div className={`w-2 h-2 rounded-full mt-1 shrink-0 ${getSeverityDot(signal.severity)}`}></div>
+                    <div>
+                      <p className="text-xs font-bold mb-0.5">{signal.label}</p>
+                      <p className="text-[10px] opacity-80 leading-relaxed">{signal.detail}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* AI narrative */}
             <div className="p-4 bg-orange-50 rounded-2xl border border-orange-100">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-4 h-4 text-[#E8762E] mt-0.5 shrink-0" />
                 <div>
-                  <p className="text-[10px] font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Analysis</p>
+                  <p className="text-[10px] font-bold text-[#E8762E] uppercase tracking-wider mb-2">AI Narrative Summary</p>
                   <p className="text-sm text-slate-600 leading-relaxed">{selectedTx.ai_reason || selectedTx.reason || 'Suspicious pattern detected by SquadMind AI engine.'}</p>
                 </div>
               </div>
             </div>
+
             {!resolvedIds.has(selectedTx.id || selectedTx.flag_id) && (
               <div className="grid grid-cols-2 gap-3">
                 <button onClick={() => handleResolve(selectedTx, 'approve')} disabled={!!resolving}
@@ -328,12 +437,13 @@ function FraudDetection() {
               <LogOut className="w-4 h-4" /><span className="text-sm font-medium">Logout</span>
             </button>
           </div>
+          {/* ── FIXED: name reads from localStorage ── */}
           <div className="pt-6 border-t border-white/5 flex items-center gap-3">
             <div className="w-10 h-10 rounded-lg bg-[#E8762E] flex items-center justify-center text-white font-bold">
               <User className="w-5 h-5" />
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-white truncate">Lekan Adeyemi</p>
+              <p className="text-sm font-bold text-white truncate">{localStorage.getItem('businessName') || 'Lekan Adeyemi'}</p>
               <p className="text-[10px] text-slate-400 font-medium truncate">Merchant Admin</p>
             </div>
           </div>
@@ -406,7 +516,7 @@ function FraudDetection() {
             <div className="p-6 md:p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
               <div>
                 <h3 className="text-lg md:text-xl font-bold text-slate-900 mb-1">Flagged Transactions</h3>
-                <p className="text-xs md:text-sm text-slate-400 font-medium">Click any row to review and take action</p>
+                <p className="text-xs md:text-sm text-slate-400 font-medium">Click any row to view AI analysis and behavioral signals</p>
               </div>
               <div className="flex items-center gap-3">
                 <button className="px-6 py-2.5 bg-[#f8fafc] border border-slate-100 rounded-xl text-[10px] font-black text-slate-500 hover:text-[#001f3f] transition-all uppercase tracking-widest cursor-pointer">Export CSV</button>
@@ -424,10 +534,10 @@ function FraudDetection() {
               </div>
             </div>
             <div className="overflow-x-auto">
-              <table className="w-full text-left min-w-[600px]">
+              <table className="w-full text-left min-w-[650px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/50 border-b border-slate-50">
-                    {['DATE', 'DESCRIPTION', 'AMOUNT', 'RISK LEVEL', 'ACTION'].map(h => (
+                    {['DATE', 'DESCRIPTION', 'AMOUNT', 'ANOMALY SCORE', 'RISK LEVEL', 'ACTION'].map(h => (
                       <th key={h} className={`p-6 text-[9px] font-black text-slate-400 uppercase tracking-widest ${h === 'ACTION' ? 'text-center' : ''}`}>{h}</th>
                     ))}
                   </tr>
@@ -444,6 +554,17 @@ function FraudDetection() {
                           <p className="text-[10px] text-slate-300 font-bold uppercase tracking-widest">{tx.reference || tx.squad_transaction_ref || 'N/A'}</p>
                         </td>
                         <td className="p-6 text-sm font-black text-[#001f3f]">{formatCurrency(tx.amount)}</td>
+                        {/* ── NEW: Anomaly Score column ── */}
+                        <td className="p-6">
+                          {tx.anomaly_score ? (
+                            <div className="flex items-center gap-2">
+                              <div className="flex-1 h-1.5 bg-slate-100 rounded-full overflow-hidden w-16">
+                                <div className={`h-full rounded-full ${tx.anomaly_score >= 80 ? 'bg-red-500' : tx.anomaly_score >= 50 ? 'bg-orange-400' : 'bg-emerald-500'}`} style={{ width: `${tx.anomaly_score}%` }}></div>
+                              </div>
+                              <span className={`text-xs font-black ${tx.anomaly_score >= 80 ? 'text-red-500' : tx.anomaly_score >= 50 ? 'text-orange-500' : 'text-emerald-500'}`}>{tx.anomaly_score}/100</span>
+                            </div>
+                          ) : <span className="text-[10px] text-slate-300">—</span>}
+                        </td>
                         <td className="p-6">{getRiskBadge(tx.risk_level)}</td>
                         <td className="p-6 text-center" onClick={e => e.stopPropagation()}>
                           {isResolved ? (
