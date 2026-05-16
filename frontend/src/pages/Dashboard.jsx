@@ -5,7 +5,7 @@ import {
   Sparkles, Award, AlertTriangle, ArrowRight, Search, User, Banknote,
   FileText, Users, Calendar, Loader2, X, TrendingUp, CheckCircle2, 
   Info, Download, RefreshCw, Zap, Link, Shield, Package, Store,
-  TrendingDown, Building2, Truck, RotateCcw, Star, ChevronRight
+  TrendingDown, Building2, Truck, RotateCcw, Star, ChevronRight, Mail, Smartphone
 } from 'lucide-react';
 import { getDashboard, getToken } from '../services/api';
 
@@ -37,12 +37,12 @@ const inventoryItems = [
 ];
 
 const multiBankTransactions = [
-  { id: 'SQ-2026-44821', bank: 'GTBank', type: 'Credit', amount: 85000, from: 'Chinedu Stores', time: '10:24 AM', status: 'success', channel: 'Transfer', flagged: false },
-  { id: 'SQ-2026-44820', bank: 'Access Bank', type: 'Debit', amount: 47500, from: 'Honeywell Flour', time: '09:15 AM', status: 'success', channel: 'POS', flagged: false },
-  { id: 'SQ-2026-44819', bank: 'OPay', type: 'Credit', amount: 12500, from: 'Unknown Sender', time: '08:44 AM', status: 'flagged', channel: 'Transfer', flagged: true },
-  { id: 'SQ-2026-44818', bank: 'Moniepoint', type: 'Credit', amount: 34000, from: 'Ngozi Enterprises', time: '08:01 AM', status: 'success', channel: 'POS', flagged: false },
-  { id: 'SQ-2026-44817', bank: 'GTBank', type: 'Debit', amount: 120000, from: 'Dufil Prima Foods', time: 'Yesterday', status: 'success', channel: 'Transfer', flagged: false },
-  { id: 'SQ-2026-44816', bank: 'Squad VA', type: 'Credit', amount: 28500, from: 'Adebayo Stores', time: 'Yesterday', status: 'success', channel: 'Virtual Account', flagged: false },
+  { id: 'SQ-2026-44821', bank: 'GTBank', type: 'Credit', amount: 85000, from: 'Chinedu Stores', time: '10:24 AM', status: 'success', channel: 'SMS Alert', flagged: false },
+  { id: 'SQ-2026-44820', bank: 'Access Bank', type: 'Debit', amount: 47500, from: 'Honeywell Flour', time: '09:15 AM', status: 'success', channel: 'Email Receipt', flagged: false },
+  { id: 'SQ-2026-44819', bank: 'OPay', type: 'Credit', amount: 12500, from: 'Unknown Sender', time: '08:44 AM', status: 'flagged', channel: 'SMS Alert', flagged: true },
+  { id: 'SQ-2026-44818', bank: 'Moniepoint', type: 'Credit', amount: 34000, from: 'Ngozi Enterprises', time: '08:01 AM', status: 'success', channel: 'SMS Alert', flagged: false },
+  { id: 'SQ-2026-44817', bank: 'GTBank', type: 'Debit', amount: 120000, from: 'Dufil Prima Foods', time: 'Yesterday', status: 'success', channel: 'PDF Statement', flagged: false },
+  { id: 'SQ-2026-44816', bank: 'Squad VA', type: 'Credit', amount: 28500, from: 'Adebayo Stores', time: 'Yesterday', status: 'success', channel: 'Email Receipt', flagged: false },
 ];
 
 const vendors = [
@@ -102,7 +102,6 @@ function Dashboard() {
     await fetchDashboard();
   };
 
-  // ── FIXED: guard prevents double-click ──
   const handleRestock = async (item) => {
     if (restockingId) return;
     setRestockingId(item.id);
@@ -113,7 +112,6 @@ function Dashboard() {
     setTimeout(() => setTrustScoreImpact(null), 5000);
   };
 
-  // ── FIXED: guard prevents double-click ──
   const handleConnectVendor = async (vendor) => {
     if (connectingVendor) return;
     setConnectingVendor(vendor.name);
@@ -185,7 +183,6 @@ function Dashboard() {
   const lowStockItems = inventoryItems.filter(i => i.stock <= i.minStock);
   const outOfStockItems = inventoryItems.filter(i => i.stock === 0);
 
-  // ── FIXED: correctly filters by selectedBank ──
   const filteredTransactions = selectedBank === 'All'
     ? multiBankTransactions
     : multiBankTransactions.filter(t => t.bank === selectedBank);
@@ -264,7 +261,8 @@ function Dashboard() {
       <div className="flex h-screen w-full items-center justify-center bg-[#f8fafc]">
         <div className="flex flex-col items-center gap-4">
           <Loader2 className="w-12 h-12 text-[#E8762E] animate-spin" />
-          <p className="text-slate-500 font-medium">Syncing with Squad API...</p>
+          {/* ── CHANGED: loading message ── */}
+          <p className="text-slate-500 font-medium">Analysing your SMS, email & PDF data...</p>
         </div>
       </div>
     );
@@ -276,7 +274,8 @@ function Dashboard() {
       {/* ── MODALS ── */}
       <Modal isOpen={showHourly} onClose={() => setShowHourly(false)} title="Hourly Sales Breakdown">
         <div className="space-y-4">
-          <p className="text-xs text-slate-400 font-medium">Average transactions by hour — sourced from Squad payment data</p>
+          {/* ── CHANGED ── */}
+          <p className="text-xs text-slate-400 font-medium">Average transactions by hour — extracted from SMS alerts & email receipts</p>
           <div className="flex items-end gap-1 h-32 pt-4">
             {[2,1,1,0,0,1,3,8,12,15,18,14,10,13,16,19,22,18,14,10,7,5,4,3].map((val, i) => (
               <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -305,11 +304,12 @@ function Dashboard() {
         <div className="space-y-6">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center">
-              <Link className="w-4 h-4 text-[#E8762E]" />
+              {/* ── CHANGED: icon + text ── */}
+              <Smartphone className="w-4 h-4 text-[#E8762E]" />
             </div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Data Source</p>
-              <p className="text-xs font-bold text-white">Squad Payment API — {(1247).toLocaleString()} transactions analyzed</p>
+              <p className="text-xs font-bold text-white">SMS + Email + PDF — {(1247).toLocaleString()} transactions extracted</p>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-4">
@@ -332,7 +332,8 @@ function Dashboard() {
         <div className="space-y-6">
           <div className="p-4 bg-[#001f3f] rounded-2xl text-white flex items-center gap-3">
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center"><Zap className="w-4 h-4 text-[#E8762E]" /></div>
-            <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by Squad API</p><p className="text-xs font-bold text-white">Real-time transaction monitoring active</p></div>
+            {/* ── CHANGED ── */}
+            <div><p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Powered by SquadMind NLP Engine</p><p className="text-xs font-bold text-white">Extracting transactions from SMS, email & PDF in real-time</p></div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div className="bg-blue-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-blue-600 uppercase tracking-wider mb-1">Total</p><p className="text-2xl font-bold text-slate-900">{totalTransactions}</p></div>
@@ -340,12 +341,13 @@ function Dashboard() {
             <div className="bg-red-50 rounded-2xl p-4 text-center"><p className="text-[10px] font-bold text-red-500 uppercase tracking-wider mb-1">Failed</p><p className="text-2xl font-bold text-slate-900">{Math.round(totalTransactions * 0.1)}</p></div>
           </div>
           <div className="space-y-3">
-            <h4 className="text-sm font-bold text-slate-700">Payment Channels</h4>
+            {/* ── CHANGED: data sources ── */}
+            <h4 className="text-sm font-bold text-slate-700">Data Sources Parsed</h4>
             {[
-              { channel: 'Bank Transfer', count: Math.round(totalTransactions * 0.35), color: 'bg-blue-500' },
-              { channel: 'POS Terminal', count: Math.round(totalTransactions * 0.28), color: 'bg-emerald-500' },
-              { channel: 'Squad Virtual Account', count: Math.round(totalTransactions * 0.22), color: 'bg-[#E8762E]' },
-              { channel: 'USSD', count: Math.round(totalTransactions * 0.15), color: 'bg-purple-500' },
+              { channel: 'Bank SMS Alerts', count: Math.round(totalTransactions * 0.45), color: 'bg-blue-500' },
+              { channel: 'Email Receipts (Paystack, Flutterwave)', count: Math.round(totalTransactions * 0.30), color: 'bg-emerald-500' },
+              { channel: 'PDF Bank Statements', count: Math.round(totalTransactions * 0.15), color: 'bg-[#E8762E]' },
+              { channel: 'Squad Virtual Account', count: Math.round(totalTransactions * 0.10), color: 'bg-purple-500' },
             ].map((item, i) => (
               <div key={i} className="flex items-center gap-3">
                 <div className={`w-2 h-2 rounded-full ${item.color}`}></div>
@@ -376,11 +378,12 @@ function Dashboard() {
           </div>
           <p className="text-sm text-slate-500 text-center font-medium">{healthAiSummary}</p>
           <div className="space-y-4">
-            <h4 className="text-sm font-bold text-slate-700">Score Components — Squad Data Signals</h4>
+            {/* ── CHANGED ── */}
+            <h4 className="text-sm font-bold text-slate-700">Score Components — SquadMind AI Signals</h4>
             {[
-              { label: 'Revenue Growth', score: healthBreakdown.revenue_growth, color: 'bg-emerald-500', icon: <TrendingUp className="w-4 h-4 text-emerald-500" />, source: 'Squad transaction history' },
-              { label: 'Fraud Safety', score: healthBreakdown.fraud_safety, color: 'bg-blue-500', icon: <ShieldAlert className="w-4 h-4 text-blue-500" />, source: 'Squad fraud detection engine' },
-              { label: 'Transaction Volume', score: healthBreakdown.transaction_volume, color: 'bg-[#E8762E]', icon: <FileText className="w-4 h-4 text-[#E8762E]" />, source: 'Squad payment API' },
+              { label: 'Revenue Growth', score: healthBreakdown.revenue_growth, color: 'bg-emerald-500', icon: <TrendingUp className="w-4 h-4 text-emerald-500" />, source: 'SMS & email transaction history' },
+              { label: 'Fraud Safety', score: healthBreakdown.fraud_safety, color: 'bg-blue-500', icon: <ShieldAlert className="w-4 h-4 text-blue-500" />, source: 'NLP anomaly detection engine' },
+              { label: 'Transaction Volume', score: healthBreakdown.transaction_volume, color: 'bg-[#E8762E]', icon: <FileText className="w-4 h-4 text-[#E8762E]" />, source: 'SMS alerts + PDF statements' },
             ].map((item, i) => (
               <div key={i} className="space-y-1">
                 <div className="flex items-center justify-between">
@@ -396,7 +399,7 @@ function Dashboard() {
           </div>
           <button onClick={() => { setActiveModal(null); onNavigate('trustscore'); }}
             className="w-full bg-[#001f3f] text-white font-bold py-3 rounded-xl text-sm flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer">
-            View Full TrustScore Report <ArrowRight className="w-4 h-4" />
+            View Full TrustScore™ Report <ArrowRight className="w-4 h-4" />
           </button>
         </div>
       </Modal>
@@ -414,7 +417,8 @@ function Dashboard() {
                   <div className="w-8 h-8 rounded-full bg-[#001f3f] flex items-center justify-center text-white font-bold text-xs">{i + 1}</div>
                   <div>
                     <p className="text-sm font-bold text-slate-900">{customer.name}</p>
-                    <p className="text-[10px] text-slate-400">{customer.transactions} transactions via Squad</p>
+                    {/* ── CHANGED ── */}
+                    <p className="text-[10px] text-slate-400">{customer.transactions} transactions extracted</p>
                     <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                   </div>
                 </div>
@@ -435,7 +439,8 @@ function Dashboard() {
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center"><Package className="w-4 h-4 text-[#E8762E]" /></div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI-Powered Inventory Engine</p>
-              <p className="text-xs font-bold text-white">Restock recommendations based on sales velocity + Squad payment history</p>
+              {/* ── CHANGED ── */}
+              <p className="text-xs font-bold text-white">Restock recommendations based on sales velocity extracted from SMS & email</p>
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
@@ -473,9 +478,7 @@ function Dashboard() {
                       <CheckCircle2 className="w-3 h-3" />Restock Order Sent to {item.vendor}
                     </div>
                   ) : (isLow || isOut) ? (
-                    <button
-                      onClick={() => handleRestock(item)}
-                      disabled={isCurrentlyRestocking}
+                    <button onClick={() => handleRestock(item)} disabled={isCurrentlyRestocking}
                       className="w-full bg-[#001f3f] text-white font-bold py-2 rounded-xl text-xs flex items-center justify-center gap-2 hover:bg-[#002b55] transition-colors cursor-pointer disabled:opacity-60">
                       {isCurrentlyRestocking
                         ? <><Loader2 className="w-3 h-3 animate-spin" />Sending Restock Order...</>
@@ -496,7 +499,7 @@ function Dashboard() {
             <div className="w-8 h-8 rounded-lg bg-[#E8762E]/20 flex items-center justify-center"><Truck className="w-4 h-4 text-[#E8762E]" /></div>
             <div>
               <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">AI-Matched Vendors</p>
-              <p className="text-xs font-bold text-white">Suppliers recommended based on your inventory patterns and payment history</p>
+              <p className="text-xs font-bold text-white">Suppliers matched based on your SMS & email purchase patterns</p>
             </div>
           </div>
           {vendors.map((vendor) => {
@@ -525,9 +528,7 @@ function Dashboard() {
                     </div>
                   ))}
                 </div>
-                <button
-                  onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }}
-                  disabled={isConnecting || isConnected}
+                <button onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }} disabled={isConnecting || isConnected}
                   className={`w-full font-bold py-2.5 rounded-xl text-xs flex items-center justify-center gap-2 transition-colors ${isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' : isConnecting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#001f3f] text-white hover:bg-[#002b55] cursor-pointer'}`}>
                   {isConnecting ? <><Loader2 className="w-3.5 h-3.5 animate-spin" />Connecting...</> :
                    isConnected ? <><CheckCircle2 className="w-3.5 h-3.5" />Connected</> :
@@ -544,7 +545,8 @@ function Dashboard() {
         <div>
           <div className="p-8 pb-10">
             <h1 className="text-2xl font-bold tracking-tight text-white mb-0">SquadMind AI</h1>
-            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">SME OPERATING SYSTEM</p>
+            {/* ── CHANGED ── */}
+            <p className="text-[10px] text-slate-400 mt-1 uppercase tracking-widest font-medium">THE SME OPERATING SYSTEM</p>
           </div>
           <nav className="px-4 space-y-1">
             {[
@@ -604,7 +606,7 @@ function Dashboard() {
           <div className="hidden md:flex items-center gap-4">
             <div className="flex items-center gap-2 px-3 py-1.5 bg-orange-50 text-[#E8762E] rounded-full">
               <div className="w-2 h-2 bg-[#E8762E] rounded-full animate-pulse"></div>
-              <span className="text-[10px] font-bold tracking-wider uppercase">AI LIVE MONITORING</span>
+              <span className="text-[10px] font-bold tracking-wider uppercase">NLP ENGINE ACTIVE</span>
             </div>
             <button className="p-2 text-slate-400 hover:text-slate-600 transition-colors"><Bell className="w-5 h-5" /></button>
             <div className="flex items-center gap-3 pl-4 border-l border-slate-100">
@@ -622,16 +624,16 @@ function Dashboard() {
         <div className="p-4 md:p-8 max-w-[1400px] w-full mx-auto">
           {error && <div className="mb-6 p-4 bg-amber-50 rounded-2xl border border-amber-100 text-amber-600 text-sm font-medium">{error}</div>}
 
-          {/* ── FIXED: TrustScore toast with X button + z-[100] ── */}
+          {/* ── TrustScore Impact Toast ── */}
           {trustScoreImpact && (
             <div className="fixed top-6 right-6 z-[100] bg-[#001f3f] text-white rounded-2xl shadow-2xl p-5 flex items-start gap-4 max-w-sm border border-emerald-500/30">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
                 <TrendingUp className="w-5 h-5 text-emerald-400" />
               </div>
               <div className="flex-1">
-                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">🎯 TrustScore Updated</p>
+                <p className="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">🎯 TrustScore™ Updated</p>
                 <p className="text-sm font-bold text-white">Restock of {trustScoreImpact.item} recorded</p>
-                <p className="text-xs text-slate-400 mt-1">Inventory consistency improved → TrustScore <span className="text-emerald-400 font-black">{trustScoreImpact.points} points</span></p>
+                <p className="text-xs text-slate-400 mt-1">Inventory consistency improved → TrustScore™ <span className="text-emerald-400 font-black">{trustScoreImpact.points} points</span></p>
                 <p className="text-[10px] text-[#E8762E] font-bold mt-1.5">Lending readiness: IMPROVING ↑</p>
               </div>
               <button onClick={() => setTrustScoreImpact(null)} className="text-slate-400 hover:text-white cursor-pointer shrink-0">
@@ -640,43 +642,44 @@ function Dashboard() {
             </div>
           )}
 
-          {/* ── Squad API Connection Banner ── */}
+          {/* ── CHANGED: Intelligence Engine Banner (was Squad API Banner) ── */}
           <div className="bg-[#001f3f] rounded-2xl p-4 mb-6 flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-4">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/20 flex items-center justify-center shrink-0">
-                <Shield className="w-5 h-5 text-emerald-400" />
+                <Sparkles className="w-5 h-5 text-emerald-400" />
               </div>
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <div className="w-2 h-2 bg-emerald-400 rounded-full animate-pulse"></div>
-                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">Squad API — Connected</span>
+                  <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest">SquadMind Intelligence Engine — Active</span>
                 </div>
-                <p className="text-sm font-bold text-white">{(1247).toLocaleString()} transactions synced · Last updated {lastSynced}</p>
+                <p className="text-sm font-bold text-white">{(1247).toLocaleString()} transactions extracted from SMS, email & PDF · Last updated {lastSynced}</p>
               </div>
             </div>
             <div className="flex items-center gap-3">
               <div className="hidden lg:flex items-center gap-4 text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Payments Active</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Fraud Engine Active</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>TrustScore Active</span>
-                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Inventory AI Active</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>SMS Extraction Active</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>Email Parsing Active</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>PDF Processing Active</span>
+                <span className="flex items-center gap-1"><span className="w-1.5 h-1.5 rounded-full bg-emerald-400 inline-block"></span>NLP Engine Active</span>
               </div>
               <button onClick={handleSync} disabled={syncing}
                 className="flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 text-white text-xs font-bold rounded-xl transition-all cursor-pointer disabled:opacity-60">
                 <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
-                {syncing ? 'Syncing...' : 'Sync Now'}
+                {syncing ? 'Processing...' : 'Refresh Data'}
               </button>
             </div>
           </div>
 
+          {/* ── CHANGED: page title + badge ── */}
           <div className="mb-6 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
               <h2 className="text-3xl font-bold text-slate-900 mb-1">Business Overview</h2>
-              <p className="text-slate-500 text-sm">SME Operating System — Inventory · Transactions · Vendors · Lending</p>
+              <p className="text-slate-500 text-sm">Turn SMS, email, and PDFs into lender-ready financial intelligence</p>
             </div>
             <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 rounded-xl border border-orange-100">
               <Zap className="w-4 h-4 text-[#E8762E]" />
-              <span className="text-xs font-bold text-[#E8762E]">Squad-Compatible Intelligence Engine</span>
+              <span className="text-xs font-bold text-[#E8762E]">No Bank APIs Required</span>
             </div>
           </div>
 
@@ -690,7 +693,8 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">TOTAL REVENUE</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{formatCurrency(totalRevenue)}</h3>
               <p className="text-xs text-slate-400 mt-1">vs last month</p>
-              <div className="mt-3 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Via Squad API</span></div>
+              {/* ── CHANGED ── */}
+              <div className="mt-3 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Via NLP Extraction</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click to see breakdown →</p>
             </div>
 
@@ -703,7 +707,8 @@ function Dashboard() {
               <h3 className="text-3xl font-bold text-slate-900 mb-3">{totalTransactions}</h3>
               <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden"><div className="bg-[#E8762E] h-full w-[72%] rounded-full"></div></div>
               <p className="text-[10px] text-slate-400 font-medium mt-1.5">72% of target reached</p>
-              <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Squad Monitored</span></div>
+              {/* ── CHANGED ── */}
+              <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SMS + Email Parsed</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-1 opacity-0 group-hover:opacity-100 transition-opacity">Click to see details →</p>
             </div>
 
@@ -714,7 +719,8 @@ function Dashboard() {
               <p className="text-[11px] text-slate-400 font-bold uppercase tracking-wider mb-1">BEST SALES DAY</p>
               <h3 className="text-2xl font-bold text-slate-900 mb-1">{bestSalesDay}</h3>
               <p className="text-xs text-slate-400 mt-1">₦47,000 avg. volume</p>
-              <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">Squad Transaction Data</span></div>
+              {/* ── CHANGED ── */}
+              <div className="mt-2 flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] font-bold text-slate-400 uppercase tracking-widest">SMS Alert Data</span></div>
               <p className="text-[10px] text-[#E8762E] font-bold mt-2 opacity-0 group-hover:opacity-100 transition-opacity">Click for hourly breakdown →</p>
             </div>
 
@@ -737,7 +743,8 @@ function Dashboard() {
               <div className="flex justify-between items-center mb-2">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Revenue Trend</h3>
-                  <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Sourced from Squad Payment API · Hover to inspect</p></div>
+                  {/* ── CHANGED ── */}
+                  <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Extracted from SMS alerts & email receipts · Hover to inspect</p></div>
                 </div>
                 <div className="flex gap-2">
                   {[7, 30, 90].map(d => (
@@ -756,7 +763,8 @@ function Dashboard() {
 
             <div className="bg-white rounded-2xl p-8 shadow-sm border border-slate-100 flex flex-col">
               <h3 className="text-lg font-bold text-slate-900 mb-1">Busiest Periods</h3>
-              <div className="flex items-center gap-1 mb-6"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Weekly — Squad transaction volume</p></div>
+              {/* ── CHANGED ── */}
+              <div className="flex items-center gap-1 mb-6"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Weekly — extracted from SMS & email data</p></div>
               <div className="flex-1 flex items-end justify-between gap-2 px-2 pb-6">
                 {[{ d: 'M', h: '40%' }, { d: 'T', h: '60%' }, { d: 'W', h: '35%' }, { d: 'T', h: '50%' }, { d: 'F', h: '100%', active: true }, { d: 'S', h: '65%' }, { d: 'S', h: '45%' }].map((item, i) => (
                   <div key={i} className="flex flex-col items-center gap-4 w-full">
@@ -781,7 +789,8 @@ function Dashboard() {
                   <h3 className="text-lg font-bold text-slate-900">Inventory Intelligence</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <p className="text-xs text-slate-400">AI restock recommendations based on sales velocity + Squad payment patterns</p>
+                    {/* ── CHANGED ── */}
+                    <p className="text-xs text-slate-400">AI restock recommendations based on sales velocity from SMS & email transaction patterns</p>
                   </div>
                 </div>
               </div>
@@ -851,9 +860,7 @@ function Dashboard() {
                               <CheckCircle2 className="w-3 h-3" />Order Sent ✓
                             </span>
                           ) : (isLow || isOut) ? (
-                            <button
-                              onClick={() => handleRestock(item)}
-                              disabled={isCurrentlyRestocking}
+                            <button onClick={() => handleRestock(item)} disabled={isCurrentlyRestocking}
                               className="px-4 py-1.5 bg-[#001f3f] text-white rounded-lg text-[10px] font-black hover:bg-[#002b55] transition-all cursor-pointer disabled:opacity-60 flex items-center gap-1.5">
                               {isCurrentlyRestocking
                                 ? <><Loader2 className="w-3 h-3 animate-spin" />Ordering...</>
@@ -873,10 +880,10 @@ function Dashboard() {
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#E8762E]" />
                 <p className="text-xs text-slate-600">
-                  <span className="font-bold text-[#E8762E]">AI Insight:</span> Consistent restocking behavior improves your Inventory Reliability score → directly boosts TrustScore → increases lending eligibility
+                  <span className="font-bold text-[#E8762E]">AI Insight:</span> Consistent restocking improves your Inventory Reliability score → boosts TrustScore™ → increases lending eligibility
                 </p>
               </div>
-              <button onClick={() => onNavigate('trustscore')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap">View TrustScore →</button>
+              <button onClick={() => onNavigate('trustscore')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap">View TrustScore™ →</button>
             </div>
           </div>
 
@@ -891,16 +898,14 @@ function Dashboard() {
                   <h3 className="text-lg font-bold text-slate-900">Multi-Bank Transaction View</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <p className="text-xs text-slate-400">All bank accounts in one view — powered by Squad-compatible financial infrastructure</p>
+                    {/* ── CHANGED ── */}
+                    <p className="text-xs text-slate-400">All bank accounts in one view — aggregated from SMS alerts, email receipts and PDF statements</p>
                   </div>
                 </div>
               </div>
-              {/* ── FIXED: bank filter buttons ── */}
               <div className="flex items-center gap-2 flex-wrap">
                 {['All', 'GTBank', 'Access Bank', 'OPay', 'Moniepoint', 'Squad VA'].map(bank => (
-                  <button
-                    key={bank}
-                    onClick={() => setSelectedBank(bank)}
+                  <button key={bank} onClick={() => setSelectedBank(bank)}
                     className={`px-3 py-1.5 rounded-lg text-[10px] font-black transition-all cursor-pointer ${selectedBank === bank ? 'bg-[#001f3f] text-white' : 'bg-slate-50 border border-slate-100 text-slate-500 hover:text-slate-900'}`}>
                     {bank}
                   </button>
@@ -916,16 +921,15 @@ function Dashboard() {
                   { bank: 'OPay', balance: '₦87,200', txns: 12, color: 'bg-emerald-500', abbr: 'OP' },
                   { bank: 'Moniepoint', balance: '₦156,800', txns: 20, color: 'bg-blue-500', abbr: 'MP' },
                 ].map((b, i) => (
-                  <div key={i}
-                    onClick={() => setSelectedBank(b.bank)}
+                  <div key={i} onClick={() => setSelectedBank(b.bank)}
                     className={`rounded-2xl p-4 border cursor-pointer transition-all ${selectedBank === b.bank ? 'border-[#E8762E] bg-orange-50/30' : 'bg-slate-50 border-slate-100 hover:border-slate-200'}`}>
                     <div className="flex items-center gap-2 mb-3">
                       <div className={`w-8 h-8 rounded-lg ${b.color} flex items-center justify-center text-white text-[10px] font-black`}>{b.abbr}</div>
                       <p className="text-xs font-bold text-slate-700">{b.bank}</p>
                     </div>
                     <p className="text-base font-black text-slate-900">{b.balance}</p>
-                    <p className="text-[10px] text-slate-400 mt-1">{b.txns} transactions today</p>
-                    <div className="flex items-center gap-1 mt-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] text-emerald-600 font-bold">Active</span></div>
+                    <p className="text-[10px] text-slate-400 mt-1">{b.txns} SMS alerts today</p>
+                    <div className="flex items-center gap-1 mt-2"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><span className="text-[9px] text-emerald-600 font-bold">Parsing Active</span></div>
                   </div>
                 ))}
               </div>
@@ -935,7 +939,7 @@ function Dashboard() {
               <table className="w-full text-left min-w-[650px]">
                 <thead>
                   <tr className="bg-[#f8fafc]/50 border-b border-slate-50">
-                    {['REF ID', 'BANK', 'TYPE', 'FROM/TO', 'AMOUNT', 'CHANNEL', 'STATUS'].map(h => (
+                    {['REF ID', 'BANK', 'TYPE', 'FROM/TO', 'AMOUNT', 'SOURCE', 'STATUS'].map(h => (
                       <th key={h} className="p-5 text-[9px] font-black text-slate-400 uppercase tracking-widest">{h}</th>
                     ))}
                   </tr>
@@ -950,7 +954,13 @@ function Dashboard() {
                       <td className={`p-5 text-sm font-black ${tx.type === 'Credit' ? 'text-emerald-600' : 'text-red-500'}`}>
                         {tx.type === 'Credit' ? '+' : '-'}₦{tx.amount.toLocaleString()}
                       </td>
-                      <td className="p-5 text-xs text-slate-500">{tx.channel}</td>
+                      {/* ── CHANGED: channel → source ── */}
+                      <td className="p-5">
+                        <span className="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                          {tx.channel === 'SMS Alert' ? <Smartphone className="w-3 h-3" /> : tx.channel === 'Email Receipt' ? <Mail className="w-3 h-3" /> : <FileText className="w-3 h-3" />}
+                          {tx.channel}
+                        </span>
+                      </td>
                       <td className="p-5">
                         {tx.flagged ? (
                           <span className="flex items-center gap-1 text-[10px] font-black text-red-500 bg-red-50 px-2 py-1 rounded-lg">
@@ -972,8 +982,9 @@ function Dashboard() {
               </table>
             </div>
             <div className="px-6 py-4 bg-slate-50 border-t border-slate-100 flex items-center justify-between">
+              {/* ── CHANGED ── */}
               <p className="text-[10px] text-slate-400 font-medium">
-                Showing {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} {selectedBank !== 'All' ? `for ${selectedBank}` : 'across all banks'}
+                Showing {filteredTransactions.length} transaction{filteredTransactions.length !== 1 ? 's' : ''} {selectedBank !== 'All' ? `for ${selectedBank}` : 'across all banks'} — extracted from SMS, email & PDF
               </p>
               <button onClick={() => onNavigate('frauddetection')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer">View Fraud Analysis →</button>
             </div>
@@ -990,7 +1001,7 @@ function Dashboard() {
                   <h3 className="text-lg font-bold text-slate-900">Vendor Marketplace</h3>
                   <div className="flex items-center gap-1 mt-0.5">
                     <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                    <p className="text-xs text-slate-400">AI-matched suppliers based on your inventory patterns and purchase history</p>
+                    <p className="text-xs text-slate-400">AI-matched suppliers based on your SMS & email purchase history</p>
                   </div>
                 </div>
               </div>
@@ -1028,15 +1039,8 @@ function Dashboard() {
                     <div className="p-2 bg-orange-50 rounded-xl mb-3">
                       <p className="text-[9px] font-bold text-[#E8762E]">{vendor.discount}</p>
                     </div>
-                    {/* ── FIXED: proper onClick guard ── */}
-                    <button
-                      onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }}
-                      disabled={isConnecting || isConnected}
-                      className={`w-full py-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 ${
-                        isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' :
-                        isConnecting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' :
-                        'bg-[#001f3f] text-white hover:bg-[#002b55] cursor-pointer'
-                      }`}>
+                    <button onClick={() => { if (!isConnected && !isConnecting) handleConnectVendor(vendor); }} disabled={isConnecting || isConnected}
+                      className={`w-full py-2 rounded-xl text-[10px] font-black transition-all flex items-center justify-center gap-1.5 ${isConnected ? 'bg-emerald-50 text-emerald-600 border border-emerald-100 cursor-default' : isConnecting ? 'bg-slate-100 text-slate-400 cursor-not-allowed' : 'bg-[#001f3f] text-white hover:bg-[#002b55] cursor-pointer'}`}>
                       {isConnecting ? <><Loader2 className="w-3 h-3 animate-spin" />Connecting...</> :
                        isConnected ? <><CheckCircle2 className="w-3 h-3" />Connected</> :
                        <><Zap className="w-3 h-3" />Connect</>}
@@ -1049,7 +1053,7 @@ function Dashboard() {
             <div className="px-6 py-4 bg-orange-50/50 border-t border-orange-100/50 flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-[#E8762E]" />
-                <p className="text-xs text-slate-600"><span className="font-bold text-[#E8762E]">AI Insight:</span> Connecting verified vendors improves your Supply Chain Reliability score → strengthens TrustScore → better loan terms</p>
+                <p className="text-xs text-slate-600"><span className="font-bold text-[#E8762E]">AI Insight:</span> Connecting verified vendors improves your Supply Chain Reliability score → strengthens TrustScore™ → better loan terms</p>
               </div>
               <button onClick={() => onNavigate('trustscore')} className="text-xs font-bold text-[#E8762E] hover:underline cursor-pointer whitespace-nowrap">View Impact →</button>
             </div>
@@ -1061,7 +1065,8 @@ function Dashboard() {
               <div className="flex justify-between items-center mb-6">
                 <div>
                   <h3 className="text-lg font-bold text-slate-900">Top Revenue Drivers</h3>
-                  <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Ranked by Squad transaction spend</p></div>
+                  {/* ── CHANGED ── */}
+                  <div className="flex items-center gap-1 mt-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div><p className="text-xs text-slate-400">Ranked by spend extracted from SMS & email receipts</p></div>
                 </div>
                 <button onClick={() => setActiveModal('customers')} className="text-sm font-bold text-[#E8762E] hover:underline cursor-pointer">View All</button>
               </div>
@@ -1072,7 +1077,8 @@ function Dashboard() {
                       <div className="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-bold text-xs">{customer.id}</div>
                       <div>
                         <span className="font-bold text-slate-700">{customer.name}</span>
-                        <p className="text-xs text-slate-400">{customer.transactions} transactions via Squad</p>
+                        {/* ── CHANGED ── */}
+                        <p className="text-xs text-slate-400">{customer.transactions} transactions extracted</p>
                         <p className="text-[10px] text-purple-500 font-bold">CLV: {formatCurrency(customer.amount * 1.5)}</p>
                       </div>
                     </div>
@@ -1082,6 +1088,7 @@ function Dashboard() {
               </div>
             </div>
 
+            {/* ── CHANGED: AI Intelligence Panel ── */}
             <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
               <div className="p-8 border-b border-slate-50 flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="flex items-center gap-4">
@@ -1089,10 +1096,11 @@ function Dashboard() {
                     <Sparkles className="w-5 h-5 text-white" />
                   </div>
                   <div>
-                    <h3 className="text-lg font-bold text-slate-900">Squad AI Intelligence</h3>
+                    {/* ── CHANGED ── */}
+                    <h3 className="text-lg font-bold text-slate-900">SquadMind AI Intelligence</h3>
                     <div className="flex items-center gap-1 mt-0.5">
                       <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></div>
-                      <p className="text-xs text-slate-400">Behavioral analysis from Squad transaction history — updated every 5 mins</p>
+                      <p className="text-xs text-slate-400">NLP analysis from SMS alerts, email receipts & PDF statements — updated every 5 mins</p>
                     </div>
                   </div>
                 </div>
@@ -1111,7 +1119,8 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-orange-50 flex items-center justify-center shrink-0"><Sparkles className="w-5 h-5 text-[#E8762E]" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">AI INSIGHT</h4>
-                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">Squad Data · 90-day analysis</p>
+                      {/* ── CHANGED ── */}
+                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">SMS + Email · 90-day NLP analysis</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">{isEnglish ? aiInsightEnglish : aiInsightPidgin}</p>
                     </div>
                   </div>
@@ -1121,7 +1130,8 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-slate-50 flex items-center justify-center shrink-0"><Users className="w-5 h-5 text-slate-600" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-slate-400 uppercase tracking-wider mb-1">CUSTOMER INSIGHTS</h4>
-                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">Squad Transaction Patterns</p>
+                      {/* ── CHANGED ── */}
+                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">NLP Transaction Patterns</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed">
                         {isEnglish
                           ? <span>Your top 3 customers account for <span className="font-bold text-slate-900">25% of total revenue</span>. Consider a loyalty program to retain them.</span>
@@ -1136,7 +1146,8 @@ function Dashboard() {
                     <div className="w-10 h-10 rounded-full bg-white flex items-center justify-center shrink-0 shadow-sm"><AlertTriangle className="w-5 h-5 text-red-500" /></div>
                     <div>
                       <h4 className="text-[11px] font-bold text-red-500 uppercase tracking-wider mb-1">SECURITY ALERT</h4>
-                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">Squad Fraud Engine · Real-time</p>
+                      {/* ── CHANGED ── */}
+                      <p className="text-[9px] text-emerald-600 font-bold uppercase tracking-widest mb-2">SquadMind Fraud Engine · Real-time</p>
                       <p className="text-sm font-medium text-slate-700 leading-relaxed mb-4">
                         {fraudFlagged > 0
                           ? <span><span className="text-red-500 font-bold">{fraudFlagged} suspicious transaction{fraudFlagged > 1 ? 's' : ''}</span> flagged totalling {formatCurrency(fraudAmount)}.</span>
@@ -1151,24 +1162,27 @@ function Dashboard() {
                 </div>
               </div>
 
+              {/* ── CHANGED: footer indicators ── */}
               <div className="px-8 py-4 bg-slate-50 border-t border-slate-100 flex flex-col md:flex-row items-center justify-between gap-3">
                 <div className="flex items-center gap-6 text-[10px] font-bold text-slate-400 uppercase tracking-widest flex-wrap">
-                  <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Squad Payment API</span>
+                  <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>NLP Extraction Engine</span>
+                  <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Cash Flow Forecast Model</span>
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Fraud Detection Engine</span>
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Inventory AI</span>
-                  <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>Vendor Intelligence</span>
                   <span className="flex items-center gap-1.5"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>TrustScore™</span>
                 </div>
-                <p className="text-[10px] text-slate-400 font-medium">All intelligence derived from Squad-compatible transaction data</p>
+                {/* ── CHANGED ── */}
+                <p className="text-[10px] text-slate-400 font-medium">All intelligence extracted from SMS, email & PDF — no bank API required</p>
               </div>
             </div>
           </div>
 
+          {/* ── CHANGED: footer ── */}
           <footer className="pt-8 pb-12 flex flex-col md:flex-row justify-between items-center gap-6 border-t border-slate-100">
             <p className="text-sm text-slate-400 flex items-center gap-2">
               <span className="font-bold text-slate-900">SquadMind</span>
               <span className="w-1 h-1 bg-slate-300 rounded-full"></span>
-              © 2026 SquadMind. SME Operating System. Powered by Squad.
+              © 2026 SquadMind. The SME Operating System. No Bank APIs Required.
             </p>
             <div className="flex gap-8">
               <a href="#" className="text-sm text-slate-500 hover:text-[#E8762E] transition-colors font-medium">Privacy Policy</a>
